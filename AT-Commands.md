@@ -2,6 +2,9 @@
 
 To make it easy to setup the LoRaWAN credentials, an AT command interface over USB is implemented. It includes the basic commands required to define the node.
 
+**Credits:**    
+Taylor Lee (taylor.lee@rakwireless.com)
+
 ----
 ## Content
 

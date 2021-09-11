@@ -633,6 +633,9 @@ build_flags =
 # License    
 Library published under MIT license    
 
+**Credits:**    
+AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
+
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
