@@ -1,6 +1,6 @@
 # WisBlock-API 
 
-| <center><img src="./assets/rakstar.jpg" alt="RAKstar" width=25%></center>  | ![RAKWireless](./assets/RAK-Whirls.png)  ![RAKWireless](./assets/WisBlock.png) | [![Build Status](https://github.com/beegee-tokyo/WisBlock-API/workflows/RAK%20Library%20Build%20CI/badge.svg)](https://github.com/beegee-tokyo/WisBlock-API/actions) | <center><img src="./assets/Yin_yang-48x48.png" alt="BeeGee"></center>  |
+| <center><img src="./assets/rakstar.jpg" alt="RAKstar" width=25%></center>  | ![RAKWireless](./assets/RAK-Whirls.png) | ![RAKWireless](./assets/WisBlock.png) | [![Build Status](https://github.com/beegee-tokyo/WisBlock-API/workflows/RAK%20Library%20Build%20CI/badge.svg)](https://github.com/beegee-tokyo/WisBlock-API/actions) | <center><img src="./assets/Yin_yang-48x48.png" alt="BeeGee"></center>  |
 | -- | -- | -- | -- | -- |
 
 ----
