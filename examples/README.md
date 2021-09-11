@@ -1,6 +1,6 @@
 # WisBlock API Examples
 
-| <center><img src="../assets/rakstar.jpg" alt="RAKstar" width=25%></center>  | ![RAKWireless](../assets/RAK-Whirls.png) | <center><img src="../assets/Yin_yang-48x48.png" alt="BeeGee" width=25%></center>  |
+| <center><img src="../assets/rakstar.jpg" alt="RAKstar" width=25%></center>  | ![RAKWireless](../assets/RAK-Whirls.png) | ![RAKWireless](../assets/WisBlock.png) | <center><img src="../assets/Yin_yang-48x48.png" alt="BeeGee"></center>  |
 | -- | -- | -- |
 
 There are 4 examples to explain the usage of the API. In all examples the API callbacks and the additional functions (sensor readings, IRQ handling, GNSS location service) are separated into their own sketches.    
