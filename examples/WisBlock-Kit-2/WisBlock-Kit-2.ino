@@ -390,6 +390,22 @@ void lora_data_handler(void)
 		/// \todo reset flag that TX cycle is running
 		lora_busy = false;
 	}
+
+	// LoRa Join finished handling
+	if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
+	{
+		g_task_event_type &= N_LORA_JOIN_FIN;
+		if (g_join_result)
+		{
+			MYLOG("APP", "Successfully joined network");
+		}
+		else
+		{
+			MYLOG("APP", "Join network failed");
+			/// \todo here join could be restarted.
+			// lmh_join();
+		}
+	}
 }
 
 /**
