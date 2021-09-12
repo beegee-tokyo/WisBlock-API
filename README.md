@@ -79,9 +79,9 @@ All available AT commands can be found in the [AT-Commands Manual](./AT-Commands
 ----
 
 ## Available examples
-- [api-test.ino](./examples/api-test.ino) is a very basic example that sends a dummy message over LoRaWAN
-- [environment.ino](./examples/environment.ino) shows how to use the frequent wake up call to read sensor data from a RAK1906
-- [accelerometer.ino](./examples/accel.ino) shows how to use an external interrupt to create a wake-up event.
+- [api-test.ino](./examples/api-test) is a very basic example that sends a dummy message over LoRaWAN
+- [environment.ino](./examples/environment) shows how to use the frequent wake up call to read sensor data from a RAK1906
+- [accelerometer.ino](./examples/accel) shows how to use an external interrupt to create a wake-up event.
 - [WisBlock Kit 2 GNSS tracker](./examples/RAK4631-Kit-2-RAK1910-RAK1904-RAK1906) is a LPWAN GNSS tracker application for the [WisBlock Kit2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel)    
 
 These four examples explain the usage of the API. In all examples the API callbacks and the additional functions (sensor readings, IRQ handling, GNSS location service) are separated into their own sketches.    
@@ -91,7 +91,7 @@ These four examples explain the usage of the API. In all examples the API callba
 ----
 
 ## Simple code example of the user application
-The code used here is the [api-test.ino](./examples/api-test.ino) example.
+The code used here is the [api-test.ino](./examples/api-test) example.
 
 ----
 
