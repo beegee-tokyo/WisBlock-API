@@ -133,15 +133,15 @@ void log_settings(void)
 	MYLOG("FLASH", "000 Marks: %02X %02X", g_lorawan_settings.valid_mark_1, g_lorawan_settings.valid_mark_2);
 	MYLOG("FLASH", "002 Auto join %s", g_lorawan_settings.auto_join ? "enabled" : "disabled");
 	MYLOG("FLASH", "003 OTAA %s", g_lorawan_settings.otaa_enabled ? "enabled" : "disabled");
-	MYLOG("FLASH", "004 Dev EUI %02X %02X %02X %02X %02X %02X %02X %02X", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
+	MYLOG("FLASH", "004 Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
 		  g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
 		  g_lorawan_settings.node_device_eui[4], g_lorawan_settings.node_device_eui[5],
 		  g_lorawan_settings.node_device_eui[6], g_lorawan_settings.node_device_eui[7]);
-	MYLOG("FLASH", "012 App EUI %02X %02X %02X %02X %02X %02X %02X %02X", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
+	MYLOG("FLASH", "012 App EUI %02X%02X%02X%02X%02X%02X%02X%02X", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
 		  g_lorawan_settings.node_app_eui[2], g_lorawan_settings.node_app_eui[3],
 		  g_lorawan_settings.node_app_eui[4], g_lorawan_settings.node_app_eui[5],
 		  g_lorawan_settings.node_app_eui[6], g_lorawan_settings.node_app_eui[7]);
-	MYLOG("FLASH", "020 App Key %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+	MYLOG("FLASH", "020 App Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 		  g_lorawan_settings.node_app_key[0], g_lorawan_settings.node_app_key[1],
 		  g_lorawan_settings.node_app_key[2], g_lorawan_settings.node_app_key[3],
 		  g_lorawan_settings.node_app_key[4], g_lorawan_settings.node_app_key[5],
@@ -150,7 +150,7 @@ void log_settings(void)
 		  g_lorawan_settings.node_app_key[10], g_lorawan_settings.node_app_key[11],
 		  g_lorawan_settings.node_app_key[12], g_lorawan_settings.node_app_key[13],
 		  g_lorawan_settings.node_app_key[14], g_lorawan_settings.node_app_key[15]);
-	MYLOG("FLASH", "036 NWS Key %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+	MYLOG("FLASH", "036 NWS Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 		  g_lorawan_settings.node_nws_key[0], g_lorawan_settings.node_nws_key[1],
 		  g_lorawan_settings.node_nws_key[2], g_lorawan_settings.node_nws_key[3],
 		  g_lorawan_settings.node_nws_key[4], g_lorawan_settings.node_nws_key[5],
@@ -159,7 +159,7 @@ void log_settings(void)
 		  g_lorawan_settings.node_nws_key[10], g_lorawan_settings.node_nws_key[11],
 		  g_lorawan_settings.node_nws_key[12], g_lorawan_settings.node_nws_key[13],
 		  g_lorawan_settings.node_nws_key[14], g_lorawan_settings.node_nws_key[15]);
-	MYLOG("FLASH", "052 Apps Key %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+	MYLOG("FLASH", "052 Apps Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 		  g_lorawan_settings.node_apps_key[0], g_lorawan_settings.node_apps_key[1],
 		  g_lorawan_settings.node_apps_key[2], g_lorawan_settings.node_apps_key[3],
 		  g_lorawan_settings.node_apps_key[4], g_lorawan_settings.node_apps_key[5],
@@ -197,17 +197,17 @@ void ble_log_settings(void)
 	delay(50);
 	g_ble_uart.printf("003 OTAA %s\n", g_lorawan_settings.otaa_enabled ? "enabled" : "disabled");
 	delay(50);
-	g_ble_uart.printf("004 Dev EUI %02X %02X %02X %02X %02X %02X %02X %02X\n", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
+	g_ble_uart.printf("004 Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
 					  g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
 					  g_lorawan_settings.node_device_eui[4], g_lorawan_settings.node_device_eui[5],
 					  g_lorawan_settings.node_device_eui[6], g_lorawan_settings.node_device_eui[7]);
 	delay(50);
-	g_ble_uart.printf("012 App EUI %02X %02X %02X %02X %02X %02X %02X %02X\n", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
+	g_ble_uart.printf("012 App EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
 					  g_lorawan_settings.node_app_eui[2], g_lorawan_settings.node_app_eui[3],
 					  g_lorawan_settings.node_app_eui[4], g_lorawan_settings.node_app_eui[5],
 					  g_lorawan_settings.node_app_eui[6], g_lorawan_settings.node_app_eui[7]);
 	delay(50);
-	g_ble_uart.printf("020 App Key %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+	g_ble_uart.printf("020 App Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
 					  g_lorawan_settings.node_app_key[0], g_lorawan_settings.node_app_key[1],
 					  g_lorawan_settings.node_app_key[2], g_lorawan_settings.node_app_key[3],
 					  g_lorawan_settings.node_app_key[4], g_lorawan_settings.node_app_key[5],
@@ -217,7 +217,7 @@ void ble_log_settings(void)
 					  g_lorawan_settings.node_app_key[12], g_lorawan_settings.node_app_key[13],
 					  g_lorawan_settings.node_app_key[14], g_lorawan_settings.node_app_key[15]);
 	delay(50);
-	g_ble_uart.printf("036 NWS Key %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+	g_ble_uart.printf("036 NWS Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
 					  g_lorawan_settings.node_nws_key[0], g_lorawan_settings.node_nws_key[1],
 					  g_lorawan_settings.node_nws_key[2], g_lorawan_settings.node_nws_key[3],
 					  g_lorawan_settings.node_nws_key[4], g_lorawan_settings.node_nws_key[5],
@@ -227,7 +227,7 @@ void ble_log_settings(void)
 					  g_lorawan_settings.node_nws_key[12], g_lorawan_settings.node_nws_key[13],
 					  g_lorawan_settings.node_nws_key[14], g_lorawan_settings.node_nws_key[15]);
 	delay(50);
-	g_ble_uart.printf("052 Apps Key %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n",
+	g_ble_uart.printf("052 Apps Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
 					  g_lorawan_settings.node_apps_key[0], g_lorawan_settings.node_apps_key[1],
 					  g_lorawan_settings.node_apps_key[2], g_lorawan_settings.node_apps_key[3],
 					  g_lorawan_settings.node_apps_key[4], g_lorawan_settings.node_apps_key[5],
