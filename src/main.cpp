@@ -81,9 +81,9 @@ void setup()
 
 	digitalWrite(LED_BUILTIN, HIGH);
 
-	MYLOG("MAIN", "=====================================");
-	MYLOG("MAIN", "RAK4631 LoRaWAN GNSS Tracker");
-	MYLOG("MAIN", "=====================================");
+	MYLOG("MAIN", "====================");
+	MYLOG("MAIN", "WisBlock API LoRaWAN");
+	MYLOG("MAIN", "====================");
 
 	// Initialize battery reading
 	init_batt();
