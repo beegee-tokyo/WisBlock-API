@@ -644,5 +644,9 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
-- 2022-09-xx:
+- 2022-09-19:
+  - Change debug output to generic `WisBlock API LoRaWAN` instead of GNSS
+- 2022-09-12:
+  - Improve examples
+- 2022-09-11:
   - V1.0.0 First release
