@@ -17,6 +17,8 @@ uint16_t g_sw_ver_2 = 0; // minor version increase on API change / backward comp
 uint16_t g_sw_ver_3 = 0; // patch version increase on bugfix, no affect on API
 
 bool g_fix_credentials = false;
+bool g_is_enabled_default_settings_modifications = false;
+s_lorawan_settings g_default_settings_modified;
 
 /**
  * @brief Set application version
@@ -39,6 +41,16 @@ void api_set_version(uint16_t sw_1, uint16_t sw_2, uint16_t sw_3)
 void api_set_credentials(void)
 {
 	g_fix_credentials = true;
+}
+
+/**
+ * @brief Inform API modifications in the default_settings to apply when a
+ * flash_reset() is performed.
+ * 
+ */
+void api_enable_default_settings_modifications(void)
+{
+	g_is_enabled_default_settings_modifications = true;
 }
 
 #endif

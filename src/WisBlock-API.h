@@ -164,7 +164,10 @@ void lora_data_handler(void);
 
 void api_set_version(uint16_t sw_1 = 1, uint16_t sw_2 = 0, uint16_t sw_3 = 0);
 void api_set_credentials(void);
+void api_enable_default_settings_modifications(void);
 extern bool g_fix_credentials;
+extern bool g_is_enabled_default_settings_modifications;
+extern s_lorawan_settings g_default_settings_modified;
 extern uint16_t g_sw_ver_1; // major version increase on API change / not backwards compatible
 extern uint16_t g_sw_ver_2; // minor version increase on API change / backward compatible
 extern uint16_t g_sw_ver_3; // patch version increase on bugfix, no affect on API

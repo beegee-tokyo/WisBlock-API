@@ -116,6 +116,10 @@ void flash_reset(void)
 		if (lora_file.open(settings_name, FILE_O_WRITE))
 		{
 			s_lorawan_settings default_settings;
+			if (g_is_enabled_default_settings_modifications)
+			{
+				default_settings = g_default_settings_modified;
+			}
 			lora_file.write((uint8_t *)&default_settings, sizeof(s_lorawan_settings));
 			lora_file.flush();
 			lora_file.close();
