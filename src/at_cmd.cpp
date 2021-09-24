@@ -1012,6 +1012,11 @@ static void at_cmd_handle(void)
 void at_serial_input(uint8_t cmd)
 {
 	Serial.printf("%c", cmd);
+	if (cmd == '\b')
+	{
+		atcmd[atcmd_index--] = '\0';
+		Serial.printf(" \b");
+	}
 
 	if ((cmd >= '0' && cmd <= '9') || (cmd >= 'a' && cmd <= 'z') ||
 		(cmd >= 'A' && cmd <= 'Z') || cmd == '?' || cmd == '+' || cmd == ':' ||
