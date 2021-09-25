@@ -12,6 +12,24 @@
 /** Add you required includes after Arduino.h */
 #include <Wire.h>
 
+// Debug output set to 0 to disable app debug output
+#ifndef MY_DEBUG
+#define MY_DEBUG 1
+#endif
+
+#if MY_DEBUG > 0
+#define MYLOG(tag, ...)           \
+	do                            \
+	{                             \
+		if (tag)                  \
+			PRINTF("[%s] ", tag); \
+		PRINTF(__VA_ARGS__);      \
+		PRINTF("\n");             \
+	} while (0)
+#else
+#define MYLOG(...)
+#endif
+
 /** Declare BME680 functions (bme680_sensor.ino) */
 bool init_bme680(void);
 uint8_t read_bme680(void);
@@ -67,6 +85,25 @@ uint8_t send_fail = 0;
  */
 void setup_app(void)
 {
+  Serial.begin(115200);
+  time_t serial_timeout = millis();
+  // On nRF52840 the USB serial is not available immediately
+  while (!Serial)
+  {
+    if ((millis() - serial_timeout) < 5000)
+    {
+      delay(100);
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    }
+    else
+    {
+      break;
+    }
+  }
+  digitalWrite(LED_BUILTIN, LOW);
+
+  MYLOG("APP", "Setup WisBlock Environment Example");
+
 	// Enable BLE
 	g_enable_ble = true;
 
@@ -83,7 +120,9 @@ void setup_app(void)
 bool init_app(void)
 {
 	MYLOG("APP", "Initialize BME680");
-	return init_bme680();
+  bool result = init_bme680();
+  MYLOG("APP", "Result %s", result ? "success" : "failed");
+  return result;
 }
 
 /**

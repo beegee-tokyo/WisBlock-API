@@ -19,12 +19,12 @@
 #endif
 
 // Debug output set to 0 to disable app debug output
-#ifndef MY_DEBUG
-#define MY_DEBUG 1
+#ifndef API_DEBUG
+#define API_DEBUG 0
 #endif
 
-#if MY_DEBUG > 0
-#define MYLOG(tag, ...)           \
+#if API_DEBUG > 0
+#define API_LOG(tag, ...)           \
 	do                            \
 	{                             \
 		if (tag)                  \
@@ -33,7 +33,7 @@
 		PRINTF("\n");             \
 	} while (0)
 #else
-#define MYLOG(...)
+#define API_LOG(...)
 #endif
 
 #include <Arduino.h>
@@ -163,8 +163,8 @@ void ble_data_handler(void) __attribute__((weak));
 void lora_data_handler(void);
 
 void api_set_version(uint16_t sw_1 = 1, uint16_t sw_2 = 0, uint16_t sw_3 = 0);
+void api_read_credentials(void);
 void api_set_credentials(void);
-extern bool g_fix_credentials;
 extern uint16_t g_sw_ver_1; // major version increase on API change / not backwards compatible
 extern uint16_t g_sw_ver_2; // minor version increase on API change / backward compatible
 extern uint16_t g_sw_ver_3; // patch version increase on bugfix, no affect on API

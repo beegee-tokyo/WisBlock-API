@@ -43,9 +43,6 @@ void periodic_wakeup(TimerHandle_t unused)
  */
 void setup()
 {
-	// Call app setup for special settings
-	setup_app();
-
 	// Create the task event semaphore
 	g_task_sem = xSemaphoreCreateBinary();
 	// Initialize semaphore
@@ -59,7 +56,7 @@ void setup()
 	pinMode(LED_CONN, OUTPUT);
 	digitalWrite(LED_CONN, HIGH);
 
-#if MY_DEBUG > 0
+#if API_DEBUG > 0
 	// Initialize Serial for debug output
 	Serial.begin(115200);
 
@@ -81,9 +78,12 @@ void setup()
 
 	digitalWrite(LED_BUILTIN, HIGH);
 
-	MYLOG("MAIN", "====================");
-	MYLOG("MAIN", "WisBlock API LoRaWAN");
-	MYLOG("MAIN", "====================");
+	// Call app setup for special settings
+	setup_app();
+
+	API_LOG("MAIN", "====================");
+	API_LOG("MAIN", "WisBlock API LoRaWAN");
+	API_LOG("MAIN", "====================");
 
 	// Initialize battery reading
 	init_batt();
@@ -108,24 +108,24 @@ void setup()
 	// Check if auto join is enabled
 	if (g_lorawan_settings.auto_join)
 	{
-		MYLOG("MAIN", "Auto join is enabled, start LoRa and join");
+		API_LOG("MAIN", "Auto join is enabled, start LoRa and join");
 		// Initialize LoRa and start join request
 		int8_t lora_init_result = init_lora();
 
 		if (lora_init_result != 0)
 		{
-			MYLOG("MAIN", "Init LoRa failed");
+			API_LOG("MAIN", "Init LoRa failed");
 
 			// Without working LoRa we just stop here
 			while (1)
 			{
-				MYLOG("MAIN", "Get your LoRa stuff in order");
+				API_LOG("MAIN", "Get your LoRa stuff in order");
 				pinMode(LED_BUILTIN, OUTPUT);
 				digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 				delay(5000);
 			}
 		}
-		MYLOG("MAIN", "LoRa init success");
+		API_LOG("MAIN", "LoRa init success");
 	}
 	else
 	{
@@ -133,7 +133,7 @@ void setup()
 		lora_rak4630_init();
 		Radio.Sleep();
 
-		MYLOG("MAIN", "Auto join is disabled, waiting for connect command");
+		API_LOG("MAIN", "Auto join is disabled, waiting for connect command");
 		delay(100);
 	}
 
@@ -143,7 +143,7 @@ void setup()
 		// Without working LoRa we just stop here
 		while (1)
 		{
-			MYLOG("MAIN", "Get your application stuff in order");
+			API_LOG("MAIN", "Get your application stuff in order");
 			pinMode(LED_BUILTIN, OUTPUT);
 			digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 			delay(5000);
@@ -181,7 +181,7 @@ void loop()
 			if ((g_task_event_type & BLE_CONFIG) == BLE_CONFIG)
 			{
 				g_task_event_type &= N_BLE_CONFIG;
-				MYLOG("MAIN", "Config received over BLE");
+				API_LOG("MAIN", "Config received over BLE");
 				delay(100);
 
 				// Inform connected device about new settings
@@ -199,8 +199,6 @@ void loop()
 			if ((g_task_event_type & AT_CMD) == AT_CMD)
 			{
 				g_task_event_type &= N_AT_CMD;
-				MYLOG("APP", "USB data received");
-
 				while (Serial.available() > 0)
 				{
 					at_serial_input(uint8_t(Serial.read()));
@@ -208,7 +206,11 @@ void loop()
 				}
 			}
 		}
-		MYLOG("MAIN", "Loop goes to sleep");
+		// Skip this log message when USB data is received
+		if ((g_task_event_type & AT_CMD) == AT_CMD)
+		{
+			API_LOG("MAIN", "Loop goes to sleep");
+		}
 		Serial.flush();
 		g_task_event_type = 0;
 		// Go back to sleep

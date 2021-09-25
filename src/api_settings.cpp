@@ -16,8 +16,6 @@ uint16_t g_sw_ver_1 = 1; // major version increase on API change / not backwards
 uint16_t g_sw_ver_2 = 0; // minor version increase on API change / backward compatible
 uint16_t g_sw_ver_3 = 0; // patch version increase on bugfix, no affect on API
 
-bool g_fix_credentials = false;
-
 /**
  * @brief Set application version
  * 
@@ -38,7 +36,16 @@ void api_set_version(uint16_t sw_1, uint16_t sw_2, uint16_t sw_3)
  */
 void api_set_credentials(void)
 {
-	g_fix_credentials = true;
+	save_settings();
+}
+
+/**
+ * @brief Force reading the LoRaWAN credentials
+ * 
+ */
+void api_read_credentials(void)
+{
+	init_flash();
 }
 
 #endif

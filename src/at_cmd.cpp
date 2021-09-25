@@ -96,7 +96,7 @@ static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length)
  */
 static int at_query_region(void)
 {
-	// 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR9207: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4 12: RU864
+	// 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR920 7: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4 12: RU864
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.lora_region);
 
 	return 0;
@@ -104,7 +104,7 @@ static int at_query_region(void)
 
 /**
  * @brief AT+BAND=xx Set regional frequency band
- *  Values: 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR9207: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4 12: RU864
+ *  Values: 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR920 7: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4 12: RU864
  * @return int 0 if valid parameter
  */
 static int at_exec_region(char *str)
@@ -116,19 +116,80 @@ static int at_exec_region(char *str)
 	if (param != NULL)
 	{
 		region = strtol(param, NULL, 0);
-		// RAK4630 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR9207: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4
-		if (region > 11)
+		// RAK4630 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR920 7: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4 12: RU864
+		if (region > 12)
 		{
 			return -1;
 		}
 		g_lorawan_settings.lora_region = region;
+		save_settings();
 	}
 	else
 	{
 		return -1;
 	}
 
-	save_settings();
+	return 0;
+}
+
+/**
+ * @brief AT+MASK=? Get channel mask
+ *  Only available for regions 1: AU915 2: CN470 8: US915
+ * @return int always 0
+ */
+static int at_query_mask(void)
+{
+	if ((g_lorawan_settings.lora_region == 1) || (g_lorawan_settings.lora_region == 2) || (g_lorawan_settings.lora_region == 8))
+	{
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.subband_channels);
+
+		return 0;
+	}
+	return AT_ERRNO_PARA_VAL;
+}
+
+/**
+ * @brief AT+MASK=xx Set channel mask
+ *  Only available for regions 1: AU915 2: CN470 8: US915
+ * @return int 0 if valid parameter
+ */
+static int at_exec_mask(char *str)
+{
+	char *param;
+	uint8_t mask;
+
+	param = strtok(str, ",");
+	if (param != NULL)
+	{
+		mask = strtol(param, NULL, 0);
+
+		uint8_t maxBand = 1;
+		switch (g_lorawan_settings.lora_region)
+		{
+		case LORAMAC_REGION_AU915:
+			maxBand = 9;
+			break;
+		case LORAMAC_REGION_CN470:
+			maxBand = 12;
+			break;
+		case LORAMAC_REGION_US915:
+			maxBand = 9;
+			break;
+		default:
+			return AT_ERRNO_PARA_VAL;
+		}
+		if ((mask == 0) || (mask > maxBand))
+		{
+			return -1;
+		}
+		g_lorawan_settings.subband_channels = mask;
+		save_settings();
+	}
+	else
+	{
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -175,7 +236,7 @@ static int at_exec_joinmode(char *str)
 static int at_query_deveui(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE,
-			 "%02x%02x%02x%02x%02x%02x%02x%02x",
+			 "%02X%02X%02X%02X%02X%02X%02X%02X",
 			 g_lorawan_settings.node_device_eui[0],
 			 g_lorawan_settings.node_device_eui[1],
 			 g_lorawan_settings.node_device_eui[2],
@@ -217,7 +278,7 @@ static int at_exec_deveui(char *str)
 static int at_query_appeui(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE,
-			 "%02x%02x%02x%02x%02x%02x%02x%02x",
+			 "%02X%02X%02X%02X%02X%02X%02X%02X",
 			 g_lorawan_settings.node_app_eui[0],
 			 g_lorawan_settings.node_app_eui[1],
 			 g_lorawan_settings.node_app_eui[2],
@@ -263,7 +324,7 @@ static int at_query_appkey(void)
 
 	for (i = 0; i < 16; i++)
 	{
-		len += snprintf(g_at_query_buf + len, ATQUERY_SIZE - len, "%02x", g_lorawan_settings.node_app_key[i]);
+		len += snprintf(g_at_query_buf + len, ATQUERY_SIZE - len, "%02X", g_lorawan_settings.node_app_key[i]);
 		if (ATQUERY_SIZE <= len)
 		{
 			return -1;
@@ -346,7 +407,7 @@ static int at_query_appskey(void)
 
 	for (i = 0; i < 16; i++)
 	{
-		len += snprintf(g_at_query_buf + len, ATQUERY_SIZE - len, "%02x", g_lorawan_settings.node_apps_key[i]);
+		len += snprintf(g_at_query_buf + len, ATQUERY_SIZE - len, "%02X", g_lorawan_settings.node_apps_key[i]);
 		if (ATQUERY_SIZE <= len)
 		{
 			return -1;
@@ -390,7 +451,7 @@ static int at_query_nwkskey(void)
 
 	for (i = 0; i < 16; i++)
 	{
-		len += snprintf(g_at_query_buf + len, ATQUERY_SIZE - len, "%02x", g_lorawan_settings.node_nws_key[i]);
+		len += snprintf(g_at_query_buf + len, ATQUERY_SIZE - len, "%02X", g_lorawan_settings.node_nws_key[i]);
 		if (ATQUERY_SIZE <= len)
 		{
 			return -1;
@@ -447,7 +508,9 @@ static int at_exec_class(char *str)
 
 	param = strtok(str, ",");
 	cls = (uint8_t)param[0];
-	if (cls != 'A' && cls != 'B' && cls != 'C')
+	// Class B is not supported
+	// if (cls != 'A' && cls != 'B' && cls != 'C')
+	if (cls != 'A' && cls != 'C')
 	{
 		return AT_ERRNO_PARA_VAL;
 	}
@@ -528,15 +591,22 @@ static int at_exec_join(char *str)
 				g_lorawan_settings.join_trials = nbtrials;
 			}
 		}
-	}
+		save_settings();
 
-	save_settings();
+		if ((bJoin == 1) && !g_lorawan_initialized) // ==0 stop join, not support, yet
+		{
+			// Manual join only works if LoRaWAN was not initialized yet.
+			// If LoRaWAN was already initialized, a restart is required
+			init_lora();
+		}
 
-	if ((bJoin == 1) && !g_lorawan_initialized) // ==0 stop join, not support, yet
-	{
-		// Manual join only works if LoRaWAN was not initialized yet.
-		// If LoRaWAN was already initialized, a restart is required
-		init_lora();
+		if ((bJoin == 1) && g_lorawan_settings.auto_join)
+		{
+			// If auto join is set, restart the device to start join process
+			delay(100);
+			sd_nvic_SystemReset();
+			return 0;
+		}
 	}
 
 	return 0;
@@ -604,7 +674,7 @@ static int at_query_datarate(void)
 /**
  * @brief AT+DR=X Set datarate
  * 
- * @param str 0 to 25, depending on region
+ * @param str 0 to 15, depending on region
  * @return int 0 if correct parameter
  */
 static int at_exec_datarate(char *str)
@@ -612,6 +682,11 @@ static int at_exec_datarate(char *str)
 	int8_t datarate;
 
 	datarate = strtol(str, NULL, 0);
+
+	if (datarate > 15)
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
 
 	g_lorawan_settings.data_rate = datarate;
 	save_settings();
@@ -820,6 +895,7 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+DR", "Get or Set the Tx DataRate=[0..7]", at_query_datarate, at_exec_datarate, NULL},
 	{"+TXP", "Get or set the transmit power", at_query_txpower, at_exec_txpower, NULL},
 	{"+BAND", "Get and Set number corresponding to active regions", at_query_region, at_exec_region, NULL},
+	{"+MASK", "Get and Set channels mask", at_query_mask, at_exec_mask, NULL},
 	// Status queries
 	{"+BAT", "Get battery level", at_query_battery, NULL, NULL},
 	{"+RSSI", "Last RX packet RSSI", at_query_rssi, NULL, NULL},
@@ -1012,6 +1088,13 @@ static void at_cmd_handle(void)
 void at_serial_input(uint8_t cmd)
 {
 	Serial.printf("%c", cmd);
+
+	// Handle backspace
+	if (cmd == '\b')
+	{
+		atcmd[atcmd_index--] = '\0';
+		Serial.printf(" \b");
+	}
 
 	if ((cmd >= '0' && cmd <= '9') || (cmd >= 'a' && cmd <= 'z') ||
 		(cmd >= 'A' && cmd <= 'Z') || cmd == '?' || cmd == '+' || cmd == ':' ||

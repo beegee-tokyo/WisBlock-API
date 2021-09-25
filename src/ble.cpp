@@ -132,7 +132,15 @@ void init_ble(void)
 	Bluefruit.Advertising.restartOnDisconnect(true);
 	Bluefruit.Advertising.setInterval(32, 244); // in unit of 0.625 ms
 	Bluefruit.Advertising.setFastTimeout(15);	// number of seconds in fast mode
-	Bluefruit.Advertising.start(60);				// 0 = Don't stop advertising
+	// Bluefruit.Advertising.start(60);			// 0 = Don't stop advertising
+	if (g_lorawan_settings.auto_join)
+	{
+		restart_advertising(60);
+	}
+	else
+	{
+		restart_advertising(0);
+	}
 }
 
 void restart_advertising(uint16_t timeout)
@@ -210,7 +218,7 @@ BLEService init_settings_characteristic(void)
  */
 void settings_rx_callback(uint16_t conn_hdl, BLECharacteristic *chr, uint8_t *data, uint16_t len)
 {
-	MYLOG("SETT", "Settings received");
+	API_LOG("SETT", "Settings received");
 
 	delay(1000);
 
@@ -219,14 +227,14 @@ void settings_rx_callback(uint16_t conn_hdl, BLECharacteristic *chr, uint8_t *da
 	{
 		if (len != sizeof(s_lorawan_settings))
 		{
-			MYLOG("SETT", "Received settings have wrong size %d", len);
+			API_LOG("SETT", "Received settings have wrong size %d", len);
 			return;
 		}
 
 		s_lorawan_settings *rcvdSettings = (s_lorawan_settings *)data;
 		if ((rcvdSettings->valid_mark_1 != 0xAA) || (rcvdSettings->valid_mark_2 != LORAWAN_DATA_MARKER))
 		{
-			MYLOG("SETT", "Received settings data do not have required markers");
+			API_LOG("SETT", "Received settings data do not have required markers");
 			return;
 		}
 
@@ -244,7 +252,7 @@ void settings_rx_callback(uint16_t conn_hdl, BLECharacteristic *chr, uint8_t *da
 
 		if (g_lorawan_settings.resetRequest)
 		{
-			MYLOG("SETT", "Initiate reset");
+			API_LOG("SETT", "Initiate reset");
 			delay(1000);
 			sd_nvic_SystemReset();
 		}
@@ -253,7 +261,7 @@ void settings_rx_callback(uint16_t conn_hdl, BLECharacteristic *chr, uint8_t *da
 		if (g_task_sem != NULL)
 		{
 			g_task_event_type |= BLE_CONFIG;
-			MYLOG("SETT", "Waking up loop task");
+			API_LOG("SETT", "Waking up loop task");
 			xSemaphoreGive(g_task_sem);
 		}
 	}

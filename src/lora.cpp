@@ -80,7 +80,7 @@ static lmh_callback_t lora_callbacks = {get_lora_batt, BoardGetUniqueId, BoardGe
 
 bool g_lpwan_has_joined = false;
 
-#if MY_DEBUG > 0
+#if API_DEBUG > 0
 char *region_names[] = {(char *)"AS923", (char *)"AU915", (char *)"CN470", (char *)"CN779",
 						(char *)"EU433", (char *)"EU868", (char *)"KR920", (char *)"IN865",
 						(char *)"US915", (char *)"AS923-2", (char *)"AS923-3", (char *)"AS923-4", (char *)"RU864"};
@@ -103,7 +103,7 @@ int8_t init_lora(void)
 	if (lora_rak4630_init() != 0)
 #endif
 	{
-		MYLOG("LORA", "Failed to initialize SX1262");
+		API_LOG("LORA", "Failed to initialize SX1262");
 		return -1;
 	}
 
@@ -123,11 +123,11 @@ int8_t init_lora(void)
 	lora_param_init.tx_power = g_lorawan_settings.tx_power;
 	lora_param_init.duty_cycle = g_lorawan_settings.duty_cycle_enabled;
 
-	MYLOG("LORA", "Initialize LoRaWAN for region %s", region_names[g_lorawan_settings.lora_region]);
+	API_LOG("LORA", "Initialize LoRaWAN for region %s", region_names[g_lorawan_settings.lora_region]);
 	// Initialize LoRaWan
 	if (lmh_init(&lora_callbacks, lora_param_init, g_lorawan_settings.otaa_enabled, (eDeviceClass)g_lorawan_settings.lora_class, (LoRaMacRegion_t)g_lorawan_settings.lora_region) != 0)
 	{
-		MYLOG("LORA", "Failed to initialize LoRaWAN");
+		API_LOG("LORA", "Failed to initialize LoRaWAN");
 		return -2;
 	}
 
@@ -135,7 +135,7 @@ int8_t init_lora(void)
 	// This must be called AFTER lmh_init()
 	if (!lmh_setSubBandChannels(g_lorawan_settings.subband_channels))
 	{
-		MYLOG("LORA", "lmh_setSubBandChannels failed. Wrong sub band requested?");
+		API_LOG("LORA", "lmh_setSubBandChannels failed. Wrong sub band requested?");
 		return -3;
 	}
 
@@ -154,17 +154,17 @@ int8_t init_lora(void)
 */
 void lpwan_join_fail_handler(void)
 {
-	MYLOG("LORA", "OTAA joined failed");
-	MYLOG("LORA", "Check LPWAN credentials and if a gateway is in range");
+	API_LOG("LORA", "OTAA joined failed");
+	API_LOG("LORA", "Check LPWAN credentials and if a gateway is in range");
 	// Restart Join procedure
-	MYLOG("LORA", "Restart network join request");
+	API_LOG("LORA", "Restart network join request");
 	g_join_result = false;
 	// Wake up task to report failed join
 	g_task_event_type |= LORA_JOIN_FIN;
 	// Notify task about the event
 	if (g_task_sem != NULL)
 	{
-		MYLOG("LORA", "Join failed, report event");
+		API_LOG("LORA", "Join failed, report event");
 		xSemaphoreGive(g_task_sem);
 	}
 }
@@ -176,15 +176,15 @@ static void lpwan_joined_handler(void)
 {
 	digitalWrite(LED_BUILTIN, LOW);
 
-#if MY_DEBUG > 0
+#if API_DEBUG > 0
 	if (g_lorawan_settings.otaa_enabled)
 	{
 		uint32_t otaaDevAddr = lmh_getDevAddr();
-		MYLOG("LORA", "OTAA joined and got dev address %08lX", otaaDevAddr);
+		API_LOG("LORA", "OTAA joined and got dev address %08lX", otaaDevAddr);
 	}
 	else
 	{
-		MYLOG("LORA", "ABP joined");
+		API_LOG("LORA", "ABP joined");
 	}
 
 	delay(100); // Just to enable the serial port to send the message
@@ -203,7 +203,7 @@ static void lpwan_joined_handler(void)
 		// Notify task about the event
 		if (g_task_sem != NULL)
 		{
-			MYLOG("LORA", "Waking up loop task");
+			API_LOG("LORA", "Waking up loop task");
 			xSemaphoreGive(g_task_sem);
 		}
 
@@ -223,7 +223,7 @@ static void lpwan_joined_handler(void)
 	// Notify task about the event
 	if (g_task_sem != NULL)
 	{
-		MYLOG("LORA", "Join success, report event");
+		API_LOG("LORA", "Join success, report event");
 		xSemaphoreGive(g_task_sem);
 	}
 }
@@ -235,7 +235,7 @@ static void lpwan_joined_handler(void)
  */
 static void lpwan_rx_handler(lmh_app_data_t *app_data)
 {
-	MYLOG("LORA", "LoRa Packet received on port %d, size:%d, rssi:%d, snr:%d",
+	API_LOG("LORA", "LoRa Packet received on port %d, size:%d, rssi:%d, snr:%d",
 		  app_data->port, app_data->buffsize, app_data->rssi, app_data->snr);
 
 	g_last_rssi = app_data->rssi;
@@ -248,7 +248,7 @@ static void lpwan_rx_handler(lmh_app_data_t *app_data)
 	// Notify task about the event
 	if (g_task_sem != NULL)
 	{
-		MYLOG("LORA", "Waking up loop task");
+		API_LOG("LORA", "Waking up loop task");
 		xSemaphoreGive(g_task_sem);
 	}
 }
@@ -260,14 +260,14 @@ static void lpwan_rx_handler(lmh_app_data_t *app_data)
  */
 static void lpwan_class_confirm_handler(DeviceClass_t Class)
 {
-	MYLOG("LORA", "switch to class %c done", "ABC"[Class]);
+	API_LOG("LORA", "switch to class %c done", "ABC"[Class]);
 
 	// Wake up task to send initial packet
 	g_task_event_type |= STATUS;
 	// Notify task about the event
 	if (g_task_sem != NULL)
 	{
-		MYLOG("LORA", "Waking up loop task");
+		API_LOG("LORA", "Waking up loop task");
 		xSemaphoreGive(g_task_sem);
 	}
 	g_lpwan_has_joined = true;
@@ -279,14 +279,14 @@ static void lpwan_class_confirm_handler(DeviceClass_t Class)
  */
 static void lpwan_unconfirm_tx_finished(void)
 {
-	MYLOG("LORA", "Uncomfirmed TX finished");
+	API_LOG("LORA", "Uncomfirmed TX finished");
 	g_rx_fin_result = true;
 	// Wake up task to send initial packet
 	g_task_event_type |= LORA_TX_FIN;
 	// Notify task about the event
 	if (g_task_sem != NULL)
 	{
-		MYLOG("LORA", "Waking up loop task");
+		API_LOG("LORA", "Waking up loop task");
 		xSemaphoreGive(g_task_sem);
 	}
 }
@@ -298,14 +298,14 @@ static void lpwan_unconfirm_tx_finished(void)
  */
 static void lpwan_confirm_tx_finished(bool result)
 {
-	MYLOG("LORA", "Comfirmed TX finished with result %s", result ? "ACK" : "NAK");
+	API_LOG("LORA", "Comfirmed TX finished with result %s", result ? "ACK" : "NAK");
 	g_rx_fin_result = result;
 	// Wake up task to send initial packet
 	g_task_event_type |= LORA_TX_FIN;
 	// Notify task about the event
 	if (g_task_sem != NULL)
 	{
-		MYLOG("LORA", "Waking up loop task");
+		API_LOG("LORA", "Waking up loop task");
 		xSemaphoreGive(g_task_sem);
 	}
 }
@@ -320,7 +320,7 @@ lmh_error_status send_lora_packet(uint8_t *data, uint8_t size)
 	if (lmh_join_status_get() != LMH_SET)
 	{
 		//Not joined, try again later
-		MYLOG("LORA", "Did not join network, skip sending frame");
+		API_LOG("LORA", "Did not join network, skip sending frame");
 		return LMH_ERROR;
 	}
 

@@ -45,6 +45,25 @@ void send_delayed(TimerHandle_t unused);
  */
 void setup_app(void)
 {
+  Serial.begin(115200);
+  time_t serial_timeout = millis();
+  // On nRF52840 the USB serial is not available immediately
+  while (!Serial)
+  {
+    if ((millis() - serial_timeout) < 5000)
+    {
+      delay(100);
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    }
+    else
+    {
+      break;
+    }
+  }
+  digitalWrite(LED_BUILTIN, LOW);
+
+  MYLOG("APP", "Setup WisBlock Kit 2 Example");
+
 	// Enable BLE
 	g_enable_ble = true;
 }
@@ -68,13 +87,19 @@ bool init_app(void)
 	Wire.setClock(400000);
 
 	// Initialize GNSS module
+  MYLOG("APP", "Initialize uBlox GNSS");
 	init_result = init_gnss();
-
+  MYLOG("APP", "Result %s", init_result ? "success" : "failed");
+  
 	// Initialize Temperature sensor
+  MYLOG("APP", "Initialize BME680");
 	has_env = init_bme();
+  MYLOG("APP", "Result %s", has_env ? "success" : "failed");
 
 	// Initialize ACC sensor
+  MYLOG("APP", "Initialize Accelerometer");
 	init_result |= init_acc();
+  MYLOG("APP", "Result %s", init_result ? "success" : "failed");
 
 	if (g_lorawan_settings.send_repeat_time != 0)
 	{

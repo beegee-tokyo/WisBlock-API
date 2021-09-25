@@ -22,16 +22,6 @@ In addition the API offers two options to setup LoRaWAN settings without the nee
 	* [Block diagram of the API and application part](#block-diagram-of-the-api-and-application-part)
 	* [AT Command format](#at-command-format)
 	* [Available examples](#available-examples)
-	* [Simple code example of the user application](#simple-code-example-of-the-user-application)
-		* [Includes and definitions](#includes-and-definitions)
-		* [setup_app()](#setup-app)
-		* [init_app()](#init-app)
-		* [app_event_handler()](#app-event-handler)
-		* [ble_data_handler()](#ble-data-handler)
-		* [lora_data_handler()](#lora-data-handler)
-			* [1 LORA_DATA](#1-lora-data)
-			* [2 LORA_TX_FIN](#2-lora-tx-fin)
-			* [3 LORA_JOIN_FIN](#3-lora-join-fin)
 * [API functions](#api-functions)
 	* [Set the application version](#set-the-application-version)
 	* [Set hardcoded LoRaWAN credentials](#set-hardcoded-lorawan-credentials)
@@ -42,6 +32,16 @@ In addition the API offers two options to setup LoRaWAN settings without the nee
 	* [Trigger custom events](#trigger-custom-events)
 		* [Event trigger definition](#event-trigger-definition)
 		* [Example for a custom event using the signal of a PIR sensor to wake up the device](#example-for-a-custom-event-using-the-signal-of-a-pir-sensor-to-wake-up-the-device)
+* [Simple code example of the user application](#simple-code-example-of-the-user-application)
+	* [Includes and definitions](#includes-and-definitions)
+	* [setup_app()](#setup-app)
+	* [init_app()](#init-app)
+	* [app_event_handler()](#app-event-handler)
+	* [ble_data_handler()](#ble-data-handler)
+	* [lora_data_handler()](#lora-data-handler)
+		* [1 LORA_DATA](#1-lora-data)
+		* [2 LORA_TX_FIN](#2-lora-tx-fin)
+		* [3 LORA_JOIN_FIN](#3-lora-join-fin)
 * [Debug and Powersave Settings](#debug-and-powersave-settings)
 * [License](#license)
 * [Changelog](#changelog)
@@ -95,12 +95,134 @@ _**The WisBlock-API has been used as well in the following PlatformIO projects:*
 
 ----
 
-## Simple code example of the user application
+# API functions
+The API provides some calls for management, to send LoRaWAN packet, to send BLE UART data and to trigger events.
+
+----
+## Set the application version
+`void api_set_version(uint16_t sw_1 = 1, uint16_t sw_2 = 0, uint16_t sw_3 = 0);`
+This function can be called to set the application version. The application version can be requested by AT commands.
+The version number is build from three digits:    
+`sw_1` ==> major version increase on API change / not backwards compatible    
+`sw_2` ==> minor version increase on API change / backward compatible    
+`sw_3` ==> patch version increase on bugfix, no affect on API     
+If `api_set_version` is not called, the application version defaults to **`1.0.0`**.    
+
+----
+
+## Set hardcoded LoRaWAN credentials
+`void api_read_credentials(void);`    
+`void api_set_credentials(void);`    
+If LoRaWAN credentials need to be hardcoded (e.g. the region, the send repeat time, ...) this can be done in `setup_app()`.
+First the saved credentials must be read from flash with `api_read_credentials();`, then credentials can be changed. After changing the credentials must be saved with `api_set_credentials()`.
+As the WisBlock API checks if any changes need to be saved, the changed values will be only saved on the first boot after flashing the application.     
+Example:    
+```c++
+// Read credentials from Flash
+api_read_credentials();
+// Make changes to the credentials
+g_lorawan_settings.send_repeat_time = 240000;                   // Default is 2 minutes
+g_lorawan_settings.subband_channels = 2;                        // Default is subband 1
+g_lorawan_settings.app_port = 4;                                // Default is 2
+g_lorawan_settings.confirmed_msg_enabled = LMH_CONFIRMED_MSG;   // Default is UNCONFIRMED
+g_lorawan_settings.lora_region = LORAMAC_REGION_EU868;          // Default is AS923-3
+// Save hard coded LoRaWAN settings
+api_set_credentials();
+```
+
+_**REMARK 1**_    
+Hard coded credentials must be set in `void setup_app(void)`!
+
+_**REMARK 2**_    
+Keep in mind that parameters that are changed from with this method can be changed over AT command or BLE _**BUT WILL BE RESET AFTER A REBOOT**_!
+
+----
+
+## Send data over BLE UART
+`g_ble_uart.print()` can be used to send data over the BLE UART. `print`, `println` and `printf` is supported.
+
+----
+
+## Restart BLE advertising
+By default the BLE advertising is only active for 30 seconds after power-up/reset to lower the power consumption. By calling `void restart_advertising(uint16_t timeout);` the advertising can be restarted for `timeout` seconds.
+
+----
+
+## Send data over LoRaWAN
+`lmh_error_status send_lora_packet(uint8_t *data, uint8_t size);` is used to send a data packet to the LoRaWAN server. `*data` is a pointer to the buffer containing the data, `size` is the size of the packet. Details like fPort, confirmed/unconfirmed are defined in the g_lorawan_settings structure inside the API.
+
+----
+
+## Check result of LoRaWAN transmission
+After the TX cycle (including RX1 and RX2 windows) are finished, the result is hold in the global flag `g_rx_fin_result`, the event `LORA_TX_FIN` is triggered and the `lora_data_handler()` callback is called. In this callback the result can be checked and if necessary measures can be taken.
+
+----
+
+## Trigger custom events
+Beside of the pre-defined wake-up events of the API, additional wake_up events can be defined. These events must be handled in the `app_event_handler()` callback.
+
+----
+
+### Event trigger definition
+An event trigger is split into two parts
+- `g_task_event_type` is holding a flag for the event.
+- `g_task_sem` is a semphore that is used to wake up the `loop()` and handle the event.    
+
+`g_task_event_type` is a 16 bit variable where each single bit represents a different event. The lower 7 bits are used for API events, the upper 9 bits can be used for custom application events.
+
+----
+
+### Example for a custom event using the signal of a PIR sensor to wake up the device
+```c++
+// Define the event flag and the clear flag for the event
+#define PIR_TRIGGER   0b1000000000000000
+#define N_PIR_TRIGGER 0b0111111111111111
+
+// This handler is called when the PIR trigger goes high
+// It sets the PIR_TRIGGER event and wakes up the loop()
+void pir_irq_handler(void)
+{
+	// Wake up task to handle PIR trigger
+	g_task_event_type |= PIR_TRIGGER;
+	// Notify task about the event
+	if (g_task_sem != NULL)
+	{
+		MYLOG("PIR", "PIR_TRIGGERED");
+		xSemaphoreGive(g_task_sem);
+	}
+}
+
+// PIR function setup in the app_setup() function
+void app_setup()
+{
+	...
+	// Set input pin for PIR trigger impulse
+	pinMode(WB_IO5, INPUT_PULLDOWN);
+	attachInterrupt(WB_IO5,pir_trigger_handler, RISING);
+	...
+}
+
+// Handling of the PIR event in the app_event_handler() function
+void app_event_handler(void)
+{
+	...
+	// PIR triggered event
+	if ((g_task_event_type & PIR_TRIGGER) == PIR_TRIGGER)
+	{
+    	g_task_event_type &= N_PIR_TRIGGER;
+		/// \todo do something when the PIR is triggered, e.g switch on a light over a relay
+	}
+}
+```
+
+----
+
+# Simple code example of the user application
 The code used here is the [api-test.ino](./examples/api-test) example.
 
 ----
 
-### Includes and definitions
+## Includes and definitions
 These are the required includes and definitions for the user application and the API interface    
 In this example we hard-coded the LoRaWAN credentials. It is strongly recommended **TO NOT DO THAT** to avoid duplicated node credentials    
 Alternative options to setup credentials are
@@ -166,7 +288,7 @@ uint8_t send_fail = 0;
 
 ----
 
-### setup_app
+## setup_app
 This function is called at the very beginning of the application start. In this function everything should be setup that is required before Arduino `setup()` is executed. This could be for example the LoRaWAN credentials.
 In this example we hard-coded the LoRaWAN credentials. It is strongly recommended **TO NOT DO THAT** to avoid duplicated node credentials    
 Alternative options to setup credentials are
@@ -192,6 +314,10 @@ void setup_app(void)
 	// Options to setup credentials are
 	// -over USB with AT commands
 	// -over BLE with My nRF52 Toolbox
+
+	// Read LoRaWAN settings from flash
+	api_read_credentials();
+	// Change LoRaWAN settings
 	g_lorawan_settings.auto_join = false;							// Flag if node joins automatically after reboot
 	g_lorawan_settings.otaa_enabled = true;							// Flag for OTAA or ABP
 	memcpy(g_lorawan_settings.node_device_eui, node_device_eui, 8); // OTAA Device EUI MSB
@@ -213,14 +339,14 @@ void setup_app(void)
 	g_lorawan_settings.confirmed_msg_enabled = LMH_UNCONFIRMED_MSG; // Flag to enable confirmed messages
 	g_lorawan_settings.resetRequest = true;							// Command from BLE to reset device
 	g_lorawan_settings.lora_region = LORAMAC_REGION_AS923_3;		// LoRa region
-	// Inform API about hard coded LoRaWAN settings
+	// Save LoRaWAN settings
 	api_set_credentials();
 }
 ```
 
 ----
 
-### init_app
+## init_app
 This function is called after BLE and LoRa are already initialized. Ideally this is the place to initialize application specific stuff like sensors or actuators. In this example it is unused    
 
 ```c++
@@ -239,7 +365,7 @@ bool init_app(void)
 
 ----
 
-### app_event_handler
+## app_event_handler
 This callback is called on the **STATUS** event. The **STATUS** event is triggered frequently, the time is set by `send_repeat_time`. It is triggered as well by user defined events. See example **RAK1904_example**_ how user defined events are defined.
 _**It is important that event flags are reset. As example the STATUS event is reset by this code sequence:**
 ```c++
@@ -320,7 +446,7 @@ void app_event_handler(void)
 
 ----
 
-### ble_data_handler
+## ble_data_handler
 This callback is used to handle data received over the BLE UART. If you do not need BLE UART functionality, you can remove this function completely.
 In this example we forward the received BLE UART data to the AT command interpreter. This way, we can submit AT commands either over the USB port or over the BLE UART port.    
 ```c++
@@ -359,16 +485,16 @@ void ble_data_handler(void)
 
 ----
 
-### lora_data_handler
+## lora_data_handler
 This callback is called on two different events:
 
-#### 1 LORA_DATA
+### 1 LORA_DATA
 The event **LORA_DATA** is triggered if a downlink packet from the LoRaWAN server has arrived. In this example we are not parsing the data, they are only printed out to the LOG and over BLE UART (if a device is connected)
 
-#### 2 LORA_TX_FIN
+### 2 LORA_TX_FIN
 The event **LORA_TX_FIN** is triggered after sending an uplink packet is finished, including the RX1 and RX2 windows. If **CONFIRMED** packets are sent, the global flag `g_rx_fin_result` contains the result of the confirmed transmission. If `g_rx_fin_result` is true, the LoRaWAN server acknowledged the uplink packet by sending an `ACK`. Otherwise the `g_rx_fin_result` is set to false, indicating that the packet was not received by the LoRaWAN server (no gateway in range, packet got damaged on the air. If **UNCONFIRMED** packets are sent, the flag `g_rx_fin_result` is always true. 
 
-#### 3 LORA_JOIN_FIN
+### 3 LORA_JOIN_FIN
 The event **LORA_JOIN_FIN** is called after the Join request/Join accept/reject cycle is finished. The global flag `g_task_event_type` contains the result of the Join request. If true, the node has joined the network. If false the join didn't succeed. In this case the join cycle could be restarted or the node could report an error.
 
 ```c++
@@ -456,134 +582,7 @@ void lora_data_handler(void)
 ```
 
 ----
-# API functions
-The API provides some calls for management, to send LoRaWAN packet, to send BLE UART data and to trigger events.
 
-----
-## Set the application version
-`void api_set_version(uint16_t sw_1 = 1, uint16_t sw_2 = 0, uint16_t sw_3 = 0);`
-This function can be called to set the application version. The application version can be requested by AT commands.
-The version number is build from three digits:    
-`sw_1` ==> major version increase on API change / not backwards compatible    
-`sw_2` ==> minor version increase on API change / backward compatible    
-`sw_3` ==> patch version increase on bugfix, no affect on API     
-If `api_set_version` is not called, the application version defaults to **`1.0.0`**.    
-
-----
-
-## Set hardcoded LoRaWAN credentials
-`void api_set_credentials(void);`
-This informs the API that hard coded LoRaWAN credentials will be used. If credentials are sent over USB or from My nRF Toolbox, the received credentials will be ignored. _**It is strongly suggest NOT TO USE hard coded credentials to avoid duplicate node definitions**_    
-If hard coded LoRaWAN credentials are used, they must be set before this function is called. Example:    
-```c++
-g_lorawan_settings.auto_join = false;							// Flag if node joins automatically after reboot
-g_lorawan_settings.otaa_enabled = true;							// Flag for OTAA or ABP
-memcpy(g_lorawan_settings.node_device_eui, node_device_eui, 8); // OTAA Device EUI MSB
-memcpy(g_lorawan_settings.node_app_eui, node_app_eui, 8);		// OTAA Application EUI MSB
-memcpy(g_lorawan_settings.node_app_key, node_app_key, 16);		// OTAA Application Key MSB
-memcpy(g_lorawan_settings.node_nws_key, node_nws_key, 16);		// ABP Network Session Key MSB
-memcpy(g_lorawan_settings.node_apps_key, node_apps_key, 16);	// ABP Application Session key MSB
-g_lorawan_settings.node_dev_addr = 0x26021FB4;					// ABP Device Address MSB
-g_lorawan_settings.send_repeat_time = 120000;					// Send repeat time in milliseconds: 2 * 60 * 1000 => 2 minutes
-g_lorawan_settings.adr_enabled = false;							// Flag for ADR on or off
-g_lorawan_settings.public_network = true;						// Flag for public or private network
-g_lorawan_settings.duty_cycle_enabled = false;					// Flag to enable duty cycle (validity depends on Region)
-g_lorawan_settings.join_trials = 5;								// Number of join retries
-g_lorawan_settings.tx_power = 0;								// TX power 0 .. 15 (validity depends on Region)
-g_lorawan_settings.data_rate = 3;								// Data rate 0 .. 15 (validity depends on Region)
-g_lorawan_settings.lora_class = 0;								// LoRaWAN class 0: A, 2: C, 1: B is not supported
-g_lorawan_settings.subband_channels = 1;						// Subband channel selection 1 .. 9
-g_lorawan_settings.app_port = 2;								// Data port to send data
-g_lorawan_settings.confirmed_msg_enabled = LMH_UNCONFIRMED_MSG; // Flag to enable confirmed messages
-g_lorawan_settings.resetRequest = true;							// Command from BLE to reset device
-g_lorawan_settings.lora_region = LORAMAC_REGION_AS923_3;		// LoRa region
-// Inform API about hard coded LoRaWAN settings
-api_set_credentials();
-```
-
-_**REMARK!**_    
-Hard coded credentials must be set in `void setup_app(void)`!
-
-----
-
-## Send data over BLE UART
-`g_ble_uart.print()` can be used to send data over the BLE UART. `print`, `println` and `printf` is supported.
-
-----
-
-## Restart BLE advertising
-By default the BLE advertising is only active for 30 seconds after power-up/reset to lower the power consumption. By calling `void restart_advertising(uint16_t timeout);` the advertising can be restarted for `timeout` seconds.
-
-----
-
-## Send data over LoRaWAN
-`lmh_error_status send_lora_packet(uint8_t *data, uint8_t size);` is used to send a data packet to the LoRaWAN server. `*data` is a pointer to the buffer containing the data, `size` is the size of the packet. Details like fPort, confirmed/unconfirmed are defined in the g_lorawan_settings structure inside the API.
-
-----
-
-## Check result of LoRaWAN transmission
-After the TX cycle (including RX1 and RX2 windows) are finished, the result is hold in the global flag `g_rx_fin_result`, the event `LORA_TX_FIN` is triggered and the `lora_data_handler()` callback is called. In this callback the result can be checked and if necessary measures can be taken.
-
-----
-
-## Trigger custom events
-Beside of the pre-defined wake-up events of the API, additional wake_up events can be defined. These events must be handled in the `app_event_handler()` callback.
-
-----
-
-### Event trigger definition
-An event trigger is split into two parts
-- `g_task_event_type` is holding a flag for the event.
-- `g_task_sem` is a semphore that is used to wake up the `loop()` and handle the event.    
-
-`g_task_event_type` is a 16 bit variable where each single bit represents a different event. The lower 7 bits are used for API events, the upper 9 bits can be used for custom application events.
-
-----
-
-### Example for a custom event using the signal of a PIR sensor to wake up the device
-```c++
-// Define the event flag and the clear flag for the event
-#define PIR_TRIGGER   0b1000000000000000
-#define N_PIR_TRIGGER 0b0111111111111111
-
-// This handler is called when the PIR trigger goes high
-// It sets the PIR_TRIGGER event and wakes up the loop()
-void pir_irq_handler(void)
-{
-	// Wake up task to handle PIR trigger
-	g_task_event_type |= PIR_TRIGGER;
-	// Notify task about the event
-	if (g_task_sem != NULL)
-	{
-		MYLOG("PIR", "PIR_TRIGGERED");
-		xSemaphoreGive(g_task_sem);
-	}
-}
-
-// PIR function setup in the app_setup() function
-void app_setup()
-{
-	...
-	// Set input pin for PIR trigger impulse
-	pinMode(WB_IO5, INPUT_PULLDOWN);
-	attachInterrupt(WB_IO5,pir_trigger_handler, RISING);
-	...
-}
-
-// Handling of the PIR event in the app_event_handler() function
-void app_event_handler(void)
-{
-	...
-	// PIR triggered event
-	if ((g_task_event_type & PIR_TRIGGER) == PIR_TRIGGER)
-	{
-    	g_task_event_type &= N_PIR_TRIGGER;
-		/// \todo do something when the PIR is triggered, e.g switch on a light over a relay
-	}
-}
-```
-
-----
 # Debug and Powersave Settings
 
 ## Arduino    
@@ -644,6 +643,13 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-09-25
+  - Added `api_read_credentials()`
+  - `api_set_credentials()` saves to flash
+  - Updated examples
+- 2022-09-24:
+  - Fix AT command response delay
+  - Add AT+MASK command to change channel settings for AU915, EU433 and US915
 - 2022-09-19:
   - Change debug output to generic `WisBlock API LoRaWAN` instead of GNSS
 - 2022-09-12:

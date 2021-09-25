@@ -28,6 +28,24 @@
 /** Add you required includes after Arduino.h */
 #include <Wire.h>
 
+// Debug output set to 0 to disable app debug output
+#ifndef MY_DEBUG
+#define MY_DEBUG 1
+#endif
+
+#if MY_DEBUG > 0
+#define MYLOG(tag, ...)           \
+	do                            \
+	{                             \
+		if (tag)                  \
+			PRINTF("[%s] ", tag); \
+		PRINTF(__VA_ARGS__);      \
+		PRINTF("\n");             \
+	} while (0)
+#else
+#define MYLOG(...)
+#endif
+
 /** Include the SX126x-API */
 #include <WisBlock-API.h> // Click to install library: http://librarymanager/All#WisBlock-API
 
