@@ -46,7 +46,7 @@
 #define MYLOG(...)
 #endif
 
-/** Include the SX126x-API */
+/** Include the WisBlock-API */
 #include <WisBlock-API.h> // Click to install library: http://librarymanager/All#WisBlock-API
 
 /** Application function definitions */

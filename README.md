@@ -12,7 +12,8 @@ This approach makes it easy to create applications designed for low power usage.
 
 In addition the API offers two options to setup LoRaWAN settings without the need to hard-code them into the source codes.    
 - AT Commands => [AT-Commands Manual](./AT-Commands.md)
-- BLE interface to [My nRF52 Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.my_nrf52_tb)
+- BLE interface to [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox)
+
 # _**IMPORTANT: This first release supports only the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_
 
 ----
@@ -82,7 +83,7 @@ All available AT commands can be found in the [AT-Commands Manual](./AT-Commands
 - [api-test.ino](./examples/api-test) is a very basic example that sends a dummy message over LoRaWAN
 - [environment.ino](./examples/environment) shows how to use the frequent wake up call to read sensor data from a RAK1906
 - [accelerometer.ino](./examples/accel) shows how to use an external interrupt to create a wake-up event.
-- [WisBlock Kit 2 GNSS tracker](./examples/RAK4631-Kit-2-RAK1910-RAK1904-RAK1906) is a LPWAN GNSS tracker application for the [WisBlock Kit2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel)    
+- [WisBlock Kit 2 GNSS tracker](./examples/WisBlock-Kit-2) is a LPWAN GNSS tracker application for the [WisBlock Kit2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel)    
 
 These four examples explain the usage of the API. In all examples the API callbacks and the additional functions (sensor readings, IRQ handling, GNSS location service) are separated into their own sketches.    
 - The simplest example (_**api-test.ino**_) just sends a 3 byte packet with the values 0x10, 0x00, 0x00.    
@@ -227,15 +228,33 @@ These are the required includes and definitions for the user application and the
 In this example we hard-coded the LoRaWAN credentials. It is strongly recommended **TO NOT DO THAT** to avoid duplicated node credentials    
 Alternative options to setup credentials are
 - over USB with [AT-Commands](./AT-Commands.md)
-- over BLE with [My nRF52 Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.my_nrf52_tb) 
+- over BLE with [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) 
 
 ```c++
 #include <Arduino.h>
 /** Add you required includes after Arduino.h */
 #include <Wire.h>
 
-/** Include the SX126x-API */
-#include <SX126x-API.h>
+// Debug output set to 0 to disable app debug output
+#ifndef MY_DEBUG
+#define MY_DEBUG 1
+#endif
+
+#if MY_DEBUG > 0
+#define MYLOG(tag, ...)           \
+  do                            \
+  {                             \
+    if (tag)                  \
+      PRINTF("[%s] ", tag); \
+    PRINTF(__VA_ARGS__);      \
+    PRINTF("\n");             \
+  } while (0)
+#else
+#define MYLOG(...)
+#endif
+
+/** Include the WisBlock-API */
+#include <WisBlock-API.h> // Click to install library: http://librarymanager/All#WisBlock-API
 
 /** Define the version of your SW */
 #define SW_VERSION_1 1 // major version increase on API change / not backwards compatible
@@ -243,12 +262,12 @@ Alternative options to setup credentials are
 #define SW_VERSION_3 0 // patch version increase on bugfix, no affect on API
 
 /**
- * Optional hard-coded LoRaWAN credentials for OTAA and ABP.
- * It is strongly recommended to avoid duplicated node credentials
- * Options to setup credentials are
- * - over USB with AT commands
- * - over BLE with My nRF52 Toolbox
- */
+   Optional hard-coded LoRaWAN credentials for OTAA and ABP.
+   It is strongly recommended to avoid duplicated node credentials
+   Options to setup credentials are
+   - over USB with AT commands
+   - over BLE with My nRF52 Toolbox
+*/
 uint8_t node_device_eui[8] = {0x00, 0x0D, 0x75, 0xE6, 0x56, 0x4D, 0xC1, 0xF3};
 uint8_t node_app_eui[8] = {0x70, 0xB3, 0xD5, 0x7E, 0xD0, 0x02, 0x01, 0xE1};
 uint8_t node_app_key[16] = {0x2B, 0x84, 0xE0, 0xB0, 0x9B, 0x68, 0xE5, 0xCB, 0x42, 0x17, 0x6F, 0xE7, 0x53, 0xDC, 0xEE, 0x79};
@@ -264,12 +283,12 @@ bool init_app(void);
 void app_event_handler(void);
 void ble_data_handler(void) __attribute__((weak));
 void lora_data_handler(void);
-
-/** Application stuff */
 ```
 
 Here the application name is set to **RAK-TEST**. The name will be extended with the nRF52 unique chip ID. This name is used in the BLE advertising.
 ```c++
+/** Application stuff */
+
 /** Set the device name, max length is 10 characters */
 char g_ble_dev_name[10] = "RAK-TEST";
 ```
@@ -293,55 +312,69 @@ This function is called at the very beginning of the application start. In this 
 In this example we hard-coded the LoRaWAN credentials. It is strongly recommended **TO NOT DO THAT** to avoid duplicated node credentials    
 Alternative options to setup credentials are
 - over USB with [AT-Commands](./AT-Commands.md)
-- over BLE with [My nRF52 Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.my_nrf52_tb) 
+- over BLE with [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) 
 In this function the global flag `g_enable_ble` is set. If true, the BLE interface is initialized. If false, the BLE interface is not activated, which can lower the power consumption.
 ```c++
-/**
- * @brief Application specific setup functions
- * 
- */
 void setup_app(void)
 {
-	// Enable BLE
-	g_enable_ble = true;
+  Serial.begin(115200);
+  time_t serial_timeout = millis();
+  // On nRF52840 the USB serial is not available immediately
+  while (!Serial)
+  {
+    if ((millis() - serial_timeout) < 5000)
+    {
+      delay(100);
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    }
+    else
+    {
+      break;
+    }
+  }
+  digitalWrite(LED_BUILTIN, LOW);
+  
+  MYLOG("APP", "Setup WisBlock API Example");
 
-	// Set firmware version
-	api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
+  // Enable BLE
+  g_enable_ble = true;
 
-	// Optional
-	// Setup LoRaWAN credentials hard coded
-	// It is strongly recommended to avoid duplicated node credentials
-	// Options to setup credentials are
-	// -over USB with AT commands
-	// -over BLE with My nRF52 Toolbox
+  // Set firmware version
+  api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
 
-	// Read LoRaWAN settings from flash
-	api_read_credentials();
-	// Change LoRaWAN settings
-	g_lorawan_settings.auto_join = false;							// Flag if node joins automatically after reboot
-	g_lorawan_settings.otaa_enabled = true;							// Flag for OTAA or ABP
-	memcpy(g_lorawan_settings.node_device_eui, node_device_eui, 8); // OTAA Device EUI MSB
-	memcpy(g_lorawan_settings.node_app_eui, node_app_eui, 8);		// OTAA Application EUI MSB
-	memcpy(g_lorawan_settings.node_app_key, node_app_key, 16);		// OTAA Application Key MSB
-	memcpy(g_lorawan_settings.node_nws_key, node_nws_key, 16);		// ABP Network Session Key MSB
-	memcpy(g_lorawan_settings.node_apps_key, node_apps_key, 16);	// ABP Application Session key MSB
-	g_lorawan_settings.node_dev_addr = 0x26021FB4;					// ABP Device Address MSB
-	g_lorawan_settings.send_repeat_time = 120000;					// Send repeat time in milliseconds: 2 * 60 * 1000 => 2 minutes
-	g_lorawan_settings.adr_enabled = false;							// Flag for ADR on or off
-	g_lorawan_settings.public_network = true;						// Flag for public or private network
-	g_lorawan_settings.duty_cycle_enabled = false;					// Flag to enable duty cycle (validity depends on Region)
-	g_lorawan_settings.join_trials = 5;								// Number of join retries
-	g_lorawan_settings.tx_power = 0;								// TX power 0 .. 15 (validity depends on Region)
-	g_lorawan_settings.data_rate = 3;								// Data rate 0 .. 15 (validity depends on Region)
-	g_lorawan_settings.lora_class = 0;								// LoRaWAN class 0: A, 2: C, 1: B is not supported
-	g_lorawan_settings.subband_channels = 1;						// Subband channel selection 1 .. 9
-	g_lorawan_settings.app_port = 2;								// Data port to send data
-	g_lorawan_settings.confirmed_msg_enabled = LMH_UNCONFIRMED_MSG; // Flag to enable confirmed messages
-	g_lorawan_settings.resetRequest = true;							// Command from BLE to reset device
-	g_lorawan_settings.lora_region = LORAMAC_REGION_AS923_3;		// LoRa region
-	// Save LoRaWAN settings
-	api_set_credentials();
-}
+  // Optional
+  // Setup LoRaWAN credentials hard coded
+  // It is strongly recommended to avoid duplicated node credentials
+  // Options to setup credentials are
+  // -over USB with AT commands
+  // -over BLE with My nRF52 Toolbox
+
+  // Read LoRaWAN settings from flash
+  api_read_credentials();
+  // Change LoRaWAN settings
+  g_lorawan_settings.auto_join = true;							// Flag if node joins automatically after reboot
+  g_lorawan_settings.otaa_enabled = true;							// Flag for OTAA or ABP
+  memcpy(g_lorawan_settings.node_device_eui, node_device_eui, 8); // OTAA Device EUI MSB
+  memcpy(g_lorawan_settings.node_app_eui, node_app_eui, 8);		// OTAA Application EUI MSB
+  memcpy(g_lorawan_settings.node_app_key, node_app_key, 16);		// OTAA Application Key MSB
+  memcpy(g_lorawan_settings.node_nws_key, node_nws_key, 16);		// ABP Network Session Key MSB
+  memcpy(g_lorawan_settings.node_apps_key, node_apps_key, 16);	// ABP Application Session key MSB
+  g_lorawan_settings.node_dev_addr = 0x26021FB4;					// ABP Device Address MSB
+  g_lorawan_settings.send_repeat_time = 120000;					// Send repeat time in milliseconds: 2 * 60 * 1000 => 2 minutes
+  g_lorawan_settings.adr_enabled = false;							// Flag for ADR on or off
+  g_lorawan_settings.public_network = true;						// Flag for public or private network
+  g_lorawan_settings.duty_cycle_enabled = false;					// Flag to enable duty cycle (validity depends on Region)
+  g_lorawan_settings.join_trials = 5;								// Number of join retries
+  g_lorawan_settings.tx_power = 0;								// TX power 0 .. 15 (validity depends on Region)
+  g_lorawan_settings.data_rate = 3;								// Data rate 0 .. 15 (validity depends on Region)
+  g_lorawan_settings.lora_class = 0;								// LoRaWAN class 0: A, 2: C, 1: B is not supported
+  g_lorawan_settings.subband_channels = 1;						// Subband channel selection 1 .. 9
+  g_lorawan_settings.app_port = 2;								// Data port to send data
+  g_lorawan_settings.confirmed_msg_enabled = LMH_UNCONFIRMED_MSG; // Flag to enable confirmed messages
+  g_lorawan_settings.resetRequest = true;							// Command from BLE to reset device
+  g_lorawan_settings.lora_region = LORAMAC_REGION_AS923_3;		// LoRa region
+  // Save LoRaWAN settings
+  api_set_credentials();
 ```
 
 ----
@@ -378,69 +411,64 @@ if ((g_task_event_type & STATUS) == STATUS)
 The **STATUS** event is used to send frequently uplink packets to the LoRaWAN server.    
 In this example code we restart as well the BLE advertising for 15 seconds. Otherwise BLE adverstising is only active for 30 seconds after power-up/reset.    
 ```c++
-/**
- * @brief Application specific event handler
- *        Requires as minimum the handling of STATUS event
- *        Here you handle as well your application specific events
- */
 void app_event_handler(void)
 {
-	// Timer triggered event
-	if ((g_task_event_type & STATUS) == STATUS)
-	{
-		g_task_event_type &= N_STATUS;
-		MYLOG("APP", "Timer wakeup");
+  // Timer triggered event
+  if ((g_task_event_type & STATUS) == STATUS)
+  {
+    g_task_event_type &= N_STATUS;
+    MYLOG("APP", "Timer wakeup");
 
-		// If BLE is enabled, restart Advertising
-		if (g_enable_ble)
-		{
-			restart_advertising(15);
-		}
+    // If BLE is enabled, restart Advertising
+    if (g_enable_ble)
+    {
+      restart_advertising(15);
+    }
 
-		if (lora_busy)
-		{
-			MYLOG("APP", "LoRaWAN TX cycle not finished, skip this event");
-			if (g_ble_uart_is_connected)
-			{
-				g_ble_uart.println("LoRaWAN TX cycle not finished, skip this event");
-			}
-		}
-		else
-		{
+    if (lora_busy)
+    {
+      MYLOG("APP", "LoRaWAN TX cycle not finished, skip this event");
+      if (g_ble_uart_is_connected)
+      {
+        g_ble_uart.println("LoRaWAN TX cycle not finished, skip this event");
+      }
+    }
+    else
+    {
 
-			// Dummy packet
+      // Dummy packet
 
-			uint8_t dummy_packet[] = {0x10, 0x00, 0x00};
+      uint8_t dummy_packet[] = {0x10, 0x00, 0x00};
 
-			lmh_error_status result = send_lora_packet(dummy_packet, 3);
-			switch (result)
-			{
-			case LMH_SUCCESS:
-				MYLOG("APP", "Packet enqueued");
-				// Set a flag that TX cycle is running
-				lora_busy = true;
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("Packet enqueued");
-				}
-				break;
-			case LMH_BUSY:
-				MYLOG("APP", "LoRa transceiver is busy");
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("LoRa transceiver is busy");
-				}
-				break;
-			case LMH_ERROR:
-				MYLOG("APP", "Packet error, too big to send with current DR");
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("Packet error, too big to send with current DR");
-				}
-				break;
-			}
-		}
-	}
+      lmh_error_status result = send_lora_packet(dummy_packet, 3);
+      switch (result)
+      {
+        case LMH_SUCCESS:
+          MYLOG("APP", "Packet enqueued");
+          // Set a flag that TX cycle is running
+          lora_busy = true;
+          if (g_ble_uart_is_connected)
+          {
+            g_ble_uart.println("Packet enqueued");
+          }
+          break;
+        case LMH_BUSY:
+          MYLOG("APP", "LoRa transceiver is busy");
+          if (g_ble_uart_is_connected)
+          {
+            g_ble_uart.println("LoRa transceiver is busy");
+          }
+          break;
+        case LMH_ERROR:
+          MYLOG("APP", "Packet error, too big to send with current DR");
+          if (g_ble_uart_is_connected)
+          {
+            g_ble_uart.println("Packet error, too big to send with current DR");
+          }
+          break;
+      }
+    }
+  }
 }
 ```
 
@@ -450,36 +478,32 @@ void app_event_handler(void)
 This callback is used to handle data received over the BLE UART. If you do not need BLE UART functionality, you can remove this function completely.
 In this example we forward the received BLE UART data to the AT command interpreter. This way, we can submit AT commands either over the USB port or over the BLE UART port.    
 ```c++
-/**
- * @brief Handle BLE UART data
- * 
- */
 void ble_data_handler(void)
 {
-	if (g_enable_ble)
-	{
-		/**************************************************************/
-		/**************************************************************/
-		/// \todo BLE UART data arrived
-		/// \todo or forward them to the AT command interpreter
-		/// \todo parse them here
-		/**************************************************************/
-		/**************************************************************/
-		if ((g_task_event_type & BLE_DATA) == BLE_DATA)
-		{
-			MYLOG("AT", "RECEIVED BLE");
-			// BLE UART data arrived
-			// in this example we forward it to the AT command interpreter
-			g_task_event_type &= N_BLE_DATA;
+  if (g_enable_ble)
+  {
+    /**************************************************************/
+    /**************************************************************/
+    /// \todo BLE UART data arrived
+    /// \todo or forward them to the AT command interpreter
+    /// \todo parse them here
+    /**************************************************************/
+    /**************************************************************/
+    if ((g_task_event_type & BLE_DATA) == BLE_DATA)
+    {
+      MYLOG("AT", "RECEIVED BLE");
+      // BLE UART data arrived
+      // in this example we forward it to the AT command interpreter
+      g_task_event_type &= N_BLE_DATA;
 
-			while (g_ble_uart.available() > 0)
-			{
-				at_serial_input(uint8_t(g_ble_uart.read()));
-				delay(5);
-			}
-			at_serial_input(uint8_t('\n'));
-		}
-	}
+      while (g_ble_uart.available() > 0)
+      {
+        at_serial_input(uint8_t(g_ble_uart.read()));
+        delay(5);
+      }
+      at_serial_input(uint8_t('\n'));
+    }
+  }
 }
 ```
 
@@ -498,86 +522,82 @@ The event **LORA_TX_FIN** is triggered after sending an uplink packet is finishe
 The event **LORA_JOIN_FIN** is called after the Join request/Join accept/reject cycle is finished. The global flag `g_task_event_type` contains the result of the Join request. If true, the node has joined the network. If false the join didn't succeed. In this case the join cycle could be restarted or the node could report an error.
 
 ```c++
-/**
- * @brief Handle received LoRa Data
- * 
- */
 void lora_data_handler(void)
 {
-	// LoRa data handling
-	if ((g_task_event_type & LORA_DATA) == LORA_DATA)
-	{
-		/**************************************************************/
-		/**************************************************************/
-		/// \todo LoRa data arrived
-		/// \todo parse them here
-		/**************************************************************/
-		/**************************************************************/
-		g_task_event_type &= N_LORA_DATA;
-		MYLOG("APP", "Received package over LoRa");
-		char log_buff[g_rx_data_len * 3] = {0};
-		uint8_t log_idx = 0;
-		for (int idx = 0; idx < g_rx_data_len; idx++)
-		{
-			sprintf(&log_buff[log_idx], "%02X ", g_rx_lora_data[idx]);
-			log_idx += 3;
-		}
-		lora_busy = false;
-		MYLOG("APP", "%s", log_buff);
+  // LoRa data handling
+  if ((g_task_event_type & LORA_DATA) == LORA_DATA)
+  {
+    /**************************************************************/
+    /**************************************************************/
+    /// \todo LoRa data arrived
+    /// \todo parse them here
+    /**************************************************************/
+    /**************************************************************/
+    g_task_event_type &= N_LORA_DATA;
+    MYLOG("APP", "Received package over LoRa");
+    char log_buff[g_rx_data_len * 3] = {0};
+    uint8_t log_idx = 0;
+    for (int idx = 0; idx < g_rx_data_len; idx++)
+    {
+      sprintf(&log_buff[log_idx], "%02X ", g_rx_lora_data[idx]);
+      log_idx += 3;
+    }
+    lora_busy = false;
+    MYLOG("APP", "%s", log_buff);
 
-		if (g_ble_uart_is_connected && g_enable_ble)
-		{
-			for (int idx = 0; idx < g_rx_data_len; idx++)
-			{
-				g_ble_uart.printf("%02X ", g_rx_lora_data[idx]);
-			}
-			g_ble_uart.println("");
-		}
-	}
+    if (g_ble_uart_is_connected && g_enable_ble)
+    {
+      for (int idx = 0; idx < g_rx_data_len; idx++)
+      {
+        g_ble_uart.printf("%02X ", g_rx_lora_data[idx]);
+      }
+      g_ble_uart.println("");
+    }
+  }
 
-	// LoRa TX finished handling
-	if ((g_task_event_type & LORA_TX_FIN) == LORA_TX_FIN)
-	{
-		g_task_event_type &= N_LORA_TX_FIN;
+  // LoRa TX finished handling
+  if ((g_task_event_type & LORA_TX_FIN) == LORA_TX_FIN)
+  {
+    g_task_event_type &= N_LORA_TX_FIN;
 
-		MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-		if (g_ble_uart_is_connected)
-		{
-			g_ble_uart.printf("LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-		}
+    MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
+    if (g_ble_uart_is_connected)
+    {
+      g_ble_uart.printf("LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
+    }
 
-		if (!g_rx_fin_result)
-		{
-			// Increase fail send counter
-			send_fail++;
+    if (!g_rx_fin_result)
+    {
+      // Increase fail send counter
+      send_fail++;
 
-			if (send_fail == 10)
-			{
-				// Too many failed sendings, reset node and try to rejoin
-				delay(100);
-				sd_nvic_SystemReset();
-			}
-		}
+      if (send_fail == 10)
+      {
+        // Too many failed sendings, reset node and try to rejoin
+        delay(100);
+        sd_nvic_SystemReset();
+      }
+    }
 
-		// Clear the LoRa TX flag
-		lora_busy = false;
-	}
+    // Clear the LoRa TX flag
+    lora_busy = false;
+  }
 
-	// LoRa Join finished handling
-	if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
-	{
-		g_task_event_type &= N_LORA_JOIN_FIN;
-		if (g_join_result)
-		{
-			MYLOG("APP", "Successfully joined network");
-		}
-		else
-		{
-			MYLOG("APP", "Join network failed");
-			/// \todo here join could be restarted.
-			// lmh_join();
-		}
-	}
+  // LoRa Join finished handling
+  if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
+  {
+    g_task_event_type &= N_LORA_JOIN_FIN;
+    if (g_join_result)
+    {
+      MYLOG("APP", "Successfully joined network");
+    }
+    else
+    {
+      MYLOG("APP", "Join network failed");
+      /// \todo here join could be restarted.
+      // lmh_join();
+    }
+  }
 }
 ```
 
@@ -590,8 +610,17 @@ In Arduino it is not possible to define settings in the .ino file that can contr
 
 ----
 ### Debug Log Output
-To enable/disable the application debug (**`MYLOG()`**) open the file [**`WisBlock-API.h`**](./src/WisBlock.h) in the libraries source folder.    
+To enable/disable the API debug (**`API_LOG()`**) open the file [**`WisBlock-API.h`**](./src/WisBlock.h) in the libraries source folder.    
 Look for 
+```c++
+#define API_DEBUG 1
+```
+in the file.      
+
+    0 -> No debug output
+    1 -> API debug output
+
+To enable/disable the application debug (**`MY_LOG()`**) You can find in the examples (either in the .ino file or app.h)     
 ```c++
 #define MY_DEBUG 1
 ```
@@ -599,6 +628,7 @@ in the file.
 
     0 -> No debug output
     1 -> Application debug output
+
 
 ----
 
@@ -616,6 +646,11 @@ in the file **`WisBlock-API`**
 
 ## PlatformIO
 Debug output can be controlled by defines in the platformio.ini
+**`API_DEBUG`** controls debug output of the WisBlock API
+
+    0 -> No debug outpuy
+    1 -> WisBlock API debug output
+
 **`MY_DEBUG`** controls debug output of the application itself
 
     0 -> No debug outpuy
@@ -629,6 +664,7 @@ Debug output can be controlled by defines in the platformio.ini
 Example for no debug output and no blue LED
 ```ini
 build_flags = 
+	-DAPI_DEBUG=0    ; 0 Disable WisBlock API debug output
 	-DMY_DEBUG=0     ; 0 Disable application debug output
 	-DNO_BLE_LED=1   ; 1 Disable blue LED as BLE notificator
 ```

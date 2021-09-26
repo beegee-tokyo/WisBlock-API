@@ -34,7 +34,7 @@
 bool init_bme680(void);
 uint8_t read_bme680(void);
 
-/** Include the SX126x-API */
+/** Include the WisBlock-API */
 #include <WisBlock-API.h> // Click to install library: http://librarymanager/All#WisBlock-API
 
 /** Define the version of your SW */

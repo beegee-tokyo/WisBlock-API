@@ -55,7 +55,7 @@ struct acc_data_s
 };
 acc_data_s g_acc_data;
 
-/** Include the SX126x-API */
+/** Include the WisBlock-API */
 #include <WisBlock-API.h> // Click to install library: http://librarymanager/All#WisBlock-API
 
 /** Define the version of your SW */
