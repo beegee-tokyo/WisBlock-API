@@ -679,7 +679,7 @@ static int at_query_datarate(void)
  */
 static int at_exec_datarate(char *str)
 {
-	int8_t datarate;
+	uint8_t datarate;
 
 	datarate = strtol(str, NULL, 0);
 
@@ -750,6 +750,11 @@ static int at_exec_txpower(char *str)
 	uint8_t tx_power;
 
 	tx_power = strtol(str, NULL, 0);
+
+	if (tx_power > 10)
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
 
 	g_lorawan_settings.tx_power = tx_power;
 
