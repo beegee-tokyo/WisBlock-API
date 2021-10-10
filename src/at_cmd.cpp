@@ -554,7 +554,7 @@ static int at_exec_join(char *str)
 	uint8_t nbtrials;
 	char *param;
 
-	param = strtok(str, ",");
+	param = strtok(str, ":");
 
 	/* check start or stop join parameter */
 	bJoin = strtol(param, NULL, 0);
@@ -564,7 +564,7 @@ static int at_exec_join(char *str)
 	}
 
 	/* check auto join parameter */
-	param = strtok(NULL, ",");
+	param = strtok(NULL, ":");
 	if (param != NULL)
 	{
 		autoJoin = strtol(param, NULL, 0);
@@ -574,13 +574,13 @@ static int at_exec_join(char *str)
 		}
 		g_lorawan_settings.auto_join = (autoJoin == 1 ? true : false);
 
-		param = strtok(NULL, ",");
+		param = strtok(NULL, ":");
 		if (param != NULL)
 		{
 			// join interval, not support yet.
 
 			// join attemps number
-			param = strtok(NULL, ",");
+			param = strtok(NULL, ":");
 			if (param != NULL)
 			{
 				nbtrials = strtol(param, NULL, 0);
@@ -598,6 +598,15 @@ static int at_exec_join(char *str)
 			// Manual join only works if LoRaWAN was not initialized yet.
 			// If LoRaWAN was already initialized, a restart is required
 			init_lora();
+			return 0;
+		}
+
+		if ((bJoin == 1) && g_lorawan_initialized && (lmh_join_status_get() != LMH_SET))
+		{
+			// If if not yet joined, start join
+			delay(100);
+			lmh_join();
+			return 0;
 		}
 
 		if ((bJoin == 1) && g_lorawan_settings.auto_join)
