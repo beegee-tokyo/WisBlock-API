@@ -89,6 +89,62 @@ static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length)
 	return cur - bin;
 }
 
+void at_settings(void)
+{
+	Serial.printf("LoRaWAN status:\n");
+	Serial.printf("   Auto join %s\n", g_lorawan_settings.auto_join ? "enabled" : "disabled");
+	Serial.printf("   OTAA %s\n", g_lorawan_settings.otaa_enabled ? "enabled" : "disabled");
+	Serial.printf("   Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
+				  g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
+				  g_lorawan_settings.node_device_eui[4], g_lorawan_settings.node_device_eui[5],
+				  g_lorawan_settings.node_device_eui[6], g_lorawan_settings.node_device_eui[7]);
+	Serial.printf("   App EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
+				  g_lorawan_settings.node_app_eui[2], g_lorawan_settings.node_app_eui[3],
+				  g_lorawan_settings.node_app_eui[4], g_lorawan_settings.node_app_eui[5],
+				  g_lorawan_settings.node_app_eui[6], g_lorawan_settings.node_app_eui[7]);
+	Serial.printf("   App Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
+				  g_lorawan_settings.node_app_key[0], g_lorawan_settings.node_app_key[1],
+				  g_lorawan_settings.node_app_key[2], g_lorawan_settings.node_app_key[3],
+				  g_lorawan_settings.node_app_key[4], g_lorawan_settings.node_app_key[5],
+				  g_lorawan_settings.node_app_key[6], g_lorawan_settings.node_app_key[7],
+				  g_lorawan_settings.node_app_key[8], g_lorawan_settings.node_app_key[9],
+				  g_lorawan_settings.node_app_key[10], g_lorawan_settings.node_app_key[11],
+				  g_lorawan_settings.node_app_key[12], g_lorawan_settings.node_app_key[13],
+				  g_lorawan_settings.node_app_key[14], g_lorawan_settings.node_app_key[15]);
+	Serial.printf("   NWS Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
+				  g_lorawan_settings.node_nws_key[0], g_lorawan_settings.node_nws_key[1],
+				  g_lorawan_settings.node_nws_key[2], g_lorawan_settings.node_nws_key[3],
+				  g_lorawan_settings.node_nws_key[4], g_lorawan_settings.node_nws_key[5],
+				  g_lorawan_settings.node_nws_key[6], g_lorawan_settings.node_nws_key[7],
+				  g_lorawan_settings.node_nws_key[8], g_lorawan_settings.node_nws_key[9],
+				  g_lorawan_settings.node_nws_key[10], g_lorawan_settings.node_nws_key[11],
+				  g_lorawan_settings.node_nws_key[12], g_lorawan_settings.node_nws_key[13],
+				  g_lorawan_settings.node_nws_key[14], g_lorawan_settings.node_nws_key[15]);
+	Serial.printf("   Apps Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
+				  g_lorawan_settings.node_apps_key[0], g_lorawan_settings.node_apps_key[1],
+				  g_lorawan_settings.node_apps_key[2], g_lorawan_settings.node_apps_key[3],
+				  g_lorawan_settings.node_apps_key[4], g_lorawan_settings.node_apps_key[5],
+				  g_lorawan_settings.node_apps_key[6], g_lorawan_settings.node_apps_key[7],
+				  g_lorawan_settings.node_apps_key[8], g_lorawan_settings.node_apps_key[9],
+				  g_lorawan_settings.node_apps_key[10], g_lorawan_settings.node_apps_key[11],
+				  g_lorawan_settings.node_apps_key[12], g_lorawan_settings.node_apps_key[13],
+				  g_lorawan_settings.node_apps_key[14], g_lorawan_settings.node_apps_key[15]);
+	Serial.printf("   Dev Addr %08lX\n", g_lorawan_settings.node_dev_addr);
+	Serial.printf("   Repeat time %ld\n", g_lorawan_settings.send_repeat_time);
+	Serial.printf("   ADR %s\n", g_lorawan_settings.adr_enabled ? "enabled" : "disabled");
+	Serial.printf("   %s Network\n", g_lorawan_settings.public_network ? "Public" : "Private");
+	Serial.printf("   Dutycycle %s\n", g_lorawan_settings.duty_cycle_enabled ? "enabled" : "disabled");
+	Serial.printf("   Join trials %d\n", g_lorawan_settings.join_trials);
+	Serial.printf("   TX Power %d\n", g_lorawan_settings.tx_power);
+	Serial.printf("   DR %d\n", g_lorawan_settings.data_rate);
+	Serial.printf("   Class %d\n", g_lorawan_settings.lora_class);
+	Serial.printf("   Subband %d\n", g_lorawan_settings.subband_channels);
+	Serial.printf("   Fport %d\n", g_lorawan_settings.app_port);
+	Serial.printf("   %s Message\n", g_lorawan_settings.confirmed_msg_enabled ? "Confirmed" : "Unconfirmed");
+	Serial.printf("   Region %d\n", g_lorawan_settings.lora_region);
+	Serial.printf("   Network %s\n", g_lpwan_has_joined ? "joined" : "not joined");
+}
+
 /**
  * @brief AT+BAND=? Get regional frequency band
  * 
@@ -806,6 +862,48 @@ static int at_exec_sendfreq(char *str)
 	return 0;
 }
 
+/** LoRaWAN application data buffer. */
+uint8_t m_lora_app_data_buffer[256];
+
+static int at_exec_send(char *str)
+{
+	if (!g_lpwan_has_joined)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+
+	// Get fPort
+	char *param;
+
+	param = strtok(str, ":");
+	uint16_t fPort = strtol(param, NULL, 0);
+	if ((fPort == 0) || (fPort > 255))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	// Get data to send
+	param = strtok(NULL, ":");
+	int data_size = strlen(param);
+	if (!(data_size % 2 == 0) || (data_size > 254))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	int buff_idx = 0;
+	char buff_parse[3];
+	for (int idx = 0; idx <= data_size + 1; idx += 2)
+	{
+		buff_parse[0] = param[idx];
+		buff_parse[1] = param[idx + 1];
+		buff_parse[2] = 0;
+		m_lora_app_data_buffer[buff_idx] = strtol(buff_parse, NULL, 16);
+		buff_idx++;
+	}
+	send_lora_packet(m_lora_app_data_buffer, data_size / 2, fPort);
+	return 0;
+}
+
 /**
  * @brief AT+BATT=? Get current battery value (0 to 255)
  * 
@@ -867,6 +965,14 @@ static int at_exec_reboot(void)
 	return 0;
 }
 
+static int at_query_status(void)
+{
+	log_settings();
+	snprintf(g_at_query_buf, ATQUERY_SIZE, " ");
+
+	return 0;
+}
+
 /**
  * @brief ATR Restore flash defaults
  * 
@@ -903,6 +1009,7 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+NJS", "Get the join status", at_query_join_status, NULL, NULL},
 	{"+NJM", "Get or set the network join mode", at_query_joinmode, at_exec_joinmode, NULL},
 	{"+SENDFREQ", "Get or Set the automatic send time", at_query_sendfreq, at_exec_sendfreq, NULL},
+	{"+SEND", "Send data", NULL, at_exec_send, NULL},
 	// LoRa network management
 	{"+ADR", "Get or set the adaptive data rate setting", at_query_adr, at_exec_adr, NULL},
 	{"+CLASS", "Get or set the device class", at_query_class, at_exec_class, NULL},
@@ -915,6 +1022,7 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+RSSI", "Last RX packet RSSI", at_query_rssi, NULL, NULL},
 	{"+SNR", "Last RX packet SNR", at_query_snr, NULL, NULL},
 	{"+VER", "Get SW version", at_query_version, NULL, NULL},
+	{"+STATUS", "Show LoRaWAN status", at_query_status, NULL, NULL},
 };
 
 /**

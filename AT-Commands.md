@@ -32,6 +32,7 @@ The Serial port is setup for 115200 baud, 8N1. It cannot be changed by AT comman
 * [AT+NJS](#atnjs)
 * [AT+NJM](#atnjm)
 * [AT+SENDFREQ](#atsendfreq)
+* [AT+SEND](#atsend)
 * [AT+ADR](#atadr)
 * [AT+CLASS](#atclass)
 * [AT+DR](#atdr)
@@ -42,7 +43,9 @@ The Serial port is setup for 115200 baud, 8N1. It cannot be changed by AT comman
 * [AT+RSSI](#atrssi)
 * [AT+SNR](#atsnr)
 * [AT+VER](#atver)
-* [Appendix](#appendix-1)
+* [AT+STATUS](#atstatus)
+
+### [Appendix](#appendix-1)
 	* [Appendix I Data Rate by Region](#appendix-i-data-rate-by-region)
 	* [Appendix II TX Power by Region](#appendix-ii-tx-power-by-region)
 	* [Appendix III Maximum Transmission Load by Region](#appendix-iii-maximum-transmission-load-by-region)
@@ -111,7 +114,7 @@ AT command list
 +++++++++++++++
 AT?         AT commands
 ATR         Restore default
-ATZ         Trig a MCU reset
+ATZ		ATZ Trig a MCU reset
 AT+APPEUI   Get or set the application EUI
 AT+APPKEY   Get or set the application key
 AT+DEVEUI   Get or set the device EUI
@@ -123,6 +126,7 @@ AT+JOIN     Join network
 AT+NJS      Get the join status
 AT+NJM      Get or set the network join mode
 AT+SENDFREQ Get or Set the automatic send time
+AT+SEND	Send data
 AT+ADR      Get or set the adaptive data rate setting
 AT+CLASS    Get or set the device class
 AT+DR       Get or Set the Tx DataRate=[0..7]
@@ -133,9 +137,11 @@ AT+BAT      Get battery level
 AT+RSSI     Last RX packet RSSI
 AT+SNR      Last RX packet SNR
 AT+VER      Get SW version
+AT+STATUS	Show LoRaWAN status
 +++++++++++++++
 
 OK
+
 ```
 [Back](#content)    
 
@@ -162,7 +168,7 @@ This command is used to trigger an MCU reset.
 
 | Command | Input Parameter | Return Value             | Return Code |
 | ------- | --------------- | ------------------------ | ----------- |
-| ATZ?    | -               | `ATZ Trig a MCU reset`   | `OK`        |
+| ATZ?    | -               | `ATZ: Trig a MCU reset`   | `OK`        |
 | ATZ     | -               | *No return. MCU resets.* | `OK`        |
 
 [Back](#content)    
@@ -177,7 +183,7 @@ This command allows the user to access and configure the APPEUI.
 
 | Command                       | Input Parameter | Return Value                                               | Return Code              |
 | ----------------------------- | --------------- | ---------------------------------------------------------- | ------------------------ |
-| AT+APPEUI?                    | -               | `AT+APPEUI Get or Set the App Eui` | `OK`                     |
+| AT+APPEUI?                    | -               | `AT+APPEUI: Get or Set the App Eui` | `OK`                     |
 | AT+APPEUI=?                   | -               | *< 8 hex >*                                                | `OK`                     |
 | AT+APPEUI=`<Input Parameter>` | *< 8 hex >*     | -                                                          | `OK` or `AT_PARAM_ERROR` |
 
@@ -186,12 +192,12 @@ This command allows the user to access and configure the APPEUI.
 ```
 AT+APPEUI?
 
-+APPEUI:"Get or set the application EUI"
++APPEUI: Get or set the application EUI 
 OK
 
 AT+APPEUI=?
 
-+APPEUI:70b3d57ed00201e1
+AT+APPEUI:70b3d57ed00201e1
 OK
 
 AT+APPEUI=70b3d57ed00201e1
@@ -215,7 +221,7 @@ This command allows the user to access and configure the APPKEY.
 
 | Command                       | Input Parameter | Return Value                                                                       | Return Code              |
 | ----------------------------- | --------------- | ---------------------------------------------------------------------------------- | ------------------------ |
-| AT+APPKEY?                    | -               | `AT+APPKEY Get or Set the Application Key` | `OK`                     |
+| AT+APPKEY?                    | -               | `AT+APPKEY: Get or Set the Application Key` | `OK`                     |
 | AT+APPKEY=?                   | -               | *< 16 hex >*                                                                       | `OK`                     |
 | AT+APPKEY=`<Input Parameter>` | *< 16 hex >*    | -                                                                                  | `OK` or `AT_PARAM_ERROR` |
 
@@ -224,12 +230,12 @@ This command allows the user to access and configure the APPKEY.
 ```
 AT+APPKEY?
 
-+APPKEY:"Get or set the application key"
+AT+APPKEY: Get or set the application key 
 OK
 
 AT+APPKEY=?
 
-+APPKEY:2b84e0b09b68e5cb42176fe753dcee79
+AT+APPKEY:2b84e0b09b68e5cb42176fe753dcee79
 OK
 
 AT+APPKEY=2b84e0b09b68e5cb42176fe753dcee79
@@ -253,7 +259,7 @@ This command allows the user to access and configure the device EUI or DEVEUI.
 
 | Command                       | Input Parameter | Return Value                                                  | Return Code              |
 | ----------------------------- | --------------- | ------------------------------------------------------------- | ------------------------ |
-| AT+DEVEUI?                    | -               | `AT+DEVEUI Get or Set the Device EUI` | `OK`                     |
+| AT+DEVEUI?                    | -               | `AT+DEVEUI: Get or Set the Device EUI` | `OK`                     |
 | AT+DEVEUI=?                   | -               | *< 8 hex >*                                                   | `OK`                     |
 | AT+DEVEUI=`<Input Parameter>` | *< 8 hex >*     | -                                                             | `OK` or `AT_PARAM_ERROR` |
 
@@ -262,7 +268,7 @@ This command allows the user to access and configure the device EUI or DEVEUI.
 ```
 AT+DEVEUI?
 
-+DEVEUI:"Get or set the device EUI"
++DEVEUI: Get or set the device EUI 
 OK
 
 AT+DEVEUI=?
@@ -291,7 +297,7 @@ This command allows the user to access and configure the application session key
 
 | Command                        | Input Parameter | Return Value                                                                                | Return Code              |
 | ------------------------------ | --------------- | ------------------------------------------------------------------------------------------- | ------------------------ |
-| AT+APPSKEY?                    | -               | `AT+APPSKEY Get or Set the Application Session Key` | `OK`                     |
+| AT+APPSKEY?                    | -               | `AT+APPSKEY: Get or Set the Application Session Key` | `OK`                     |
 | AT+APPSKEY=?                   | -               | *< 16 hex >*                                                                                | `OK`                     |
 | AT+APPSKEY=`<Input Parameter>` | *< 16 hex >*    | -                                                                                           | `OK` or `AT_PARAM_ERROR` |
 
@@ -300,12 +306,12 @@ This command allows the user to access and configure the application session key
 ```
 AT+APPSKEY?
 
-+APPSKEY:"Get or set the application session key"
+AT+APPSKEY: Get or set the application session key 
 OK
 
 AT+APPSKEY=?
 
-+APPSKEY:3f6a66459d5edca63cbc4619cd61a11e
+AT+APPSKEY:3f6a66459d5edca63cbc4619cd61a11e
 OK
 
 AT+APPSKEY=3f6a66459d5edca63cbc4619cd61a11e
@@ -329,7 +335,7 @@ This command allows the user to access and configure the network session keys or
 
 | Command                        | Input Parameter | Return Value                                                                                | Return Code              |
 | ------------------------------ | --------------- | ------------------------------------------------------------------------------------------- | ------------------------ |
-| AT+NWKSKEY?                    | -               | `AT+NWKSKEY Get or Set the Network Session Key` | `OK`                     |
+| AT+NWKSKEY?                    | -               | `AT+NWKSKEY: Get or Set the Network Session Key` | `OK`                     |
 | AT+NWKSKEY=?                   | -               | *< 16 hex >*                                                                                | `OK`                     |
 | AT+NWKSKEY=`<Input Parameter>` | *< 16 hex >*    | -                                                                                           | `OK` or `AT_PARAM_ERROR` |
 
@@ -338,12 +344,12 @@ This command allows the user to access and configure the network session keys or
 ```
 AT+NWKSKEY?
 
-+NWKSKEY:"Get or Set the network session key"
+AT+NWKSKEY: Get or Set the network session key 
 OK
 
 AT+NWKSKEY=?
 
-+NWKSKEY:323d155a000df335307a16da0c9df53f
+AT+NWKSKEY:323d155a000df335307a16da0c9df53f
 OK
 
 AT+NWKSKEY=323d155a000df335307a16da0c9df53f
@@ -367,7 +373,7 @@ This command allows the user to access and configure the device address or DEVAD
 
 | Command                        | Input Parameter | Return Value                                               | Return Code              |
 | ------------------------------ | --------------- | ---------------------------------------------------------- | ------------------------ |
-| AT+DEVADDR?                    | -               | `AT+DEVADDR Get or Set the Device address` | `OK`                     |
+| AT+DEVADDR?                    | -               | `AT+DEVADDR: Get or Set the Device address` | `OK`                     |
 | AT+DEVADDR=?                   | -               | *< 4 hex >*                                                | `OK`                     |
 | AT+DEVADDR=`<Input Parameter>` | *< 4 hex >*     | -                                                          | `OK` or `AT_PARAM_ERROR` |
 
@@ -376,12 +382,12 @@ This command allows the user to access and configure the device address or DEVAD
 ```
 AT+DEVADDR?
 
-+DEVADDR:"Get or set the device address"
+AT+DEVADDR: Get or set the device address 
 OK
 
 AT+DEVADDR=?
 
-+DEVADDR:26021FB0
+AT+DEVADDR:26021FB0
 
 OK
 
@@ -406,21 +412,21 @@ This command allows the user to access and configure type of payload of the devi
 
 | Command                    | Input Parameter | Return Value                               | Return Code            |
 | -------------------------- | --------------- | ------------------------------------------ | ---------------------- |
-| AT+CFM?                    | -               | AT+CFM: get or set the confirm mode  | OK                     |
-| AT+CFM=?                   | -               | 0 *(if Unconfirmed) or* 1 *(if confirmed)* | OK                     |
-| AT+CFM=`<Input Parameter>` | 0 or 1          | -                                          | OK *or* AT_PARAM_ERROR |
+| AT+CFM?                    | -               | `AT+CFM: get or set the confirm mode`  | `OK`                     |
+| AT+CFM=?                   | -               | 0 *(if Unconfirmed) or* 1 *(if confirmed)* | `OK`                     |
+| AT+CFM=`<Input Parameter>` | 0 or 1          | -                                          | `OK` *or* `AT_PARAM_ERROR` |
 
 **Examples**:
 
 ```
 AT+CFM?
 
-+CFM:"Get or set the confirm mode"
+AT+CFM: Get or set the confirm mode 
 OK
 
 AT+CFM=?
 
-+CFM:0
+AT+CFM:0
 OK
 
 AT+CFM=0
@@ -444,9 +450,9 @@ This command allows the user to join a LoRaWAN® network.
 
 | Command                     | Input Parameter                                                                                    | Return Value                     | Return Code           |
 | --------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------- | --------------------- |
-| AT+JOIN?                    | -                                                                                                  | AT+JOIN: join network            | OK                    |
-| AT+JOIN=?                   | -                                                                                                  | *Param1, Param2, Param3, Param4* | OK *or* AT_BUSY_ERROR |
-| AT+JOIN=`<Input Parameter>` | *Param1:Param2:Param3:Param4*                                                                      | -                                | OK                    |
+| AT+JOIN?                    | -                                                                                                  | `AT+JOIN: join network`            | `OK`                    |
+| AT+JOIN=?                   | -                                                                                                  | *Param1, Param2, Param3, Param4* | `OK` *or* `AT_BUSY_ERROR` |
+| AT+JOIN=`<Input Parameter>` | *Param1:Param2:Param3:Param4*                                                                      | -                                | `OK`                    |
 |                             | *Param1* = **Join command**: 1 for joining the network , 0 for stop joining                        |                                  |                       |
 |                             | *Param2* = **Auto-Join config**: 1 for Auto-join on power up) , 0 for no auto-join. (0 is default) |                                  |                       |
 |                             | *Param3* = **Reattempt interval**: 7 - 255 seconds (30 is default)                                  |                                  |                       |
@@ -461,17 +467,19 @@ _**Param3 is not supported yet and is fixed to 30s always**_
 ```
 AT+JOIN?
 
-+JOIN:"Join network"
+AT+JOIN: Join network 
 OK
 
 AT+JOIN=?
 
-+JOIN:0:1:8:10
+AT+JOIN=0:1:8:10
 OK
 
 AT+JOIN=1:1:8:10
 
 OK
+
+AT+JOIN=SUCCESS
 
 AT+JOIN=3:1:8:10
 
@@ -490,20 +498,20 @@ This command allows the user to check the status of the devices if it is connect
 
 | Command  | Input Parameter | Return Value                     | Return Code |
 | -------- | --------------- | -------------------------------- | ----------- |
-| AT+NJS?  | -               | AT+NJS: get the join status      | OK          |
-| AT+NJS=? | -               | 0 *(not joined) or* 1 *(joined)* | OK          |
+| AT+NJS?  | -               | `AT+NJS: get the join status`      | `OK`          |
+| AT+NJS=? | -               | 0 *(not joined) or* 1 *(joined)* | `OK`          |
 
 **Examples**:
 
 ```
 AT+NJS?
 
-+NJS:"Get the join status"
+AT+NJS: Get the join status 
 OK
 
 AT+NJS=?
 
-+NJS:1
+AT+NJS:1
 OK
 ```
 
@@ -528,12 +536,12 @@ This command allows the user to access and configure the activation method of th
 ```
 AT+NJM?
 
-+NJM:"Get or set the network join mode"
+AT+NJM: Get or set the network join mode 
 OK
 
 AT+NJM=?
 
-+NJM:0
+AT+NJM:0
 OK
 
 AT+NJM=0
@@ -566,16 +574,66 @@ This command allows to set the period in seconds between automatic packet transm
 ```
 AT+SENDFREQ?
 
-+SENDFREQ:"Get or Set the automatic send time"
+AT+SENDFREQ: Get or Set the automatic send time 
 OK
 
 AT+SENDFREQ=?
 
-+SENDFREQ:60
+AT+SENDFREQ:60
 OK
 
 AT+SENDFREQ=60
 
+OK
+```
+
+[Back](#content)    
+
+----
+
+## AT+SEND
+
+Description: Send payload data
+
+This command is used to send LoRaWAN® payload on specific port.
+| Command                    | Input Parameter | Return Value                                                  | Return Code              |
+| -------------------------- | --------------- | ------------------------------------------------------------- | ------------------------ |
+| AT+SEND?                    | -               | `AT+SEND Send data` | `OK`                     |
+| AT+SEND=`<Input Parameter>` | `port:payload`      | -      | `OK` , `AT_NO_NETWORK_JOINED` , `AT_PARAM_ERROR` or `AT_BUSY_ERROR` |
+
+**Examples**:
+```
+AT+SEND?
+
+AT+SEND: Send data
+OK
+```
+
+Unconfirmed Payload
+```
+AT+SEND=2:1234
+
+OK
+
+AT+SEND=SUCCESS
+```
+
+Confirm Payload
+```
+AT+SEND=2:1234
+
+OK
+
+AT+SEND=SUCCESS
+```
+Downlink packet received
+```
+AT+SEND=5:10AAFF45
+
+OK
+
+AT+SEND=SUCCESS
+RX:2:6:-46:11:48656C6C6F0A
 OK
 ```
 
@@ -591,21 +649,21 @@ This command allows the user to access and configure the adaptive data rate of t
 
 | Command                    | Input Parameter | Return Value                                                                    | Return Code            |
 | -------------------------- | --------------- | ------------------------------------------------------------------------------- | ---------------------- |
-| AT+ADR?                    | -               | AT+ADR=`<ADR><CR>`. Get or Set the Adaptive Data Rate setting | OK                     |
-| AT+ADR=?                   | -               | 0 *(ADR off) or* 1 *(ARD on)*                                                   | OK                     |
-| AT+ADR=`<Input Parameter>` | 0 or 1          | -                                                                               | OK *or* AT_PARAM_ERROR |
+| AT+ADR?                    | -               | `AT+ADR: Get or Set the Adaptive Data Rate setting` | `OK`                     |
+| AT+ADR=?                   | -               | `0` *(ADR off) or* `1` *(ARD on)*                                                   | OK                     |
+| AT+ADR=`<Input Parameter>` | `0` or `1`          | -                                                                               | `OK` *or* `AT_PARAM_ERROR` |
 
 **Examples**:
 
 ```
 AT+ADR?
 
-+ADR:"Get or set the adaptive data rate setting"
++ADR: Get or set the adaptive data rate setting 
 OK
 
 AT+ADR=?
 
-+ADR:0
+AT+ADR:0
 OK
 
 AT+ADR=0
@@ -629,9 +687,9 @@ This command allows the user to access and configure the the LoRaWAN® class of 
 
 | Command                      | Input Parameter | Return Value                                                  | Return Code            |
 | ---------------------------- | --------------- | ------------------------------------------------------------- | ---------------------- |
-| AT+CLASS?                    | -               | AT+CLASS=`<Class><CR>`. Get or Set the Device Class=[A, B, C] | OK                     |
-| AT+CLASS=?                   | -               | A or C (B not supported)                                                     | OK                     |
-| AT+CLASS=`<Input Parameter>` | A or C       | -                                                             | OK *or* AT_PARAM_ERROR |
+| AT+CLASS?                    | -               | `AT+CLASS: Get or Set the Device Class=[A, B, C]` | `OK`                     |
+| AT+CLASS=?                   | -               | `A` or `C` (B not supported)                                                     | `OK`                     |
+| AT+CLASS=`<Input Parameter>` | `A` or `C`       | -                                                             | `OK` *or* `AT_PARAM_ERROR` |
 
 _**This FW of the device supports the LoRaWAN® V1.0.2 stack**_
 
@@ -640,12 +698,12 @@ _**This FW of the device supports the LoRaWAN® V1.0.2 stack**_
 ```
 AT+CLASS?
 
-+CLASS:"Get or set the device class"
++CLASS: Get or set the device class 
 OK
 
 AT+CLASS=?
 
-+CLASS:A
+AT++CLASS:A
 OK
 
 AT+CLASS=A
@@ -680,12 +738,12 @@ Check [Appendix I](#appendix-i-data-rate-by-region) for the input parameter depe
 ```
 AT+DR?
 
-+DR:"Get or Set the Tx DataRate=[0..7]"
+AT+DR: Get or Set the Tx DataRate=[0..7] 
 OK
 
 AT+DR=?
 
-+DR:3
+AT+DR:3
 OK
 
 AT+DR=3
@@ -718,12 +776,12 @@ For example, at EU868, a value of 2 represents **MaxEIRP - 4 dB** where MaxEIRP 
 ```
 AT+TXP?
 
-+TXP:"Get or set the transmit power"
+AT+TXP: Get or set the transmit power 
 OK
 
 AT+TXP=?
 
-+TXP:0
+AT+TXP:0
 OK
 
 AT+TXP=0
@@ -764,12 +822,12 @@ This command allows the user to access and configure the regional frequency band
 ```
 AT+BAND?
 
-+BAND:"Get and Set number corresponding to active regions"
+AT+BAND: Get and Set number corresponding to active regions 
 OK
 
 AT+BAND=?
 
-+BAND:10
+AT+BAND:10
 OK
 
 AT+BAND=10
@@ -810,12 +868,12 @@ Channel mask can only be set for following regions: AU915, CN470 and US915
 ```
 AT+MASK?
 
-+MASK: "Get and Set channels mask"
+AT+MASK: Get and Set channels mask
 OK
 
 AT+MASK=?
 
-+MASK:10
+AT+MASK:10
 OK
 
 AT+MASK=10
@@ -878,12 +936,12 @@ This command allows the user to get RSSI value of the last packet received.
 ```
 AT+RSSI?
 
-+RSSI:"Last RX packet RSSI"
+AT+RSSI: Last RX packet RSSI 
 OK
 
 AT+RSSI=?
 
-+RSSI:-41
+AT+RSSI:-41
 OK
 ```
 
@@ -907,12 +965,12 @@ This command allows the user to get SNR value of the last packet received.
 ```
 AT+SNR?
 
-+SNR:"Last RX packet SNR"
+AT+SNR: Last RX packet SNR 
 OK
 
 AT+SNR=?
 
-+SNR:11
+AT+SNR:11
 OK
 ```
 
@@ -936,12 +994,64 @@ This command allows the user to get firmware version installed on the device.
 ```
 AT+VER?
 
-+VER:"Get SW version"
+AT+VER: Get SW version 
 OK
 
 AT+VER=?
 
-+VER:1.0.0.0 May 27 2021 17:11:12
+AT+VER:1.0.0.0 May 27 2021 17:11:12
+OK
+```
+
+[Back](#content)    
+
+----
+
+## AT+STATUS
+
+Description: Show device status
+
+This command allows the user to get the current device status.
+
+| Command                    | Input Parameter | Return Value                              | Return Code |
+| -------------------------- | --------------- | ----------------------------------------- | ----------- |
+| AT+STATUS?                    | -               | `AT+STATUS: Show LoRaWAN status` | `OK`        |
+| AT+STATUS=? | -               | *< status   >*                        | `OK`        |
+
+**Examples**:
+
+```
+AT+STATUS?
+
+AT+STATUS: Show LoRaWAN status
+OK
+
+AT+STATUS=?
+LoRaWAN status:
+   Auto join disabled
+   OTAA enabled
+   Dev EUI 5032333338350012
+   App EUI 1200353833333250
+   App Key 50323333383500121200353833333250
+   NWS Key 50323333383500121200353833333250
+   Apps Key 50323333383500121200353833333250
+   Dev Addr 83986D12
+   Repeat time 120000
+   ADR disabled
+   Public Network
+   Dutycycle disabled
+   Join trials 10
+   TX Power 0
+   DR 3
+   Class 0
+   Subband 1
+   Fport 2
+   Unconfirmed Message
+   Region 10
+   Network joined
+   Mode User
+
++STATUS: 
 OK
 ```
 

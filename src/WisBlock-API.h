@@ -77,7 +77,7 @@ extern bool g_enable_ble;
 #include <LoRaWan-Arduino.h>
 
 int8_t init_lora(void);
-lmh_error_status send_lora_packet(uint8_t *data, uint8_t size);
+lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport = NULL);
 extern bool g_lpwan_has_joined;
 extern bool g_rx_fin_result;
 extern bool g_join_result;
@@ -105,7 +105,7 @@ struct s_lorawan_settings
 	// ABP Device Address MSB
 	uint32_t node_dev_addr = 0x26021FB4;
 	// Send repeat time in milliseconds: 2 * 60 * 1000 => 2 minutes
-	uint32_t send_repeat_time = 120000;
+	uint32_t send_repeat_time = 0;
 	// Flag for ADR on or off
 	bool adr_enabled = false;
 	// Flag for public or private network
@@ -139,6 +139,7 @@ extern uint8_t g_rx_data_len;
 extern bool g_lorawan_initialized;
 extern int16_t g_last_rssi;
 extern int8_t g_last_snr;
+extern uint8_t g_last_fport;
 
 // Flash
 void init_flash(void);

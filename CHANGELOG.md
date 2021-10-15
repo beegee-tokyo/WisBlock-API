@@ -3,6 +3,9 @@
 Arduino library that takes all the LoRaWAN, BLE, AT command stuff off your workload. You concentrate on your application and leave the rest to the API. It is made as a companion to the [SX126x-Arduino LoRaWAN library](https://github.com/beegee-tokyo/SX126x-Arduino)    
 
 # Release Notes
+## V1.0.6 Add AT+STATUS and AT+SEND commands
+  - Additional AT commands
+  
 ## V1.0.5 Make AT+JOIN conform with RAKwireless AT Command syntax
   - Change separator in AT+JOIN from _**`,`**_ to _**`:`**_
   

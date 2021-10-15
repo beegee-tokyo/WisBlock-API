@@ -28,6 +28,8 @@ uint8_t g_tx_data_len = 0;
 int16_t g_last_rssi = 0;
 /** SNR of last received packet */
 int8_t g_last_snr = 0;
+/** fPort of last received packet */
+uint8_t g_last_fport = 0;
 
 /** Flag if LoRaWAN is initialized and started */
 bool g_lorawan_initialized = false;
@@ -206,9 +208,9 @@ static void lpwan_joined_handler(void)
 			API_LOG("LORA", "Waking up loop task");
 			xSemaphoreGive(g_task_sem);
 		}
-
-		g_lpwan_has_joined = true;
 	}
+
+	g_lpwan_has_joined = true;
 
 	if (g_lorawan_settings.send_repeat_time != 0)
 	{
@@ -236,10 +238,11 @@ static void lpwan_joined_handler(void)
 static void lpwan_rx_handler(lmh_app_data_t *app_data)
 {
 	API_LOG("LORA", "LoRa Packet received on port %d, size:%d, rssi:%d, snr:%d",
-		  app_data->port, app_data->buffsize, app_data->rssi, app_data->snr);
+			app_data->port, app_data->buffsize, app_data->rssi, app_data->snr);
 
 	g_last_rssi = app_data->rssi;
 	g_last_snr = app_data->snr;
+	g_last_fport = app_data->port;
 
 	// Copy the data into loop data buffer
 	memcpy(g_rx_lora_data, app_data->buffer, app_data->buffsize);
@@ -315,7 +318,7 @@ static void lpwan_confirm_tx_finished(bool result)
  * 
  * @return result of send request
  */
-lmh_error_status send_lora_packet(uint8_t *data, uint8_t size)
+lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport)
 {
 	if (lmh_join_status_get() != LMH_SET)
 	{
@@ -324,7 +327,14 @@ lmh_error_status send_lora_packet(uint8_t *data, uint8_t size)
 		return LMH_ERROR;
 	}
 
-	m_lora_app_data.port = g_lorawan_settings.app_port;
+	if (fport != NULL)
+	{
+		m_lora_app_data.port = fport;
+	}
+	else
+	{
+		m_lora_app_data.port = g_lorawan_settings.app_port;
+	}
 
 	m_lora_app_data.buffsize = size;
 
