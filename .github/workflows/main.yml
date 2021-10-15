@@ -24,6 +24,8 @@ jobs:
         /home/runner/work/WisBlock-API/WisBlock-API/bin/arduino-cli lib install SX126x-Arduino
         git clone --quiet https://github.com/adafruit/Adafruit_Sensor
         mv Adafruit_Sensor /home/runner/Arduino/libraries/Adafruit_Sensor
+        git clone --quiet https://github.com/adafruit/Adafruit_BusIO
+        mv Adafruit_BusIO /home/runner/Arduino/libraries/Adafruit_BusIO
         git clone --quiet https://github.com/sparkfun/SparkFun_LIS3DH_Arduino_Library
         mv SparkFun_LIS3DH_Arduino_Library /home/runner/Arduino/libraries/SparkFun_LIS3DH_Arduino_Library
         git clone --quiet https://github.com/adafruit/Adafruit_BME680
