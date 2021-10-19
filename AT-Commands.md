@@ -523,7 +523,7 @@ OK
 
 Description: LoRaWAN® network join mode
 
-This command allows the user to access and configure the activation method of the device either OTAA or ABP. A value of 0 means OTAA join mode, a value of 1 means ABP join mode
+This command allows the user to access and configure the activation method of the device either OTAA or ABP. A value of 1 means OTAA join mode, a value of 0 means ABP join mode
 
 | Command                    | Input Parameter | Return Value                                                  | Return Code              |
 | -------------------------- | --------------- | ------------------------------------------------------------- | ------------------------ |

@@ -257,7 +257,7 @@ static int at_exec_mask(char *str)
 static int at_query_joinmode(void)
 {
 	int mode;
-	mode = g_lorawan_settings.otaa_enabled == true ? 0 : 1;
+	mode = g_lorawan_settings.otaa_enabled == true ? 1 : 0;
 
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", mode);
 	return 0;
@@ -266,7 +266,7 @@ static int at_query_joinmode(void)
 /**
  * @brief AT+NJM=x Set current join modus
  * 
- * @param str 0 = OTAA 1 = ABP
+ * @param str 1 = OTAA 0 = ABP
  * @return int 0 if valid parameter
  */
 static int at_exec_joinmode(char *str)
@@ -278,7 +278,7 @@ static int at_exec_joinmode(char *str)
 		return AT_ERRNO_PARA_VAL;
 	}
 
-	g_lorawan_settings.otaa_enabled = (mode == 0 ? true : false);
+	g_lorawan_settings.otaa_enabled = (mode == 1 ? true : false);
 	save_settings();
 
 	return 0;
