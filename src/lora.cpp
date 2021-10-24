@@ -87,6 +87,9 @@ char *region_names[] = {(char *)"AS923", (char *)"AU915", (char *)"CN470", (char
 						(char *)"EU433", (char *)"EU868", (char *)"KR920", (char *)"IN865",
 						(char *)"US915", (char *)"AS923-2", (char *)"AS923-3", (char *)"AS923-4", (char *)"RU864"};
 #endif
+
+uint32_t otaaDevAddr = 0;
+
 /**
  * @brief Initialize LoRa HW and LoRaWan MAC layer
  * 
@@ -144,6 +147,9 @@ int8_t init_lora(void)
 	// Start Join process
 	lmh_join();
 
+	// Initialize the app timer
+	g_task_wakeup_timer.begin(g_lorawan_settings.send_repeat_time, periodic_wakeup);
+
 	g_lorawan_initialized = true;
 	return 0;
 }
@@ -178,10 +184,11 @@ static void lpwan_joined_handler(void)
 {
 	digitalWrite(LED_BUILTIN, LOW);
 
+	otaaDevAddr = lmh_getDevAddr();
+
 #if API_DEBUG > 0
 	if (g_lorawan_settings.otaa_enabled)
 	{
-		uint32_t otaaDevAddr = lmh_getDevAddr();
 		API_LOG("LORA", "OTAA joined and got dev address %08lX", otaaDevAddr);
 	}
 	else
@@ -215,7 +222,6 @@ static void lpwan_joined_handler(void)
 	if (g_lorawan_settings.send_repeat_time != 0)
 	{
 		// Now we are connected, start the timer that will wakeup the loop frequently
-		g_task_wakeup_timer.begin(g_lorawan_settings.send_repeat_time, periodic_wakeup);
 		g_task_wakeup_timer.start();
 	}
 

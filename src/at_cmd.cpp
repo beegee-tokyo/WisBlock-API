@@ -418,7 +418,14 @@ static int at_exec_appkey(char *str)
  */
 static int at_query_devaddr(void)
 {
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "%08lX\n", g_lorawan_settings.node_dev_addr);
+	if (otaaDevAddr != 0)
+	{
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "%08lX\n", otaaDevAddr);
+	}
+	else
+	{
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "%08lX\n", g_lorawan_settings.node_dev_addr);
+	}
 	return 0;
 }
 
@@ -858,6 +865,14 @@ static int at_exec_sendfreq(char *str)
 
 	g_lorawan_settings.send_repeat_time = time * 1000;
 	save_settings();
+
+	if (g_lorawan_settings.send_repeat_time != 0)
+	{
+		// Now we are connected, start the timer that will wakeup the loop frequently
+		g_task_wakeup_timer.stop();
+		g_task_wakeup_timer.setPeriod(g_lorawan_settings.send_repeat_time);
+		g_task_wakeup_timer.start();
+	}
 
 	return 0;
 }

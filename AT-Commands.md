@@ -369,7 +369,7 @@ AT+NWKSKEY=323d155a000df335307a16da0c9df53f0
 
 Description: Device address or DEVADDR
 
-This command allows the user to access and configure the device address or DEVADDR.
+This command allows the user to access and configure the device address or DEVADDR. If in OTAA mode and device has joined the network, `AT+DEVADDR=?` will return the device address assigned by the network server
 
 | Command                        | Input Parameter | Return Value                                               | Return Code              |
 | ------------------------------ | --------------- | ---------------------------------------------------------- | ------------------------ |
@@ -1049,7 +1049,6 @@ LoRaWAN status:
    Unconfirmed Message
    Region 10
    Network joined
-   Mode User
 
 +STATUS: 
 OK
