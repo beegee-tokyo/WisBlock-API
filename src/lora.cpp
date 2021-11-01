@@ -333,7 +333,7 @@ lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport)
 		return LMH_ERROR;
 	}
 
-	if (fport != NULL)
+	if (fport != 0)
 	{
 		m_lora_app_data.port = fport;
 	}

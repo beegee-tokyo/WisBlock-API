@@ -77,7 +77,7 @@ extern bool g_enable_ble;
 #include <LoRaWan-Arduino.h>
 
 int8_t init_lora(void);
-lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport = NULL);
+lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport = 0);
 extern bool g_lpwan_has_joined;
 extern bool g_rx_fin_result;
 extern bool g_join_result;
