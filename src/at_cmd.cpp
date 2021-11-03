@@ -982,7 +982,7 @@ static int at_exec_reboot(void)
 
 static int at_query_status(void)
 {
-	log_settings();
+	at_settings();
 	snprintf(g_at_query_buf, ATQUERY_SIZE, " ");
 
 	return 0;
