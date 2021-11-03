@@ -94,7 +94,7 @@ void setup_app(void)
     }
   }
   digitalWrite(LED_BUILTIN, LOW);
-  
+
   MYLOG("APP", "Setup WisBlock API Example");
 
   // Enable BLE
