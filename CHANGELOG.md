@@ -4,8 +4,14 @@ Arduino library that takes all the LoRaWAN, BLE, AT command stuff off your workl
 
 # Release Notes
 
+## V1.0.9 Fix AT+STATUS command
+  - Bugfix
+  
+## V1.0.8 Fix Compiler warnings
+  - Bugfix
+  
 ## V1.0.7 Make AT+NJM compatible with RAK3172/RUI AT commands
-  - Additional AT commands
+  - Adjust AT commands
   
 ## V1.0.6 Add AT+STATUS and AT+SEND commands
   - Additional AT commands
