@@ -1,32 +1,39 @@
 {
-   "name":"WisBlock-API",
-   "version":"1.1.0",
-   "keywords":[
-      "lora",
-      "Semtech",
-      "SX126x",
-      "RAK4630",
-	  "WisBlock"
-   ],
-   "description":"A library that covers the complete LoRaWAN, BLE and AT command handling. Just write your application specific functions and leave the rest to the API",
-   "frameworks":[
-      "arduino"
-   ],
-   "platforms":[
-      "nordicnrf52"
-   ],
-   "license":"MIT",
-   "authors":[
-      {
-         "email":"bernd.giesecke@rakwireless.com",
-         "url":"https://www.rakwireless.com",
-         "maintainer":true,
-         "name":"Bernd Giesecke"
-      }
-   ],
-   "repository":{
-      "type":"git",
-      "url":"https://github.com/beegee-tokyo/WisBlock-API"
-   },
-   "homepage":"https://github.com/beegee-tokyo/WisBlock-API"
+	"name": "WisBlock-API",
+	"version": "1.1.1",
+	"keywords": [
+		"lora",
+		"Semtech",
+		"SX126x",
+		"RAK4630",
+		"WisBlock"
+	],
+	"description": "A library that covers the complete LoRaWAN, BLE and AT command handling. Just write your application specific functions and leave the rest to the API",
+	"frameworks": [
+		"arduino"
+	],
+	"platforms": [
+		"nordicnrf52"
+	],
+	"license": "MIT",
+	"authors": [
+		{
+			"email": "bernd.giesecke@rakwireless.com",
+			"url": "https://www.rakwireless.com",
+			"maintainer": true,
+			"name": "Bernd Giesecke"
+		}
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/beegee-tokyo/WisBlock-API"
+	},
+	"dependencies": [
+		{
+			"owner": "beegee-tokyo",
+			"name": "SX126x-Arduino",
+			"version": "*"
+		}
+	],
+	"homepage": "https://github.com/beegee-tokyo/WisBlock-API"
 }

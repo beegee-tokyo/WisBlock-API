@@ -679,8 +679,10 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-11-06
+  - Add library dependency for SX126x-Arduino library
 - 2022-11-03
-  -  Make AT+JOIN conform with RAKwireless AT Command syntax
+  - Make AT+JOIN conform with RAKwireless AT Command syntax
   - Add AT+STATUS and AT+SEND commands
   - Make AT+NJM compatible with RAK3172
   - Fix compiler warning

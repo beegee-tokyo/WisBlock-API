@@ -4,6 +4,11 @@ Arduino library that takes all the LoRaWAN, BLE, AT command stuff off your workl
 
 # Release Notes
 
+## V1.1.1 Add library dependencies
+  - Add SX126x-Arduino library dependency
+  
+## V1.1.0 Bug fix
+
 ## V1.0.9 Fix AT+STATUS command
   - Bugfix
   
