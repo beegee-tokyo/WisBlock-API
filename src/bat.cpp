@@ -13,7 +13,7 @@
 #include "WisBlock-API.h"
 
 /** Millivolts per LSB 3.0V ADC range and 12-bit ADC resolution = 3000mV/4096 */
-#define VBAT_MV_PER_LSB (0.73242188F) 
+#define VBAT_MV_PER_LSB (0.73242188F)
 /** Compensation factor for the VBAT divider */
 #define VBAT_DIVIDER_COMP (1.73)
 /** Real milli Volts per LSB including compensation */
@@ -95,7 +95,7 @@ uint8_t get_lora_batt(void)
 	{
 		read_val += read_batt();
 	}
-	return (mv_to_percent(read_val/10) * 2.54);
+	return (mv_to_percent(read_val / 10) * 2.54);
 }
 
 #endif

@@ -24,7 +24,7 @@
 #endif
 
 #if API_DEBUG > 0
-#define API_LOG(tag, ...)           \
+#define API_LOG(tag, ...)         \
 	do                            \
 	{                             \
 		if (tag)                  \
@@ -47,19 +47,19 @@ extern SoftwareTimer g_task_wakeup_timer;
 
 /** Wake up events, more events can be defined in app.h */
 #define NO_EVENT 0
-#define STATUS          0b0000000000000001
-#define N_STATUS        0b1111111111111110
-#define BLE_CONFIG      0b0000000000000010
-#define N_BLE_CONFIG    0b1111111111111101
-#define BLE_DATA        0b0000000000000100
-#define N_BLE_DATA      0b1111111111111011
-#define LORA_DATA       0b0000000000001000
-#define N_LORA_DATA     0b1111111111110111
-#define LORA_TX_FIN     0b0000000000010000
-#define N_LORA_TX_FIN   0b1111111111101111
-#define AT_CMD          0b0000000000100000
-#define N_AT_CMD        0b1111111111011111
-#define LORA_JOIN_FIN   0b0000000001000000
+#define STATUS 0b0000000000000001
+#define N_STATUS 0b1111111111111110
+#define BLE_CONFIG 0b0000000000000010
+#define N_BLE_CONFIG 0b1111111111111101
+#define BLE_DATA 0b0000000000000100
+#define N_BLE_DATA 0b1111111111111011
+#define LORA_DATA 0b0000000000001000
+#define N_LORA_DATA 0b1111111111110111
+#define LORA_TX_FIN 0b0000000000010000
+#define N_LORA_TX_FIN 0b1111111111101111
+#define AT_CMD 0b0000000000100000
+#define N_AT_CMD 0b1111111111011111
+#define LORA_JOIN_FIN 0b0000000001000000
 #define N_LORA_JOIN_FIN 0b1111111110111111
 
 // BLE
@@ -77,17 +77,94 @@ extern bool g_enable_ble;
 #include <LoRaWan-Arduino.h>
 
 int8_t init_lora(void);
-lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport = 0);
+int8_t init_lorawan(void);
+bool send_lora_packet(uint8_t *data, uint8_t size);
+lmh_error_status send_lorawan_packet(uint8_t *data, uint8_t size, uint8_t fport = 0);
 extern bool g_lpwan_has_joined;
 extern bool g_rx_fin_result;
 extern bool g_join_result;
 extern uint32_t otaaDevAddr;
 
-#define LORAWAN_DATA_MARKER 0x57
+#define LORAWAN_DATA_MARKER 0x55
 struct s_lorawan_settings
 {
 	uint8_t valid_mark_1 = 0xAA;				// Just a marker for the Flash
 	uint8_t valid_mark_2 = LORAWAN_DATA_MARKER; // Just a marker for the Flash
+												// OTAA Device EUI MSB
+	uint8_t node_device_eui[8] = {0x00, 0x0D, 0x75, 0xE6, 0x56, 0x4D, 0xC1, 0xF3};
+	// OTAA Application EUI MSB
+	uint8_t node_app_eui[8] = {0x70, 0xB3, 0xD5, 0x7E, 0xD0, 0x02, 0x01, 0xE1};
+	// OTAA Application Key MSB
+	uint8_t node_app_key[16] = {0x2B, 0x84, 0xE0, 0xB0, 0x9B, 0x68, 0xE5, 0xCB, 0x42, 0x17, 0x6F, 0xE7, 0x53, 0xDC, 0xEE, 0x79};
+	// ABP Device Address MSB
+	uint32_t node_dev_addr = 0x26021FB4;
+	// ABP Network Session Key MSB
+	uint8_t node_nws_key[16] = {0x32, 0x3D, 0x15, 0x5A, 0x00, 0x0D, 0xF3, 0x35, 0x30, 0x7A, 0x16, 0xDA, 0x0C, 0x9D, 0xF5, 0x3F};
+	// ABP Application Session key MSB
+	uint8_t node_apps_key[16] = {0x3F, 0x6A, 0x66, 0x45, 0x9D, 0x5E, 0xDC, 0xA6, 0x3C, 0xBC, 0x46, 0x19, 0xCD, 0x61, 0xA1, 0x1E};
+	// Flag for OTAA or ABP
+	bool otaa_enabled = true;
+	// Flag for ADR on or off
+	bool adr_enabled = false;
+	// Flag for public or private network
+	bool public_network = true;
+	// Flag to enable duty cycle
+	bool duty_cycle_enabled = false;
+	// In milliseconds: 2 * 60 * 1000 => 2 minutes
+	uint32_t send_repeat_time = 120000;
+	// Number of join retries
+	uint8_t join_trials = 5;
+	// TX power 0 .. 10
+	uint8_t tx_power = 0;
+	// Data rate 0 .. 15 (validity depnends on Region)
+	uint8_t data_rate = 3;
+	// LoRaWAN class 0: A, 2: C, 1: B is not supported
+	uint8_t lora_class = 0;
+	// Subband channel selection 1 .. 9
+	uint8_t subband_channels = 1;
+	// Flag if node joins automatically after reboot
+	bool auto_join = false;
+	// Data port to send data
+	uint8_t app_port = 2;
+	// Flag to enable confirmed messages
+	lmh_confirm confirmed_msg_enabled = LMH_UNCONFIRMED_MSG;
+	// Fixed LoRaWAN lorawan_region (depends on compiler option)
+	uint8_t lora_region = 1;
+	// Flag for LoRaWAN or LoRa P2P
+	bool lorawan_enable = true;
+	// Frequency in Hz
+	uint32_t p2p_frequency = 916000000;
+	// Tx power 0 .. 22
+	uint8_t p2p_tx_power = 22;
+	// Bandwidth 0: 125 kHz, 1: 250 kHz, 2: 500 kHz, 3: Reserved
+	uint8_t p2p_bandwidth = 0;
+	// Spreading Factor SF7..SF12
+	uint8_t p2p_sf = 7;
+	// Coding Rate 1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8
+	uint8_t p2p_cr = 1;
+	// Preamble length
+	uint8_t p2p_preamble_len = 8;
+	// Symbol timeout
+	uint16_t p2p_symbol_timeout = 0;
+	// Command from BLE to reset device
+	bool resetRequest = true;
+};
+
+// int size = sizeof(s_lorawan_settings);
+extern s_lorawan_settings g_lorawan_settings;
+extern uint8_t g_rx_lora_data[];
+extern uint8_t g_rx_data_len;
+extern uint8_t g_tx_lora_data[];
+extern uint8_t g_tx_data_len;
+extern bool g_lorawan_initialized;
+extern int16_t g_last_rssi;
+extern int8_t g_last_snr;
+
+#define LORAWAN_COMPAT_MARKER 0x57
+struct s_loracompat_settings
+{
+	uint8_t valid_mark_1 = 0xAA;				  // Just a marker for the Flash
+	uint8_t valid_mark_2 = LORAWAN_COMPAT_MARKER; // Just a marker for the Flash
 
 	// Flag if node joins automatically after reboot
 	bool auto_join = false;
@@ -133,15 +210,6 @@ struct s_lorawan_settings
 	uint8_t lora_region = 0;
 };
 
-// int size = sizeof(s_lorawan_settings);
-extern s_lorawan_settings g_lorawan_settings;
-extern uint8_t g_rx_lora_data[];
-extern uint8_t g_rx_data_len;
-extern bool g_lorawan_initialized;
-extern int16_t g_last_rssi;
-extern int8_t g_last_snr;
-extern uint8_t g_last_fport;
-
 // Flash
 void init_flash(void);
 bool save_settings(void);
@@ -155,7 +223,10 @@ uint8_t get_lora_batt(void);
 uint8_t mv_to_percent(float mvolts);
 
 // AT command parser
+#include "at_cmd.h"
 void at_serial_input(uint8_t cmd);
+extern char *region_names[];
+bool user_at_handler(char *user_cmd, uint8_t cmd_size) __attribute__((weak));
 
 // API stuff
 void setup_app(void);

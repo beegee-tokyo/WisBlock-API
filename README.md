@@ -679,6 +679,9 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-11-15
+  - Add LoRa P2P support
+  - Add support for user defined AT commands
 - 2022-11-06
   - Add library dependency for SX126x-Arduino library
 - 2022-11-03

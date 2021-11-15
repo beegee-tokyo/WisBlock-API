@@ -4,6 +4,10 @@ Arduino library that takes all the LoRaWAN, BLE, AT command stuff off your workl
 
 # Release Notes
 
+## V1.1.2 Add LoRa P2P support
+  - Experimental support for LoRa P2P communication
+  - Add support for user defined AT commands
+  
 ## V1.1.1 Add library dependencies
   - Add SX126x-Arduino library dependency
   

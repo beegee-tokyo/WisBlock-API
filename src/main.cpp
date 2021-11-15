@@ -108,9 +108,18 @@ void setup()
 	// Check if auto join is enabled
 	if (g_lorawan_settings.auto_join)
 	{
-		API_LOG("MAIN", "Auto join is enabled, start LoRa and join");
 		// Initialize LoRa and start join request
-		int8_t lora_init_result = init_lora();
+		int8_t lora_init_result = 0;
+		if (g_lorawan_settings.lorawan_enable)
+		{
+			API_LOG("MAIN", "Auto join is enabled, start LoRaWAN and join");
+			lora_init_result = init_lorawan();
+		}
+		else
+		{
+			API_LOG("MAIN", "Auto join is enabled, start LoRa P2P listen");
+			lora_init_result = init_lora();
+		}
 
 		if (lora_init_result != 0)
 		{
@@ -149,7 +158,6 @@ void setup()
 			delay(5000);
 		}
 	}
-
 }
 
 /**
@@ -191,7 +199,14 @@ void loop()
 				// Check if auto connect is enabled
 				if ((g_lorawan_settings.auto_join) && !g_lorawan_initialized)
 				{
-					init_lora();
+					if (g_lorawan_settings.lorawan_enable)
+					{
+						init_lorawan();
+					}
+					else
+					{
+						init_lora();
+					}
 				}
 			}
 

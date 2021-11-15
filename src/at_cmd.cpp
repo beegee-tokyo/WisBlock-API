@@ -27,6 +27,15 @@ static char atcmd[ATCMD_SIZE];
 static uint16_t atcmd_index = 0;
 static char g_at_query_buf[ATQUERY_SIZE];
 
+/** LoRaWAN application data buffer. */
+uint8_t m_lora_app_data_buffer[256];
+
+char *bandwidths[] = {(char *)"125", (char *)"250", (char *)"500", (char *)"062", (char *)"041", (char *)"031", (char *)"020", (char *)"015", (char *)"010", (char *)"007"};
+
+char *region_names[] = {(char *)"AS923", (char *)"AU915", (char *)"CN470", (char *)"CN779",
+						(char *)"EU433", (char *)"EU868", (char *)"KR920", (char *)"IN865",
+						(char *)"US915", (char *)"AS923-2", (char *)"AS923-3", (char *)"AS923-4", (char *)"RU864"};
+
 typedef struct atcmd_s
 {
 	const char *cmd_name;		   // CMD NAME
@@ -36,6 +45,29 @@ typedef struct atcmd_s
 	int (*exec_cmd_no_para)(void); // AT+CMD
 } atcmd_t;
 
+void set_new_config(void)
+{
+	Radio.Sleep();
+	Radio.SetTxConfig(MODEM_LORA, g_lorawan_settings.p2p_tx_power, 0, g_lorawan_settings.p2p_bandwidth,
+					  g_lorawan_settings.p2p_sf, g_lorawan_settings.p2p_cr,
+					  g_lorawan_settings.p2p_preamble_len, false,
+					  true, 0, 0, false, 5000);
+
+	Radio.SetRxConfig(MODEM_LORA, g_lorawan_settings.p2p_bandwidth, g_lorawan_settings.p2p_sf,
+					  g_lorawan_settings.p2p_cr, 0, g_lorawan_settings.p2p_preamble_len,
+					  g_lorawan_settings.p2p_symbol_timeout, false,
+					  0, true, 0, 0, false, true);
+	Radio.Rx(0);
+}
+
+/**
+ * @brief Convert Hex string into uint8_t array
+ * 
+ * @param hex Hex string
+ * @param bin uint8_t
+ * @param bin_length Length of array
+ * @return int -1 if conversion failed
+ */
 static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length)
 {
 	uint16_t hex_length = strlen(hex);
@@ -89,60 +121,415 @@ static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length)
 	return cur - bin;
 }
 
+/**
+ * @brief Print out all parameters over UART and BLE
+ * 
+ */
 void at_settings(void)
 {
-	Serial.printf("LoRaWAN status:\n");
-	Serial.printf("   Auto join %s\n", g_lorawan_settings.auto_join ? "enabled" : "disabled");
-	Serial.printf("   OTAA %s\n", g_lorawan_settings.otaa_enabled ? "enabled" : "disabled");
-	Serial.printf("   Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
-				  g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
-				  g_lorawan_settings.node_device_eui[4], g_lorawan_settings.node_device_eui[5],
-				  g_lorawan_settings.node_device_eui[6], g_lorawan_settings.node_device_eui[7]);
-	Serial.printf("   App EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
-				  g_lorawan_settings.node_app_eui[2], g_lorawan_settings.node_app_eui[3],
-				  g_lorawan_settings.node_app_eui[4], g_lorawan_settings.node_app_eui[5],
-				  g_lorawan_settings.node_app_eui[6], g_lorawan_settings.node_app_eui[7]);
-	Serial.printf("   App Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
-				  g_lorawan_settings.node_app_key[0], g_lorawan_settings.node_app_key[1],
-				  g_lorawan_settings.node_app_key[2], g_lorawan_settings.node_app_key[3],
-				  g_lorawan_settings.node_app_key[4], g_lorawan_settings.node_app_key[5],
-				  g_lorawan_settings.node_app_key[6], g_lorawan_settings.node_app_key[7],
-				  g_lorawan_settings.node_app_key[8], g_lorawan_settings.node_app_key[9],
-				  g_lorawan_settings.node_app_key[10], g_lorawan_settings.node_app_key[11],
-				  g_lorawan_settings.node_app_key[12], g_lorawan_settings.node_app_key[13],
-				  g_lorawan_settings.node_app_key[14], g_lorawan_settings.node_app_key[15]);
-	Serial.printf("   NWS Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
-				  g_lorawan_settings.node_nws_key[0], g_lorawan_settings.node_nws_key[1],
-				  g_lorawan_settings.node_nws_key[2], g_lorawan_settings.node_nws_key[3],
-				  g_lorawan_settings.node_nws_key[4], g_lorawan_settings.node_nws_key[5],
-				  g_lorawan_settings.node_nws_key[6], g_lorawan_settings.node_nws_key[7],
-				  g_lorawan_settings.node_nws_key[8], g_lorawan_settings.node_nws_key[9],
-				  g_lorawan_settings.node_nws_key[10], g_lorawan_settings.node_nws_key[11],
-				  g_lorawan_settings.node_nws_key[12], g_lorawan_settings.node_nws_key[13],
-				  g_lorawan_settings.node_nws_key[14], g_lorawan_settings.node_nws_key[15]);
-	Serial.printf("   Apps Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
-				  g_lorawan_settings.node_apps_key[0], g_lorawan_settings.node_apps_key[1],
-				  g_lorawan_settings.node_apps_key[2], g_lorawan_settings.node_apps_key[3],
-				  g_lorawan_settings.node_apps_key[4], g_lorawan_settings.node_apps_key[5],
-				  g_lorawan_settings.node_apps_key[6], g_lorawan_settings.node_apps_key[7],
-				  g_lorawan_settings.node_apps_key[8], g_lorawan_settings.node_apps_key[9],
-				  g_lorawan_settings.node_apps_key[10], g_lorawan_settings.node_apps_key[11],
-				  g_lorawan_settings.node_apps_key[12], g_lorawan_settings.node_apps_key[13],
-				  g_lorawan_settings.node_apps_key[14], g_lorawan_settings.node_apps_key[15]);
-	Serial.printf("   Dev Addr %08lX\n", g_lorawan_settings.node_dev_addr);
-	Serial.printf("   Repeat time %ld\n", g_lorawan_settings.send_repeat_time);
-	Serial.printf("   ADR %s\n", g_lorawan_settings.adr_enabled ? "enabled" : "disabled");
-	Serial.printf("   %s Network\n", g_lorawan_settings.public_network ? "Public" : "Private");
-	Serial.printf("   Dutycycle %s\n", g_lorawan_settings.duty_cycle_enabled ? "enabled" : "disabled");
-	Serial.printf("   Join trials %d\n", g_lorawan_settings.join_trials);
-	Serial.printf("   TX Power %d\n", g_lorawan_settings.tx_power);
-	Serial.printf("   DR %d\n", g_lorawan_settings.data_rate);
-	Serial.printf("   Class %d\n", g_lorawan_settings.lora_class);
-	Serial.printf("   Subband %d\n", g_lorawan_settings.subband_channels);
-	Serial.printf("   Fport %d\n", g_lorawan_settings.app_port);
-	Serial.printf("   %s Message\n", g_lorawan_settings.confirmed_msg_enabled ? "Confirmed" : "Unconfirmed");
-	Serial.printf("   Region %d\n", g_lorawan_settings.lora_region);
-	Serial.printf("   Network %s\n", g_lpwan_has_joined ? "joined" : "not joined");
+	AT_PRINTF("Device status:\n");
+	AT_PRINTF("   Auto join %s\n", g_lorawan_settings.auto_join ? "enabled" : "disabled");
+	AT_PRINTF("   Mode %s\n", g_lorawan_settings.lorawan_enable ? "LPWAN" : "P2P");
+	AT_PRINTF("LPWAN status:\n");
+	AT_PRINTF("   Marks: %02X %02X\n", g_lorawan_settings.valid_mark_1, g_lorawan_settings.valid_mark_2);
+	AT_PRINTF("   Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
+			  g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
+			  g_lorawan_settings.node_device_eui[4], g_lorawan_settings.node_device_eui[5],
+			  g_lorawan_settings.node_device_eui[6], g_lorawan_settings.node_device_eui[7]);
+	AT_PRINTF("   App EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
+			  g_lorawan_settings.node_app_eui[2], g_lorawan_settings.node_app_eui[3],
+			  g_lorawan_settings.node_app_eui[4], g_lorawan_settings.node_app_eui[5],
+			  g_lorawan_settings.node_app_eui[6], g_lorawan_settings.node_app_eui[7]);
+	AT_PRINTF("   App Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
+			  g_lorawan_settings.node_app_key[0], g_lorawan_settings.node_app_key[1],
+			  g_lorawan_settings.node_app_key[2], g_lorawan_settings.node_app_key[3],
+			  g_lorawan_settings.node_app_key[4], g_lorawan_settings.node_app_key[5],
+			  g_lorawan_settings.node_app_key[6], g_lorawan_settings.node_app_key[7],
+			  g_lorawan_settings.node_app_key[8], g_lorawan_settings.node_app_key[9],
+			  g_lorawan_settings.node_app_key[10], g_lorawan_settings.node_app_key[11],
+			  g_lorawan_settings.node_app_key[12], g_lorawan_settings.node_app_key[13],
+			  g_lorawan_settings.node_app_key[14], g_lorawan_settings.node_app_key[15]);
+	AT_PRINTF("   Dev Addr %08lX\n", g_lorawan_settings.node_dev_addr);
+	AT_PRINTF("   NWS Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
+			  g_lorawan_settings.node_nws_key[0], g_lorawan_settings.node_nws_key[1],
+			  g_lorawan_settings.node_nws_key[2], g_lorawan_settings.node_nws_key[3],
+			  g_lorawan_settings.node_nws_key[4], g_lorawan_settings.node_nws_key[5],
+			  g_lorawan_settings.node_nws_key[6], g_lorawan_settings.node_nws_key[7],
+			  g_lorawan_settings.node_nws_key[8], g_lorawan_settings.node_nws_key[9],
+			  g_lorawan_settings.node_nws_key[10], g_lorawan_settings.node_nws_key[11],
+			  g_lorawan_settings.node_nws_key[12], g_lorawan_settings.node_nws_key[13],
+			  g_lorawan_settings.node_nws_key[14], g_lorawan_settings.node_nws_key[15]);
+	AT_PRINTF("   Apps Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
+			  g_lorawan_settings.node_apps_key[0], g_lorawan_settings.node_apps_key[1],
+			  g_lorawan_settings.node_apps_key[2], g_lorawan_settings.node_apps_key[3],
+			  g_lorawan_settings.node_apps_key[4], g_lorawan_settings.node_apps_key[5],
+			  g_lorawan_settings.node_apps_key[6], g_lorawan_settings.node_apps_key[7],
+			  g_lorawan_settings.node_apps_key[8], g_lorawan_settings.node_apps_key[9],
+			  g_lorawan_settings.node_apps_key[10], g_lorawan_settings.node_apps_key[11],
+			  g_lorawan_settings.node_apps_key[12], g_lorawan_settings.node_apps_key[13],
+			  g_lorawan_settings.node_apps_key[14], g_lorawan_settings.node_apps_key[15]);
+	AT_PRINTF("   OTAA %s\n", g_lorawan_settings.otaa_enabled ? "enabled" : "disabled");
+	AT_PRINTF("   ADR %s\n", g_lorawan_settings.adr_enabled ? "enabled" : "disabled");
+	AT_PRINTF("   %s Network\n", g_lorawan_settings.public_network ? "Public" : "Private");
+	AT_PRINTF("   Dutycycle %s\n", g_lorawan_settings.duty_cycle_enabled ? "enabled" : "disabled");
+	AT_PRINTF("   Repeat time %ld\n", g_lorawan_settings.send_repeat_time);
+	AT_PRINTF("   Join trials %d\n", g_lorawan_settings.join_trials);
+	AT_PRINTF("   TX Power %d\n", g_lorawan_settings.tx_power);
+	AT_PRINTF("   DR %d\n", g_lorawan_settings.data_rate);
+	AT_PRINTF("   Class %d\n", g_lorawan_settings.lora_class);
+	AT_PRINTF("   Subband %d\n", g_lorawan_settings.subband_channels);
+	AT_PRINTF("   Fport %d\n", g_lorawan_settings.app_port);
+	AT_PRINTF("   %s Message\n", g_lorawan_settings.confirmed_msg_enabled ? "Confirmed" : "Unconfirmed");
+	AT_PRINTF("   Region %s\n", region_names[g_lorawan_settings.lora_region]);
+	AT_PRINTF("   Network %s\n", g_lpwan_has_joined ? "joined" : "not joined");
+	AT_PRINTF("LoRa P2P status:\n");
+	AT_PRINTF("   P2P frequency %ld\n", g_lorawan_settings.p2p_frequency);
+	AT_PRINTF("   P2P TX Power %d\n", g_lorawan_settings.p2p_tx_power);
+	AT_PRINTF("   P2P BW %s\n", bandwidths[g_lorawan_settings.p2p_bandwidth]);
+	AT_PRINTF("   P2P SF %d\n", g_lorawan_settings.p2p_sf);
+	AT_PRINTF("   P2P CR %d\n", g_lorawan_settings.p2p_cr);
+	AT_PRINTF("   P2P Preamble length %d\n", g_lorawan_settings.p2p_preamble_len);
+	AT_PRINTF("   P2P Symbol Timeout %d\n", g_lorawan_settings.p2p_symbol_timeout);
+}
+
+static int at_query_mode(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.lorawan_enable ? 1 : 0);
+	return 0;
+}
+
+static int at_exec_mode(char *str)
+{
+	bool need_restart = false;
+	if (str[0] == '0')
+	{
+		if (g_lorawan_settings.lorawan_enable)
+		{
+			need_restart = true;
+		}
+		g_lorawan_settings.lorawan_enable = false;
+	}
+	else if (str[0] == '1')
+	{
+		if (!g_lorawan_settings.lorawan_enable)
+		{
+			need_restart = true;
+		}
+		g_lorawan_settings.lorawan_enable = true;
+	}
+	else
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	save_settings();
+
+	if (need_restart)
+	{
+		delay(100);
+		sd_nvic_SystemReset();
+	}
+	return 0;
+}
+
+static int at_query_p2p_freq(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", g_lorawan_settings.p2p_frequency);
+	return 0;
+}
+
+static int at_exec_p2p_freq(char *str)
+{
+	if (g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+	long freq = strtol(str, NULL, 0);
+
+	if ((freq < 525000000) || (freq > 960000000))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	g_lorawan_settings.p2p_frequency = freq;
+	save_settings();
+
+	set_new_config();
+	return 0;
+}
+
+static int at_query_p2p_sf(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.p2p_sf);
+	return 0;
+}
+
+static int at_exec_p2p_sf(char *str)
+{
+	if (g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+	long sf = strtol(str, NULL, 0);
+
+	if ((sf < 7) || (sf > 12))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	g_lorawan_settings.p2p_sf = sf;
+	save_settings();
+
+	set_new_config();
+	return 0;
+}
+
+static int at_query_p2p_bw(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%s", bandwidths[g_lorawan_settings.p2p_bandwidth]);
+	return 0;
+}
+
+static int at_exec_p2p_bw(char *str)
+{
+	if (g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+	for (int idx = 0; idx < 10; idx++)
+	{
+		if (strcmp(str, bandwidths[idx]) == 0)
+		{
+			g_lorawan_settings.p2p_bandwidth = idx;
+			save_settings();
+
+			set_new_config();
+			return 0;
+		}
+	}
+	return AT_ERRNO_PARA_VAL;
+}
+
+static int at_query_p2p_cr(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.p2p_cr);
+	return 0;
+}
+
+static int at_exec_p2p_cr(char *str)
+{
+	if (g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+	long cr = strtol(str, NULL, 0);
+
+	if ((cr < 1) || (cr > 4))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	g_lorawan_settings.p2p_cr = cr;
+	save_settings();
+
+	set_new_config();
+	return 0;
+}
+
+static int at_query_p2p_pl(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.p2p_preamble_len);
+	return 0;
+}
+
+static int at_exec_p2p_pl(char *str)
+{
+	if (g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+	long preamble_len = strtol(str, NULL, 0);
+
+	if ((preamble_len < 0) || (preamble_len > 256))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	g_lorawan_settings.p2p_preamble_len = preamble_len;
+	save_settings();
+
+	set_new_config();
+	return 0;
+}
+
+static int at_query_p2p_txp(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.p2p_tx_power);
+	return 0;
+}
+
+static int at_exec_p2p_txp(char *str)
+{
+	if (g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+	long txp = strtol(str, NULL, 0);
+
+	if ((txp < 0) || (txp > 23))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	g_lorawan_settings.p2p_tx_power = txp;
+	save_settings();
+
+	set_new_config();
+	return 0;
+}
+
+static int at_query_p2p_config(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld:%d:%d:%d:%d:%d",
+			 g_lorawan_settings.p2p_frequency,
+			 g_lorawan_settings.p2p_sf,
+			 g_lorawan_settings.p2p_bandwidth,
+			 g_lorawan_settings.p2p_cr,
+			 g_lorawan_settings.p2p_preamble_len,
+			 g_lorawan_settings.p2p_tx_power);
+	return 0;
+}
+
+static int at_exec_p2p_config(char *str)
+{
+	if (g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+	char *param;
+
+	param = strtok(str, ":");
+
+	if (param != NULL)
+	{
+		/* check frequency */
+		long freq = strtol(param, NULL, 0);
+
+		if ((freq < 525000000) || (freq > 960000000))
+		{
+			return AT_ERRNO_PARA_VAL;
+		}
+
+		g_lorawan_settings.p2p_frequency = freq;
+
+		/* check SF */
+		param = strtok(NULL, ":");
+		if (param != NULL)
+		{
+			long sf = strtol(param, NULL, 0);
+
+			if ((sf < 7) || (sf > 12))
+			{
+				return AT_ERRNO_PARA_VAL;
+			}
+
+			g_lorawan_settings.p2p_sf = sf;
+
+			// Check Bandwidth
+			param = strtok(NULL, ":");
+			if (param != NULL)
+			{
+				bool found_bw = false;
+				for (int idx = 0; idx < 10; idx++)
+				{
+					if (strcmp(param, bandwidths[idx]) == 0)
+					{
+						g_lorawan_settings.p2p_bandwidth = idx;
+						found_bw = true;
+					}
+				}
+				if (!found_bw)
+				{
+					return AT_ERRNO_PARA_VAL;
+				}
+
+				// Check CR
+				param = strtok(NULL, ":");
+				if (param != NULL)
+				{
+					long cr = strtol(param, NULL, 0);
+
+					if ((cr < 0) || (cr > 3))
+					{
+						return AT_ERRNO_PARA_VAL;
+					}
+
+					g_lorawan_settings.p2p_cr = cr;
+
+					// Check Preamble length
+					param = strtok(NULL, ":");
+					if (param != NULL)
+					{
+						long preamble_len = strtol(param, NULL, 0);
+
+						if ((preamble_len < 0) || (preamble_len > 256))
+						{
+							return AT_ERRNO_PARA_VAL;
+						}
+
+						g_lorawan_settings.p2p_preamble_len = preamble_len;
+
+						// Check TX power
+						param = strtok(NULL, ":");
+						if (param != NULL)
+						{
+							long txp = strtol(param, NULL, 0);
+
+							if ((txp < 0) || (txp > 23))
+							{
+								return AT_ERRNO_PARA_VAL;
+							}
+
+							g_lorawan_settings.p2p_tx_power = txp;
+
+							save_settings();
+
+							set_new_config();
+							return 0;
+						}
+					}
+				}
+			}
+		}
+	}
+	return AT_ERRNO_PARA_NUM;
+}
+
+static int at_exec_p2p_send(char *str)
+{
+	if (g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+
+	int data_size = strlen(str);
+	if (!(data_size % 2 == 0) || (data_size > 254))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	int buff_idx = 0;
+	char buff_parse[3];
+	for (int idx = 0; idx <= data_size + 1; idx += 2)
+	{
+		buff_parse[0] = str[idx];
+		buff_parse[1] = str[idx + 1];
+		buff_parse[2] = 0;
+		m_lora_app_data_buffer[buff_idx] = strtol(buff_parse, NULL, 16);
+		buff_idx++;
+	}
+	send_lora_packet(m_lora_app_data_buffer, data_size / 2);
+	return 0;
 }
 
 /**
@@ -165,6 +552,10 @@ static int at_query_region(void)
  */
 static int at_exec_region(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	char *param;
 	uint8_t region;
 
@@ -175,14 +566,14 @@ static int at_exec_region(char *str)
 		// RAK4630 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR920 7: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4 12: RU864
 		if (region > 12)
 		{
-			return -1;
+			return AT_ERRNO_PARA_VAL;
 		}
 		g_lorawan_settings.lora_region = region;
 		save_settings();
 	}
 	else
 	{
-		return -1;
+		return AT_ERRNO_PARA_VAL;
 	}
 
 	return 0;
@@ -211,6 +602,10 @@ static int at_query_mask(void)
  */
 static int at_exec_mask(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	char *param;
 	uint8_t mask;
 
@@ -236,14 +631,14 @@ static int at_exec_mask(char *str)
 		}
 		if ((mask == 0) || (mask > maxBand))
 		{
-			return -1;
+			return AT_ERRNO_PARA_VAL;
 		}
 		g_lorawan_settings.subband_channels = mask;
 		save_settings();
 	}
 	else
 	{
-		return -1;
+		return AT_ERRNO_PARA_NUM;
 	}
 
 	return 0;
@@ -271,6 +666,10 @@ static int at_query_joinmode(void)
  */
 static int at_exec_joinmode(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	int mode = strtol(str, NULL, 0);
 
 	if (mode != 0 && mode != 1)
@@ -310,6 +709,10 @@ static int at_query_deveui(void)
  */
 static int at_exec_deveui(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	uint8_t len;
 	uint8_t buf[8];
 
@@ -353,6 +756,10 @@ static int at_query_appeui(void)
  */
 static int at_exec_appeui(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	uint8_t len;
 	uint8_t buf[8];
 
@@ -396,6 +803,10 @@ static int at_query_appkey(void)
  */
 static int at_exec_appkey(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	uint8_t buf[16];
 	uint8_t len;
 
@@ -436,6 +847,10 @@ static int at_query_devaddr(void)
  */
 static int at_exec_devaddr(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	int i;
 	uint8_t len;
 	uint8_t buf[4];
@@ -487,6 +902,10 @@ static int at_query_appskey(void)
  */
 static int at_exec_appskey(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	uint8_t len;
 	uint8_t buf[16];
 
@@ -531,6 +950,10 @@ static int at_query_nwkskey(void)
  */
 static int at_exec_nwkskey(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	uint8_t len;
 	uint8_t buf[16];
 
@@ -566,6 +989,10 @@ static int at_query_class(void)
  */
 static int at_exec_class(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	uint8_t cls;
 	char *param;
 
@@ -591,6 +1018,10 @@ static int at_exec_class(char *str)
  */
 static int at_query_join(void)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	// Param1 = Join command: 1 for joining the network , 0 for stop joining
 	// Param2 = Auto-Join config: 1 for Auto-join on power up) , 0 for no auto-join.
 	// Param3 = Reattempt interval: 7 - 255 seconds
@@ -637,6 +1068,34 @@ static int at_exec_join(char *str)
 		}
 		g_lorawan_settings.auto_join = (autoJoin == 1 ? true : false);
 
+		if (!g_lorawan_settings.lorawan_enable)
+		{
+			if (bJoin == 0)
+			{
+				if (!g_lorawan_initialized)
+				{
+					init_lora();
+				}
+				if (!g_lorawan_settings.auto_join)
+				{
+					Radio.Sleep();
+				}
+			}
+
+			if (bJoin == 1)
+			{
+				if (!g_lorawan_initialized)
+				{
+					init_lora();
+				}
+				else
+				{
+					Radio.Rx(0);
+				}
+			}
+			return 0;
+		}
+
 		param = strtok(NULL, ":");
 		if (param != NULL)
 		{
@@ -647,7 +1106,7 @@ static int at_exec_join(char *str)
 			if (param != NULL)
 			{
 				nbtrials = strtol(param, NULL, 0);
-				if (nbtrials == 0)
+				if ((nbtrials == 0) && g_lorawan_settings.lorawan_enable)
 				{
 					return AT_ERRNO_PARA_VAL;
 				}
@@ -660,9 +1119,9 @@ static int at_exec_join(char *str)
 		{
 			// Manual join only works if LoRaWAN was not initialized yet.
 			// If LoRaWAN was already initialized, a restart is required
-			init_lora();
-			return 0;
+			init_lorawan();
 		}
+		return 0;
 
 		if ((bJoin == 1) && g_lorawan_initialized && (lmh_join_status_get() != LMH_SET))
 		{
@@ -691,6 +1150,10 @@ static int at_exec_join(char *str)
  */
 static int at_query_join_status()
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	uint8_t join_status;
 
 	join_status = (uint8_t)lmh_join_status_get();
@@ -718,6 +1181,10 @@ static int at_query_confirm(void)
  */
 static int at_exec_confirm(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	int cfm;
 
 	cfm = strtol(str, NULL, 0);
@@ -751,6 +1218,10 @@ static int at_query_datarate(void)
  */
 static int at_exec_datarate(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	uint8_t datarate;
 
 	datarate = strtol(str, NULL, 0);
@@ -785,6 +1256,10 @@ static int at_query_adr(void)
  */
 static int at_exec_adr(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	int adr;
 
 	adr = strtol(str, NULL, 0);
@@ -819,6 +1294,10 @@ static int at_query_txpower(void)
  */
 static int at_exec_txpower(char *str)
 {
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
 	uint8_t tx_power;
 
 	tx_power = strtol(str, NULL, 0);
@@ -877,12 +1356,9 @@ static int at_exec_sendfreq(char *str)
 	return 0;
 }
 
-/** LoRaWAN application data buffer. */
-uint8_t m_lora_app_data_buffer[256];
-
 static int at_exec_send(char *str)
 {
-	if (!g_lpwan_has_joined)
+	if (!g_lpwan_has_joined || !g_lorawan_settings.lorawan_enable)
 	{
 		return AT_ERRNO_NOALLOW;
 	}
@@ -915,7 +1391,7 @@ static int at_exec_send(char *str)
 		m_lora_app_data_buffer[buff_idx] = strtol(buff_parse, NULL, 16);
 		buff_idx++;
 	}
-	send_lora_packet(m_lora_app_data_buffer, data_size / 2, fPort);
+	send_lorawan_packet(m_lora_app_data_buffer, data_size / 2, fPort);
 	return 0;
 }
 
@@ -1038,6 +1514,16 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+SNR", "Last RX packet SNR", at_query_snr, NULL, NULL},
 	{"+VER", "Get SW version", at_query_version, NULL, NULL},
 	{"+STATUS", "Show LoRaWAN status", at_query_status, NULL, NULL},
+	// LoRa P2P management
+	{"+NWM", "Switch LoRa workmode", at_query_mode, at_exec_mode, NULL},
+	{"+PFREQ", "Set P2P frequency", at_query_p2p_freq, at_exec_p2p_freq, NULL},
+	{"+PSF", "Set P2P spreading factor", at_query_p2p_sf, at_exec_p2p_sf, NULL},
+	{"+PBW", "Set P2P bandwidth", at_query_p2p_bw, at_exec_p2p_bw, NULL},
+	{"+PCR", "Set P2P coding rate", at_query_p2p_cr, at_exec_p2p_cr, NULL},
+	{"+PPL", "Set P2P preamble length", at_query_p2p_pl, at_exec_p2p_pl, NULL},
+	{"+PTP", "Set P2P TX power", at_query_p2p_txp, at_exec_p2p_txp, NULL},
+	{"+P2P", "Set P2P configuration", at_query_p2p_config, at_exec_p2p_config, NULL},
+	{"+PSEND", "P2P send data", NULL, at_exec_p2p_send, NULL},
 };
 
 /**
@@ -1198,8 +1684,22 @@ static void at_cmd_handle(void)
 
 	if (i == sizeof(g_at_cmd_list) / sizeof(atcmd_t))
 	{
-
-		ret = AT_ERRNO_NOSUPP;
+		if (user_at_handler != NULL)
+		{
+			if (user_at_handler(rxcmd, rxcmd_index))
+			{
+				ret = 0;
+				snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+			}
+			else
+			{
+				ret = AT_ERRNO_NOSUPP;
+			}
+		}
+		else
+		{
+			ret = AT_ERRNO_NOSUPP;
+		}
 	}
 
 	if (ret != 0 && ret != AT_CB_PRINT)

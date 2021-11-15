@@ -1,6 +1,6 @@
 {
 	"name": "WisBlock-API",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"keywords": [
 		"lora",
 		"Semtech",
@@ -8,7 +8,7 @@
 		"RAK4630",
 		"WisBlock"
 	],
-	"description": "A library that covers the complete LoRaWAN, BLE and AT command handling. Just write your application specific functions and leave the rest to the API",
+	"description": "A library that covers the complete LoRa/LoRaWAN, BLE and AT command handling. Just write your application specific functions and leave the rest to the API",
 	"frameworks": [
 		"arduino"
 	],

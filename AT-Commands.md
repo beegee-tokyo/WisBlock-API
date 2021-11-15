@@ -1,12 +1,12 @@
 # AT-Commands
 
-To make it easy to setup the LoRaWAN® credentials, an AT command interface over USB is implemented. It includes the basic commands required to define the node.
+To make it easy to setup the LoRaWAN® credentials and LoRa® P2P settings, an AT command interface over USB is implemented. It includes the basic commands required to define the node.
 
 **Credits:**    
 Taylor Lee (taylor.lee@rakwireless.com)
 
 _**REMARK 1**_
-After changing LoRaWAN® parameters the device must be reset by either the ATZ command or pushing the reset button.
+After changing LoRaWAN® parameters or LoRa P2P settings, the device must be reset by either the ATZ command or pushing the reset button.
 
 _**REMARK 2**_
 The Serial port connection is lost after the ATZ command or pushing the reset button. The connection must be re-established on the connected computer before log output can be seen or AT commands can be entered again.
@@ -14,36 +14,57 @@ The Serial port connection is lost after the ATZ command or pushing the reset bu
 _**REMARK 3**_
 The Serial port is setup for 115200 baud, 8N1. It cannot be changed by AT commands.
 
+_**REMARK 4**_
+In LoRaWAN® Class C mode the received data is not shown in the AT Command interface. The data has to be handled in the user application
+In P2P LoRa® mode the received data is not shown in the AT Command interface. The data has to be handled in the user application
+
+_**REMARK 5**_
+LoRa® is a registered trademark or service mark of Semtech Corporation or its affiliates. LoRaWAN® is a licensed mark.
+
 ----
 ## Content
 
+### General commands
 * [AT Command syntax](#at-command-syntax)
-* [AT?](#at)
-* [ATR](#atr)
-* [ATZ](#atz)
-* [AT+APPEUI](#atappeui)
-* [AT+APPKEY](#atappkey)
-* [AT+DEVEUI](#atdeveui)
-* [AT+APPSKEY](#atappskey)
-* [AT+NWKSKEY](#atnwkskey)
-* [AT+DEVADDR](#atdevaddr)
-* [AT+CFM](#atcfm)
-* [AT+JOIN](#atjoin)
-* [AT+NJS](#atnjs)
-* [AT+NJM](#atnjm)
-* [AT+SENDFREQ](#atsendfreq)
-* [AT+SEND](#atsend)
-* [AT+ADR](#atadr)
-* [AT+CLASS](#atclass)
-* [AT+DR](#atdr)
-* [AT+TXP](#attxp)
-* [AT+BAND](#atband)
-* [AT+MASK](#atmask)
-* [AT+BAT](#atbat)
-* [AT+RSSI](#atrssi)
-* [AT+SNR](#atsnr)
-* [AT+VER](#atver)
-* [AT+STATUS](#atstatus)
+* [AT?](#at) Help
+* [ATR](#atr) Reset device
+* [ATZ](#atz) Reset to default configuration
+### LoRaWAN commands
+* [AT+APPEUI](#atappeui) Set/Get Application EUI
+* [AT+APPKEY](#atappkey) Set/Get Application Key
+* [AT+DEVEUI](#atdeveui) Set/Get Device EUI
+* [AT+APPSKEY](#atappskey) Set/Get Application Session Key
+* [AT+NWKSKEY](#atnwkskey) Set/Get Network Session Key
+* [AT+DEVADDR](#atdevaddr) Set/Get Device Address
+* [AT+CFM](#atcfm) Set/Get Confirmed Packet Mode
+* [AT+JOIN](#atjoin) Join LoRaWAN® Network
+* [AT+NJS](#atnjs) Get Network Join Status
+* [AT+NJM](#atnjm) Get/Set Network Join Mode
+* [AT+SENDFREQ](#atsendfreq) Get/Set Automatic Send Interval 
+* [AT+SEND](#atsend) Send LoRaWAN® packet
+* [AT+ADR](#atadr) Set/Get ADR Mode
+* [AT+CLASS](#atclass) Set/Get Class
+* [AT+DR](#atdr) Set/Get Data Rate
+* [AT+TXP](#attxp) Set/Get TX Power
+* [AT+BAND](#atband) Set/Get LoRaWAN® Region
+* [AT+MASK](#atmask) Set/Get Channel Mask
+### Device Information
+* [AT+BAT](#atbat) Get Battery Level
+* [AT+RSSI](#atrssi) Get Last Packet RSSI
+* [AT+SNR](#atsnr) Get Last Packet SNR
+* [AT+VER](#atver) Get Firmware Version
+* [AT+STATUS](#atstatus) Get Device Status
+### LoRa P2P commands
+* [AT+NWM](#atnwm) Set Device Workmode
+* [AT+PFREQ](#atpfreq) Set/Get LoRa® P2P Frequency
+* [AT+PSF](#atpsf) Set/Get LoRa® P2P Spreading Factor
+* [AT+PBW](#atpbw) Set/Get LoRa® P2P Bandwidth
+* [AT+PCR](#atpcr) Set/Get LoRa® P2P Coding Rate
+* [AT+PPL](#atppl) Set/Get LoRa® P2P Preamble Length
+* [AT+PTP](#atptp) Set/Get LoRa® P2P TX Power
+* [AT+P2P](#atp2p) Set/Get LoRa® P2P Configuration
+* [AT+PSEND](#atpsend) Send LoRa® P2P packet
+
 
 ### [Appendix](#appendix-1)
 	* [Appendix I Data Rate by Region](#appendix-i-data-rate-by-region)
@@ -138,6 +159,15 @@ AT+RSSI     Last RX packet RSSI
 AT+SNR      Last RX packet SNR
 AT+VER      Get SW version
 AT+STATUS	Show LoRaWAN status
+AT+NWM	Switch LoRa workmode
+AT+PFREQ	Set P2P frequency
+AT+PSF	Set P2P spreading factor
+AT+PBW	Set P2P bandwidth
+AT+PCR	Set P2P coding rate
+AT+PPL	Set P2P preamble length
+AT+PTP	Set P2P TX power
+AT+P2P	Set P2P configuration
+AT+PSEND	P2P send data
 +++++++++++++++
 
 OK
@@ -636,6 +666,8 @@ AT+SEND=SUCCESS
 RX:2:6:-46:11:48656C6C6F0A
 OK
 ```
+_**REMARK**_
+In Class C mode the received data is not shown in the AT Command interface. The data has to be handled in the user application
 
 [Back](#content)    
 
@@ -1053,6 +1085,266 @@ LoRaWAN status:
 +STATUS: 
 OK
 ```
+
+[Back](#content)    
+
+----
+
+## AT+NWM
+
+Description: LoRa® network work mode (LoRaWAN® or P2P)
+
+This command is used to switch to LoRaWAN® or (P2P)point-to-point mode.
+
+| Command                    | Input Parameter | Return Value                                                 | Return Code |
+| -------------------------- | --------------- | -----------------------------------------                    | ----------- |
+| AT+NWM?                    | -               | `AT+NWM: Get or set the network work NWM (0:P2P, 1:LoRaWAN)` | `OK`        |
+| AT+NWM=?                   | -               | *< 0 *> (P2P) or *< 1 >* (LoRaWAN)`                          | -           |
+| AT+NWM=`<Input Parameter>`   | *< 0 P2P or 1 LoRaWAN >* | -                                                   | `OK`        |
+
+**Examples**:
+Query status
+
+```
+AT+NWM=?
+
++NWM:0
+OK
+```
+
+Switch from LoRa P2P to LoRaWAN
+
+```
+AT+NWM=1
+```
+Module will restart
+
+
+Switch from LoRaWAN to LoRa P2P
+
+```
+AT+NWM=0
+```
+Module will restart
+
+[Back](#content)    
+
+----
+
+## AT+PFREQ
+
+Description: P2P mode frequency
+
+This command is used to access and configure P2P mode frequency.
+
+| Command                    | Input Parameter | Return Value                                                 | Return Code |
+| -------------------------- | --------------- | -----------------------------------------                    | ----------- |
+| AT+PFREQ?                    | -               | `AT+NWM: Set P2P frequency` | `OK`        |
+| AT+PFREQ=?                   | -               | *< frequency >* in Hz                                     | -           |
+| AT+PFREQ=`<Input Parameter>`   | *< frequency >* in Hz | -                                                   | `OK`        |
+
+**Examples**:
+
+```
+AT+PFREQ=868000000
+
+OK
+AT+PFREQ=?
+
++PFREQ:916000000
+OK
+```
+
+[Back](#content)    
+
+----
+
+## AT+PSF
+
+Description: P2P mode spreading factor
+
+This command is used to access and configure P2P mode spreading factor.
+
+| Command                    | Input Parameter | Return Value                | Return Code |
+| -------------------------- | --------------- | --------------------------- | ----------- |
+| AT+PSF?                    | -               | `AT+NWM: Set P2P frequency` | `OK`        |
+| AT+PSF=?                   | -               | *< Spreading factor >*      | -           |
+| AT+PSF=`<Input Parameter>`   | *< 7 to 12 >*   | -                       | `OK`        |
+
+**Examples**:
+
+```
+AT+PSF=9
+
+OK
+AT+PSF=?
+
++PSF:7
+OK
+```
+
+[Back](#content)    
+
+----
+
+## AT+PBW
+
+Description: P2P mode bandwidth
+
+This command is used to access and configure P2P mode bandwidth.
+
+| Command                    | Input Parameter | Return Value                | Return Code |
+| -------------------------- | --------------- | --------------------------- | ----------- |
+| AT+PBW?                    | -               | `AT+PBW: Set P2P bandwidth` | `OK`        |
+| AT+PBW=?                   | -               | *`125`*, *`250`*, *`500`*, *`062`*, *`041`*, *`031`*, *`020`*, *`015`*, *`010`*, *`007`*      | -           |
+| AT+PBW=`<Input Parameter>`   | *< *`125`*, *`250`*, *`500`*, *`062`*, *`041`*, *`031`*, *`020`*, *`015`*, *`010`*, *`007`* >*   | -                       | `OK`        |
+
+**Examples**:
+
+```
+AT+PBW=125
+
+OK
+AT+PBW=?
+
++PBW:125
+OK
+```
+
+[Back](#content)    
+
+----
+
+## AT+PCR
+
+Description: P2P mode coding rate
+
+This command is used to access and configure P2P mode coding rate. (4/5=1, 4/6=2, 4/7=3, 4/8=4)
+
+| Command                    | Input Parameter | Return Value                | Return Code |
+| -------------------------- | --------------- | --------------------------- | ----------- |
+| AT+PCR?                    | -               | `AT+PCR: Set P2P coding rate` | `OK`        |
+| AT+PCR=?                   | -               | *`1`*, *`2`*, *`3`*, *`4`*      | -           |
+| AT+PCR=`<Input Parameter>`   | *< *`1`*, *`2`*, *`3`*, *`4`* >*   | -                       | `OK`        |
+
+**Examples**:
+
+```
+AT+PCR=1
+
+OK
+AT+PCR=?
+
++PCR:1
+OK
+```
+
+[Back](#content)    
+
+----
+
+## AT+PPL
+
+Description: P2P mode preamble length
+
+This command is used to access and configure P2P mode preamble length.
+
+| Command                    | Input Parameter | Return Value                | Return Code |
+| -------------------------- | --------------- | --------------------------- | ----------- |
+| AT+PPL?                    | -               | `AT+PPL: Set P2P preamble length` | `OK`        |
+| AT+PPL=?                   | -               | *`1`* to *`254`*      | -           |
+| AT+PPL=`<Input Parameter>`   | *< *`1`* to *`254`* >*   | -                       | `OK`        |
+
+**Examples**:
+
+```
+AT+PPL=8
+
+OK
+AT+PPL=?
+
++PPL:8
+OK
+```
+
+[Back](#content)    
+
+----
+
+## AT+PTP
+
+Description: P2P mode coding rate
+
+This command is used to access and configure P2P mode coding rate. (4/5=1, 4/6=2, 4/7=3, 4/8=4)
+
+| Command                    | Input Parameter | Return Value                | Return Code |
+| -------------------------- | --------------- | --------------------------- | ----------- |
+| AT+PTP?                    | -               | `AT+PTP: Set P2P TX power` | `OK`        |
+| AT+PTP=?                   | -               | *`0`* to *`22`*      | -           |
+| AT+PTP=`<Input Parameter>`   | *< *`0`* to *`22`* >*   | -                       | `OK`        |
+
+**Examples**:
+
+```
+AT+PTP=22
+
+OK
+AT+PTP=?
+
++PTP:22
+OK
+```
+
+[Back](#content)    
+
+----
+
+## AT+P2P
+
+Description: P2P configuration settings
+
+This command is used to access and configure all P2P mode settings.
+Frequency, Spreading Factor, Bandwidth, Codingrate, Preamble Length, TX Power
+
+| Command                    | Input Parameter | Return Value                | Return Code |
+| -------------------------- | --------------- | --------------------------- | ----------- |
+| AT+P2P?                    | -               | `AT+PTP: Set P2P TX power` | `OK`        |
+| AT+P2P=?                   | -               | *`Freq`*:*`SF`*:*`BW`*:*`CR`*:*`PPL`*:*`PWR`*      | -           |
+| AT+P2P=`<Input Parameter>`   | *< *`Freq`*:*`SF`*:*`BW`*:*`CR`*:*`PPL`*:*`PWR`* >*   | -                       | `OK`        |
+
+**Examples**:
+
+```
+AT+P2P=916000000:7:0:1:8:10
+
+OK
+AT+P2P=?
+
++P2P:916000000:7:0:1:8:10
+OK
+```
+
+
+## AT+PSEND
+
+Description: P2P send data
+
+This command is used to send P2P data.
+
+| Command                    | Input Parameter | Return Value                | Return Code |
+| -------------------------- | --------------- | --------------------------- | ----------- |
+| AT+PSEND?                    | -               | `AT+PSEND: P2P send data` | `OK`        |
+| AT+PSEND=`<Input Parameter>`   | *< *`Payload`* >*   | -                       | `OK`        |
+
+**Examples**:
+
+```
+AT+PSEND=313233
+
+OK
+```
+_**REMARK**_
+Received data is not shown in the AT Command interface. The data has to be handled in the user application
 
 [Back](#content)    
 
