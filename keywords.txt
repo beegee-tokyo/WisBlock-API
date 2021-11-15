@@ -16,6 +16,7 @@ api_read_credentials	KEYWORD1
 api_set_credentials	KEYWORD1
 g_ble_uart	KEYWORD1
 send_lora_packet	KEYWORD1
+send_lorawan_packet	KEYWORD1
 
 #######################################
 # Globals (KEYWORD2)

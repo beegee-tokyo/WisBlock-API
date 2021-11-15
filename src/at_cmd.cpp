@@ -528,7 +528,7 @@ static int at_exec_p2p_send(char *str)
 		m_lora_app_data_buffer[buff_idx] = strtol(buff_parse, NULL, 16);
 		buff_idx++;
 	}
-	send_lora_packet(m_lora_app_data_buffer, data_size / 2);
+	send_lorawan_packet(m_lora_app_data_buffer, data_size / 2);
 	return 0;
 }
 

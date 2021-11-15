@@ -241,12 +241,12 @@ void app_event_handler(void)
 			if (has_env)
 			{
 				// Tracker has BME680, send full packet
-				result = send_lora_packet((uint8_t *)&g_tracker_data, TRACKER_DATA_LEN);
+				result = send_lorawan_packet((uint8_t *)&g_tracker_data, TRACKER_DATA_LEN);
 			}
 			else
 			{
 				// Tracker has no BME680, send short packet
-				result = send_lora_packet((uint8_t *)&g_tracker_data, TRACKER_DATA_SHORT_LEN);
+				result = send_lorawan_packet((uint8_t *)&g_tracker_data, TRACKER_DATA_SHORT_LEN);
 			}
 			switch (result)
 			{

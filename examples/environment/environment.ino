@@ -158,7 +158,7 @@ void app_event_handler(void)
 			// Get BME680 sensor data
 
 			uint8_t data_size = read_bme680();
-			lmh_error_status result = send_lora_packet(collected_data, data_size);
+			lmh_error_status result = send_lorawan_packet(collected_data, data_size);
 			switch (result)
 			{
 			case LMH_SUCCESS:
