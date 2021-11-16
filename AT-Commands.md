@@ -67,9 +67,9 @@ LoRa® is a registered trademark or service mark of Semtech Corporation or its a
 
 
 ### [Appendix](#appendix-1)
-	* [Appendix I Data Rate by Region](#appendix-i-data-rate-by-region)
-	* [Appendix II TX Power by Region](#appendix-ii-tx-power-by-region)
-	* [Appendix III Maximum Transmission Load by Region](#appendix-iii-maximum-transmission-load-by-region)
+  * [Appendix I Data Rate by Region](#appendix-i-data-rate-by-region)    
+  * [Appendix II TX Power by Region](#appendix-ii-tx-power-by-region)    
+  * [Appendix III Maximum Transmission Load by Region](#appendix-iii-maximum-transmission-load-by-region)    
 
 ----
 
