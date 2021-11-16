@@ -5,16 +5,16 @@
 
 ----
 
-Targeting low power consumption, this Arduino library for RAKwireless WisBlock Core modules takes care of all the LoRaWAN, BLE, AT command functionality. You can concentrate on your application and leave the rest to the API. It is made as a companion to the [SX126x-Arduino LoRaWAN library](https://github.com/beegee-tokyo/SX126x-Arduino)    
+Targeting low power consumption, this Arduino library for RAKwireless WisBlock Core modules takes care of all the LoRa P2P, LoRaWAN, BLE, AT command functionality. You can concentrate on your application and leave the rest to the API. It is made as a companion to the [SX126x-Arduino LoRaWAN library](https://github.com/beegee-tokyo/SX126x-Arduino) :arrow_upper_right:    
 It requires some rethinking about Arduino applications, because you have no `setup()` or `loop()` function. Instead everything is event driven. The MCU is sleeping until it needs to take actions. This can be a LoRaWAN event, an AT command received over the USB port or an application event, e.g. an interrupt coming from a sensor. 
 
 This approach makes it easy to create applications designed for low power usage. During sleep the WisBlock Base + WisBlock Core RAK4631 consume only 40uA.
 
-In addition the API offers two options to setup LoRaWAN settings without the need to hard-code them into the source codes.    
+In addition the API offers two options to setup LoRa P2P / LoRaWAN settings without the need to hard-code them into the source codes.    
 - AT Commands => [AT-Commands Manual](./AT-Commands.md)
-- BLE interface to [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox)
+- BLE interface to [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) :arrow_upper_right:
 
-# _**IMPORTANT: This first release supports only the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_
+# _**IMPORTANT: This first release supports only the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_ :arrow_upper_right:
 
 ----
 
@@ -22,6 +22,7 @@ In addition the API offers two options to setup LoRaWAN settings without the nee
 * [How does it work?](#how-does-it-work)
 	* [Block diagram of the API and application part](#block-diagram-of-the-api-and-application-part)
 	* [AT Command format](#at-command-format)
+	* [Extend AT command interface](#extend-at-command-interface)
 	* [Available examples](#available-examples)
 * [API functions](#api-functions)
 	* [Set the application version](#set-the-application-version)
@@ -79,20 +80,74 @@ All available AT commands can be found in the [AT-Commands Manual](./AT-Commands
 
 ----
 
-## Available examples
-- [api-test.ino](./examples/api-test) is a very basic example that sends a dummy message over LoRaWAN
-- [environment.ino](./examples/environment) shows how to use the frequent wake up call to read sensor data from a RAK1906
-- [accelerometer.ino](./examples/accel) shows how to use an external interrupt to create a wake-up event.
-- [WisBlock Kit 2 GNSS tracker](./examples/WisBlock-Kit-2) is a LPWAN GNSS tracker application for the [WisBlock Kit2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel)    
+## Extend AT command interface
+Starting with WisBlock API V1.1.2 the AT Commands can be extended by user defined AT Commands. Here is an example code how to add a user AT command. To extend the AT commands, a function **`user_at_handler`** has to be written.
+This function will be called by the AT command handler if the AT command is not recognied. 
+**`user_at_handler**` has two inputs:
+- `char * user_cmd` a pointer to an char array with the AT command
+- `uint8_t cmd_size` is the length of the AT command char array.
 
-These four examples explain the usage of the API. In all examples the API callbacks and the additional functions (sensor readings, IRQ handling, GNSS location service) are separated into their own sketches.    
+This examples is used to set a variable in the application.
+
+```c++
+/*********************************************************************/
+// Example AT command to change the value of the variable new_val:
+// Query the value AT+SETVAL=?
+// Set the value AT+SETVAL=120000
+/*********************************************************************/
+int32_t new_val = 3000;
+
+bool user_at_handler(char *user_cmd, uint8_t cmd_size)
+{
+	MYLOG("APP", "Received User AT commmand >>%s<< len %d", user_cmd, cmd_size);
+
+	// Get the command itself
+	char *param;
+
+	param = strtok(user_cmd, "=");
+	MYLOG("APP", "Commmand >>%s<<", param);
+
+	// Check if the command is supported
+	if (strcmp(param, (const char *)"+SETVAL") == 0)
+	{
+		// check if it is query or set
+		param = strtok(NULL, ":");
+		MYLOG("APP", "Param string >>%s<<", param);
+
+		if (strcmp(param, (const char *)"?") == 0)
+		{
+			// It is a query, use AT_PRINTF to respond
+			AT_PRINTF("NEW_VAL: %d", new_val);
+		}
+		else
+		{
+			new_val = strtol(param, NULL, 0);
+			MYLOG("APP", "Value number >>%ld<<", new_val);
+		}
+		return true;
+	}
+	return false;
+}
+```
+
+----
+
+## Available examples
+- [API Test](./examples/api-test) is a very basic example that sends a dummy message over LoRaWAN
+- [Environment Sensor](./examples/environment) shows how to use the frequent wake up call to read sensor data from a RAK1906
+- [Accelerometer Sensor](./examples/accel) shows how to use an external interrupt to create a wake-up event.
+- [WisBlock Kit 2 GNSS tracker](./examples/WisBlock-Kit-2) is a LPWAN GNSS tracker application for the [WisBlock Kit2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel) :arrow_upper_right:    
+- [LoRa P2P](./examples/LoRa-P2P) is a simple LoRa P2P example using the WisBlock API    
+
+These five examples explain the usage of the API. In all examples the API callbacks and the additional functions (sensor readings, IRQ handling, GNSS location service) are separated into their own sketches.    
 - The simplest example (_**api-test.ino**_) just sends a 3 byte packet with the values 0x10, 0x00, 0x00.    
-- The other examples send their data encoded in the same format as RAKwireless WisNode devices. An explanation of the data format can be found in the RAKwireless [Documentation Center](https://docs.rakwireless.com/Product-Categories/WisTrio/RAK7205-5205/Quickstart/#decoding-sensor-data-on-chirpstack-and-ttn). A ready to use packet decoder can be found in the RAKwireless Github repos in [RUI_LoRa_node_payload_decoder](https://github.com/RAKWireless/RUI_LoRa_node_payload_decoder)
+- The other examples send their data encoded in the same format as RAKwireless WisNode devices. An explanation of the data format can be found in the RAKwireless [Documentation Center](https://docs.rakwireless.com/Product-Categories/WisTrio/RAK7205-5205/Quickstart/#decoding-sensor-data-on-chirpstack-and-ttn) :arrow_upper_right:. A ready to use packet decoder can be found in the RAKwireless Github repos in [RUI_LoRa_node_payload_decoder](https://github.com/RAKWireless/RUI_LoRa_node_payload_decoder) :arrow_upper_right:
+- The LoRa P2P example (_**LoRa-P2P.ino**_) listens for P2P packets and displays them in the log.    
 
 _**The WisBlock-API has been used as well in the following PlatformIO projects:**_
-- _**[RAK4631-Kit-4-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-4-RAK1906) Environment sensor application for the [WisBlock Kit 4](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-4-air-quality-monitor)**_
-- _**[RAK4631-Kit-2-RAK1910-RAK1904-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-2-RAK1910-RAK1904-RAK1906) LPWAN GNSS tracker application for the [WisBlock Kit 2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel)**_
-- _**[RAK4631-Kit-2-RAK12500-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-2-RAK12500-RAK1906) LPWAN GNSS tracker application using the [RAK12500](https://store.rakwireless.com/products/wisblock-gnss-location-module-rak12500)**_
+- _**[RAK4631-Kit-4-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-4-RAK1906) :arrow_upper_right: Environment sensor application for the [WisBlock Kit 4](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-4-air-quality-monitor)**_ :arrow_upper_right:
+- _**[RAK4631-Kit-2-RAK1910-RAK1904-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-2-RAK1910-RAK1904-RAK1906) :arrow_upper_right: LPWAN GNSS tracker application for the [WisBlock Kit 2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel)**_ :arrow_upper_right:
+- _**[RAK4631-Kit-2-RAK12500-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-2-RAK12500-RAK1906) :arrow_upper_right: LPWAN GNSS tracker application using the [RAK12500](https://store.rakwireless.com/products/wisblock-gnss-location-module-rak12500)**_ :arrow_upper_right:
 
 ----
 
@@ -138,6 +193,35 @@ _**REMARK 2**_
 Keep in mind that parameters that are changed from with this method can be changed over AT command or BLE _**BUT WILL BE RESET AFTER A REBOOT**_!
 
 ----
+
+## Set hardcoded LoRa P2P settings
+`void api_read_credentials(void);`    
+`void api_set_credentials(void);`
+If LoRa P2P settings need to be hardcoded (e.g. the frequency, bandwidth, ...) this can be done in `setup_app()`.
+First the saved settings must be read from flash with `api_read_credentials();`, then settings can be changed. After changing the settings must be saved with `api_set_credentials()`.
+As the WisBlock API checks if any changes need to be saved, the changed values will be only saved on the first boot after flashing the application.     
+Example:    
+```c++
+// Read credentials from Flash
+api_read_credentials();
+
+// Make changes to the credentials
+g_lorawan_settings.p2p_frequency = 916000000;			// Use 916 MHz to send and receive
+g_lorawan_settings.p2p_bandwidth = 0;					// Bandwidth 125 kHz
+g_lorawan_settings.p2p_sf = 7;							// Spreading Factor 7
+g_lorawan_settings.p2p_cr = 1;							// Coding Rate 4/5
+g_lorawan_settings.p2p_preamble_len = 8;				// Preample Length 8
+g_lorawan_settings.p2p_tx_power = 22;					// TX power 22 dBi
+
+// Save hard coded LoRaWAN settings
+api_set_credentials();
+```
+
+_**REMARK 1**_    
+Hard coded settings must be set in `void setup_app(void)`!
+
+_**REMARK 2**_    
+Keep in mind that parameters that are changed from with this method can be changed over AT command or BLE _**BUT WILL BE RESET AFTER A REBOOT**_!
 
 ## Send data over BLE UART
 `g_ble_uart.print()` can be used to send data over the BLE UART. `print`, `println` and `printf` is supported.
@@ -233,7 +317,7 @@ These are the required includes and definitions for the user application and the
 In this example we hard-coded the LoRaWAN credentials. It is strongly recommended **TO NOT DO THAT** to avoid duplicated node credentials    
 Alternative options to setup credentials are
 - over USB with [AT-Commands](./AT-Commands.md)
-- over BLE with [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) 
+- over BLE with [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) :arrow_upper_right: 
 
 ```c++
 #include <Arduino.h>
@@ -317,7 +401,7 @@ This function is called at the very beginning of the application start. In this 
 In this example we hard-coded the LoRaWAN credentials. It is strongly recommended **TO NOT DO THAT** to avoid duplicated node credentials    
 Alternative options to setup credentials are
 - over USB with [AT-Commands](./AT-Commands.md)
-- over BLE with [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) 
+- over BLE with [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) :arrow_upper_right: 
 In this function the global flag `g_enable_ble` is set. If true, the BLE interface is initialized. If false, the BLE interface is not activated, which can lower the power consumption.
 ```c++
 void setup_app(void)
@@ -518,10 +602,10 @@ void ble_data_handler(void)
 This callback is called on two different events:
 
 ### 1 LORA_DATA
-The event **LORA_DATA** is triggered if a downlink packet from the LoRaWAN server has arrived. In this example we are not parsing the data, they are only printed out to the LOG and over BLE UART (if a device is connected)
+The event **LORA_DATA** is triggered if a downlink packet from the LoRaWAN server or a LoRa P2P packet has arrived. In this example we are not parsing the data, they are only printed out to the LOG and over BLE UART (if a device is connected)
 
 ### 2 LORA_TX_FIN
-The event **LORA_TX_FIN** is triggered after sending an uplink packet is finished, including the RX1 and RX2 windows. If **CONFIRMED** packets are sent, the global flag `g_rx_fin_result` contains the result of the confirmed transmission. If `g_rx_fin_result` is true, the LoRaWAN server acknowledged the uplink packet by sending an `ACK`. Otherwise the `g_rx_fin_result` is set to false, indicating that the packet was not received by the LoRaWAN server (no gateway in range, packet got damaged on the air. If **UNCONFIRMED** packets are sent, the flag `g_rx_fin_result` is always true. 
+The event **LORA_TX_FIN** is triggered after sending an uplink packet is finished, including the RX1 and RX2 windows. If **CONFIRMED** packets are sent, the global flag `g_rx_fin_result` contains the result of the confirmed transmission. If `g_rx_fin_result` is true, the LoRaWAN server acknowledged the uplink packet by sending an `ACK`. Otherwise the `g_rx_fin_result` is set to false, indicating that the packet was not received by the LoRaWAN server (no gateway in range, packet got damaged on the air. If **UNCONFIRMED** packets are sent or if **LoRa P2P mode** is used, the flag `g_rx_fin_result` is always true. 
 
 ### 3 LORA_JOIN_FIN
 The event **LORA_JOIN_FIN** is called after the Join request/Join accept/reject cycle is finished. The global flag `g_task_event_type` contains the result of the Join request. If true, the node has joined the network. If false the join didn't succeed. In this case the join cycle could be restarted or the node could report an error.
@@ -684,6 +768,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-11-16
+  - Update documentation
 - 2022-11-15
   - Add LoRa P2P support
   - Add support for user defined AT commands
