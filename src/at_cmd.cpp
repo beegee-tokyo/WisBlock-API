@@ -1682,6 +1682,7 @@ static void at_cmd_handle(void)
 		break;
 	}
 
+	// Check if user defined AT commands are setup
 	if (i == sizeof(g_at_cmd_list) / sizeof(atcmd_t))
 	{
 		if (user_at_handler != NULL)

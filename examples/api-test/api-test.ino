@@ -19,13 +19,13 @@
 
 #if MY_DEBUG > 0
 #define MYLOG(tag, ...)           \
-  do                            \
-  {                             \
-    if (tag)                  \
-      PRINTF("[%s] ", tag); \
-    PRINTF(__VA_ARGS__);      \
-    PRINTF("\n");             \
-  } while (0)
+	do                            \
+	{                             \
+		if (tag)                  \
+			PRINTF("[%s] ", tag); \
+		PRINTF(__VA_ARGS__);      \
+		PRINTF("\n");             \
+	} while (0)
 #else
 #define MYLOG(...)
 #endif
@@ -78,64 +78,64 @@ uint8_t send_fail = 0;
 */
 void setup_app(void)
 {
-  Serial.begin(115200);
-  time_t serial_timeout = millis();
-  // On nRF52840 the USB serial is not available immediately
-  while (!Serial)
-  {
-    if ((millis() - serial_timeout) < 5000)
-    {
-      delay(100);
-      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-    }
-    else
-    {
-      break;
-    }
-  }
-  digitalWrite(LED_BUILTIN, LOW);
+	Serial.begin(115200);
+	time_t serial_timeout = millis();
+	// On nRF52840 the USB serial is not available immediately
+	while (!Serial)
+	{
+		if ((millis() - serial_timeout) < 5000)
+		{
+			delay(100);
+			digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+		}
+		else
+		{
+			break;
+		}
+	}
+	digitalWrite(LED_BUILTIN, LOW);
 
-  MYLOG("APP", "Setup WisBlock API Example");
+	MYLOG("APP", "Setup WisBlock API Example");
 
-  // Enable BLE
-  g_enable_ble = true;
+	// Enable BLE
+	g_enable_ble = true;
 
-  // Set firmware version
-  api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
+	// Set firmware version
+	api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
 
-  // Optional
-  // Setup LoRaWAN credentials hard coded
-  // It is strongly recommended to avoid duplicated node credentials
-  // Options to setup credentials are
-  // -over USB with AT commands
-  // -over BLE with My nRF52 Toolbox
+	// Optional
+	// Setup LoRaWAN credentials hard coded
+	// It is strongly recommended to avoid duplicated node credentials
+	// Options to setup credentials are
+	// -over USB with AT commands
+	// -over BLE with My nRF52 Toolbox
 
-  // Read LoRaWAN settings from flash
-  api_read_credentials();
-  // Change LoRaWAN settings
-  g_lorawan_settings.auto_join = true;							// Flag if node joins automatically after reboot
-  g_lorawan_settings.otaa_enabled = true;							// Flag for OTAA or ABP
-  memcpy(g_lorawan_settings.node_device_eui, node_device_eui, 8); // OTAA Device EUI MSB
-  memcpy(g_lorawan_settings.node_app_eui, node_app_eui, 8);		// OTAA Application EUI MSB
-  memcpy(g_lorawan_settings.node_app_key, node_app_key, 16);		// OTAA Application Key MSB
-  memcpy(g_lorawan_settings.node_nws_key, node_nws_key, 16);		// ABP Network Session Key MSB
-  memcpy(g_lorawan_settings.node_apps_key, node_apps_key, 16);	// ABP Application Session key MSB
-  g_lorawan_settings.node_dev_addr = 0x26021FB4;					// ABP Device Address MSB
-  g_lorawan_settings.send_repeat_time = 120000;					// Send repeat time in milliseconds: 2 * 60 * 1000 => 2 minutes
-  g_lorawan_settings.adr_enabled = false;							// Flag for ADR on or off
-  g_lorawan_settings.public_network = true;						// Flag for public or private network
-  g_lorawan_settings.duty_cycle_enabled = false;					// Flag to enable duty cycle (validity depends on Region)
-  g_lorawan_settings.join_trials = 5;								// Number of join retries
-  g_lorawan_settings.tx_power = 0;								// TX power 0 .. 15 (validity depends on Region)
-  g_lorawan_settings.data_rate = 3;								// Data rate 0 .. 15 (validity depends on Region)
-  g_lorawan_settings.lora_class = 0;								// LoRaWAN class 0: A, 2: C, 1: B is not supported
-  g_lorawan_settings.subband_channels = 1;						// Subband channel selection 1 .. 9
-  g_lorawan_settings.app_port = 2;								// Data port to send data
-  g_lorawan_settings.confirmed_msg_enabled = LMH_UNCONFIRMED_MSG; // Flag to enable confirmed messages
-  g_lorawan_settings.resetRequest = true;							// Command from BLE to reset device
-  g_lorawan_settings.lora_region = LORAMAC_REGION_AS923_3;		// LoRa region
-  // Save LoRaWAN settings
-  api_set_credentials();
+	// Read LoRaWAN settings from flash
+	api_read_credentials();
+	// Change LoRaWAN settings
+	g_lorawan_settings.auto_join = true;							// Flag if node joins automatically after reboot
+	g_lorawan_settings.otaa_enabled = true;							// Flag for OTAA or ABP
+	memcpy(g_lorawan_settings.node_device_eui, node_device_eui, 8); // OTAA Device EUI MSB
+	memcpy(g_lorawan_settings.node_app_eui, node_app_eui, 8);		// OTAA Application EUI MSB
+	memcpy(g_lorawan_settings.node_app_key, node_app_key, 16);		// OTAA Application Key MSB
+	memcpy(g_lorawan_settings.node_nws_key, node_nws_key, 16);		// ABP Network Session Key MSB
+	memcpy(g_lorawan_settings.node_apps_key, node_apps_key, 16);	// ABP Application Session key MSB
+	g_lorawan_settings.node_dev_addr = 0x26021FB4;					// ABP Device Address MSB
+	g_lorawan_settings.send_repeat_time = 120000;					// Send repeat time in milliseconds: 2 * 60 * 1000 => 2 minutes
+	g_lorawan_settings.adr_enabled = false;							// Flag for ADR on or off
+	g_lorawan_settings.public_network = true;						// Flag for public or private network
+	g_lorawan_settings.duty_cycle_enabled = false;					// Flag to enable duty cycle (validity depends on Region)
+	g_lorawan_settings.join_trials = 5;								// Number of join retries
+	g_lorawan_settings.tx_power = 0;								// TX power 0 .. 15 (validity depends on Region)
+	g_lorawan_settings.data_rate = 3;								// Data rate 0 .. 15 (validity depends on Region)
+	g_lorawan_settings.lora_class = 0;								// LoRaWAN class 0: A, 2: C, 1: B is not supported
+	g_lorawan_settings.subband_channels = 1;						// Subband channel selection 1 .. 9
+	g_lorawan_settings.app_port = 2;								// Data port to send data
+	g_lorawan_settings.confirmed_msg_enabled = LMH_UNCONFIRMED_MSG; // Flag to enable confirmed messages
+	g_lorawan_settings.resetRequest = true;							// Command from BLE to reset device
+	g_lorawan_settings.lora_region = LORAMAC_REGION_AS923_3;		// LoRa region
+	// Save LoRaWAN settings
+	api_set_credentials();
 }
 
 /**
@@ -146,8 +146,8 @@ void setup_app(void)
 */
 bool init_app(void)
 {
-  MYLOG("APP", "init_app");
-  return true;
+	MYLOG("APP", "init_app");
+	return true;
 }
 
 /**
@@ -157,62 +157,62 @@ bool init_app(void)
 */
 void app_event_handler(void)
 {
-  // Timer triggered event
-  if ((g_task_event_type & STATUS) == STATUS)
-  {
-    g_task_event_type &= N_STATUS;
-    MYLOG("APP", "Timer wakeup");
+	// Timer triggered event
+	if ((g_task_event_type & STATUS) == STATUS)
+	{
+		g_task_event_type &= N_STATUS;
+		MYLOG("APP", "Timer wakeup");
 
-    // If BLE is enabled, restart Advertising
-    if (g_enable_ble)
-    {
-      restart_advertising(15);
-    }
+		// If BLE is enabled, restart Advertising
+		if (g_enable_ble)
+		{
+			restart_advertising(15);
+		}
 
-    if (lora_busy)
-    {
-      MYLOG("APP", "LoRaWAN TX cycle not finished, skip this event");
-      if (g_ble_uart_is_connected)
-      {
-        g_ble_uart.println("LoRaWAN TX cycle not finished, skip this event");
-      }
-    }
-    else
-    {
+		if (lora_busy)
+		{
+			MYLOG("APP", "LoRaWAN TX cycle not finished, skip this event");
+			if (g_ble_uart_is_connected)
+			{
+				g_ble_uart.println("LoRaWAN TX cycle not finished, skip this event");
+			}
+		}
+		else
+		{
 
-      // Dummy packet
+			// Dummy packet
 
-      uint8_t dummy_packet[] = {0x10, 0x00, 0x00};
+			uint8_t dummy_packet[] = {0x10, 0x00, 0x00};
 
-      lmh_error_status result = send_lorawan_packet(dummy_packet, 3);
-      switch (result)
-      {
-        case LMH_SUCCESS:
-          MYLOG("APP", "Packet enqueued");
-          // Set a flag that TX cycle is running
-          lora_busy = true;
-          if (g_ble_uart_is_connected)
-          {
-            g_ble_uart.println("Packet enqueued");
-          }
-          break;
-        case LMH_BUSY:
-          MYLOG("APP", "LoRa transceiver is busy");
-          if (g_ble_uart_is_connected)
-          {
-            g_ble_uart.println("LoRa transceiver is busy");
-          }
-          break;
-        case LMH_ERROR:
-          MYLOG("APP", "Packet error, too big to send with current DR");
-          if (g_ble_uart_is_connected)
-          {
-            g_ble_uart.println("Packet error, too big to send with current DR");
-          }
-          break;
-      }
-    }
-  }
+			lmh_error_status result = send_lorawan_packet(dummy_packet, 3);
+			switch (result)
+			{
+			case LMH_SUCCESS:
+				MYLOG("APP", "Packet enqueued");
+				// Set a flag that TX cycle is running
+				lora_busy = true;
+				if (g_ble_uart_is_connected)
+				{
+					g_ble_uart.println("Packet enqueued");
+				}
+				break;
+			case LMH_BUSY:
+				MYLOG("APP", "LoRa transceiver is busy");
+				if (g_ble_uart_is_connected)
+				{
+					g_ble_uart.println("LoRa transceiver is busy");
+				}
+				break;
+			case LMH_ERROR:
+				MYLOG("APP", "Packet error, too big to send with current DR");
+				if (g_ble_uart_is_connected)
+				{
+					g_ble_uart.println("Packet error, too big to send with current DR");
+				}
+				break;
+			}
+		}
+	}
 }
 
 /**
@@ -221,30 +221,30 @@ void app_event_handler(void)
 */
 void ble_data_handler(void)
 {
-  if (g_enable_ble)
-  {
-    /**************************************************************/
-    /**************************************************************/
-    /// \todo BLE UART data arrived
-    /// \todo or forward them to the AT command interpreter
-    /// \todo parse them here
-    /**************************************************************/
-    /**************************************************************/
-    if ((g_task_event_type & BLE_DATA) == BLE_DATA)
-    {
-      MYLOG("AT", "RECEIVED BLE");
-      // BLE UART data arrived
-      // in this example we forward it to the AT command interpreter
-      g_task_event_type &= N_BLE_DATA;
+	if (g_enable_ble)
+	{
+		/**************************************************************/
+		/**************************************************************/
+		/// \todo BLE UART data arrived
+		/// \todo or forward them to the AT command interpreter
+		/// \todo parse them here
+		/**************************************************************/
+		/**************************************************************/
+		if ((g_task_event_type & BLE_DATA) == BLE_DATA)
+		{
+			MYLOG("AT", "RECEIVED BLE");
+			// BLE UART data arrived
+			// in this example we forward it to the AT command interpreter
+			g_task_event_type &= N_BLE_DATA;
 
-      while (g_ble_uart.available() > 0)
-      {
-        at_serial_input(uint8_t(g_ble_uart.read()));
-        delay(5);
-      }
-      at_serial_input(uint8_t('\n'));
-    }
-  }
+			while (g_ble_uart.available() > 0)
+			{
+				at_serial_input(uint8_t(g_ble_uart.read()));
+				delay(5);
+			}
+			at_serial_input(uint8_t('\n'));
+		}
+	}
 }
 
 /**
@@ -253,78 +253,78 @@ void ble_data_handler(void)
 */
 void lora_data_handler(void)
 {
-  // LoRa data handling
-  if ((g_task_event_type & LORA_DATA) == LORA_DATA)
-  {
-    /**************************************************************/
-    /**************************************************************/
-    /// \todo LoRa data arrived
-    /// \todo parse them here
-    /**************************************************************/
-    /**************************************************************/
-    g_task_event_type &= N_LORA_DATA;
-    MYLOG("APP", "Received package over LoRa");
-    char log_buff[g_rx_data_len * 3] = {0};
-    uint8_t log_idx = 0;
-    for (int idx = 0; idx < g_rx_data_len; idx++)
-    {
-      sprintf(&log_buff[log_idx], "%02X ", g_rx_lora_data[idx]);
-      log_idx += 3;
-    }
-    lora_busy = false;
-    MYLOG("APP", "%s", log_buff);
+	// LoRa Join finished handling
+	if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
+	{
+		g_task_event_type &= N_LORA_JOIN_FIN;
+		if (g_join_result)
+		{
+			MYLOG("APP", "Successfully joined network");
+		}
+		else
+		{
+			MYLOG("APP", "Join network failed");
+			/// \todo here join could be restarted.
+			// lmh_join();
+		}
+	}
 
-    if (g_ble_uart_is_connected && g_enable_ble)
-    {
-      for (int idx = 0; idx < g_rx_data_len; idx++)
-      {
-        g_ble_uart.printf("%02X ", g_rx_lora_data[idx]);
-      }
-      g_ble_uart.println("");
-    }
-  }
+	// LoRa data handling
+	if ((g_task_event_type & LORA_DATA) == LORA_DATA)
+	{
+		/**************************************************************/
+		/**************************************************************/
+		/// \todo LoRa data arrived
+		/// \todo parse them here
+		/**************************************************************/
+		/**************************************************************/
+		g_task_event_type &= N_LORA_DATA;
+		MYLOG("APP", "Received package over LoRa");
+		char log_buff[g_rx_data_len * 3] = {0};
+		uint8_t log_idx = 0;
+		for (int idx = 0; idx < g_rx_data_len; idx++)
+		{
+			sprintf(&log_buff[log_idx], "%02X ", g_rx_lora_data[idx]);
+			log_idx += 3;
+		}
+		lora_busy = false;
+		MYLOG("APP", "%s", log_buff);
 
-  // LoRa TX finished handling
-  if ((g_task_event_type & LORA_TX_FIN) == LORA_TX_FIN)
-  {
-    g_task_event_type &= N_LORA_TX_FIN;
+		if (g_ble_uart_is_connected && g_enable_ble)
+		{
+			for (int idx = 0; idx < g_rx_data_len; idx++)
+			{
+				g_ble_uart.printf("%02X ", g_rx_lora_data[idx]);
+			}
+			g_ble_uart.println("");
+		}
+	}
 
-    MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-    if (g_ble_uart_is_connected)
-    {
-      g_ble_uart.printf("LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-    }
+	// LoRa TX finished handling
+	if ((g_task_event_type & LORA_TX_FIN) == LORA_TX_FIN)
+	{
+		g_task_event_type &= N_LORA_TX_FIN;
 
-    if (!g_rx_fin_result)
-    {
-      // Increase fail send counter
-      send_fail++;
+		MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
+		if (g_ble_uart_is_connected)
+		{
+			g_ble_uart.printf("LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
+		}
 
-      if (send_fail == 10)
-      {
-        // Too many failed sendings, reset node and try to rejoin
-        delay(100);
-        sd_nvic_SystemReset();
-      }
-    }
+		if (!g_rx_fin_result)
+		{
+			// Increase fail send counter
+			send_fail++;
 
-    // Clear the LoRa TX flag
-    lora_busy = false;
-  }
+			if (send_fail == 10)
+			{
+				// Too many failed sendings, reset node and try to rejoin
+				delay(100);
+				sd_nvic_SystemReset();
+			}
+		}
 
-  // LoRa Join finished handling
-  if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
-  {
-    g_task_event_type &= N_LORA_JOIN_FIN;
-    if (g_join_result)
-    {
-      MYLOG("APP", "Successfully joined network");
-    }
-    else
-    {
-      MYLOG("APP", "Join network failed");
-      /// \todo here join could be restarted.
-      // lmh_join();
-    }
-  }
+		// Clear the LoRa TX flag
+		lora_busy = false;
+	}
 }

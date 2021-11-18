@@ -196,44 +196,6 @@ void app_event_handler(void)
 			{
 				Serial.printf("%02X", packet[idx]);
 			}
-			// Serial.printf("%02X", g_tracker_data.data_flag1);
-			// Serial.printf("%02X", g_tracker_data.data_flag2);
-			// Serial.printf("%02X", g_tracker_data.lat_1);
-			// Serial.printf("%02X", g_tracker_data.lat_2);
-			// Serial.printf("%02X", g_tracker_data.lat_3);
-			// Serial.printf("%02X", g_tracker_data.long_1);
-			// Serial.printf("%02X", g_tracker_data.long_2);
-			// Serial.printf("%02X", g_tracker_data.long_3);
-			// Serial.printf("%02X", g_tracker_data.alt_1);
-			// Serial.printf("%02X", g_tracker_data.alt_2);
-			// Serial.printf("%02X", g_tracker_data.alt_3);
-			// Serial.printf("%02X", g_tracker_data.data_flag3);
-			// Serial.printf("%02X", g_tracker_data.data_flag4);
-			// Serial.printf("%02X", g_tracker_data.batt_1);
-			// Serial.printf("%02X", g_tracker_data.batt_2);
-			// Serial.printf("%02X", g_tracker_data.data_flag5);
-			// Serial.printf("%02X", g_tracker_data.data_flag6);
-			// Serial.printf("%02X", g_tracker_data.acc_x_1);
-			// Serial.printf("%02X", g_tracker_data.acc_x_2);
-			// Serial.printf("%02X", g_tracker_data.acc_y_1);
-			// Serial.printf("%02X", g_tracker_data.acc_y_2);
-			// Serial.printf("%02X", g_tracker_data.acc_z_1);
-			// Serial.printf("%02X", g_tracker_data.acc_z_2);
-			// Serial.printf("%02X", g_tracker_data.data_flag7);
-			// Serial.printf("%02X", g_tracker_data.data_flag8);
-			// Serial.printf("%02X", g_tracker_data.humid_1);
-			// Serial.printf("%02X", g_tracker_data.data_flag9);
-			// Serial.printf("%02X", g_tracker_data.data_flag10);
-			// Serial.printf("%02X", g_tracker_data.temp_1);
-			// Serial.printf("%02X", g_tracker_data.temp_2);
-			// Serial.printf("%02X", g_tracker_data.data_flag11);
-			// Serial.printf("%02X", g_tracker_data.data_flag12);
-			// Serial.printf("%02X", g_tracker_data.press_1);
-			// Serial.printf("%02X", g_tracker_data.press_2);
-			// Serial.printf("%02X", g_tracker_data.data_flag13);
-			// Serial.printf("%02X", g_tracker_data.data_flag14);
-			// Serial.printf("%02X", g_tracker_data.gas_1);
-			// Serial.printf("%02X", g_tracker_data.gas_2);
 			Serial.println("");
 #endif
 			lmh_error_status result;
@@ -370,6 +332,22 @@ void ble_data_handler(void)
  */
 void lora_data_handler(void)
 {
+	// LoRa Join finished handling
+	if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
+	{
+		g_task_event_type &= N_LORA_JOIN_FIN;
+		if (g_join_result)
+		{
+			MYLOG("APP", "Successfully joined network");
+		}
+		else
+		{
+			MYLOG("APP", "Join network failed");
+			/// \todo here join could be restarted.
+			// lmh_join();
+		}
+	}
+
 	// LoRa data handling
 	if ((g_task_event_type & LORA_DATA) == LORA_DATA)
 	{
@@ -414,22 +392,6 @@ void lora_data_handler(void)
 
 		/// \todo reset flag that TX cycle is running
 		lora_busy = false;
-	}
-
-	// LoRa Join finished handling
-	if ((g_task_event_type & LORA_JOIN_FIN) == LORA_JOIN_FIN)
-	{
-		g_task_event_type &= N_LORA_JOIN_FIN;
-		if (g_join_result)
-		{
-			MYLOG("APP", "Successfully joined network");
-		}
-		else
-		{
-			MYLOG("APP", "Join network failed");
-			/// \todo here join could be restarted.
-			// lmh_join();
-		}
 	}
 }
 
