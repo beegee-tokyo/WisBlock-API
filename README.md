@@ -768,33 +768,35 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
-- 2022-11-18
+- 2021-11-26
+  - Keep it backward compatible, rename LoRa P2P send function
+- 2021-11-18
   - Cleanup
-- 2022-11-16
+- 2021-11-16
   - Update documentation
-- 2022-11-15
+- 2021-11-15
   - Add LoRa P2P support
   - Add support for user defined AT commands
-- 2022-11-06
+- 2021-11-06
   - Add library dependency for SX126x-Arduino library
-- 2022-11-03
+- 2021-11-03
   - Make AT+JOIN conform with RAKwireless AT Command syntax
   - Add AT+STATUS and AT+SEND commands
   - Make AT+NJM compatible with RAK3172
   - Fix compiler warning
   - Fix AT+STATUS command
-- 2022-09-29
+- 2021-09-29
   - Fixed bug in AT+DR and AT+TXP commands
-- 2022-09-25
+- 2021-09-25
   - Added `api_read_credentials()`
   - `api_set_credentials()` saves to flash
   - Updated examples
-- 2022-09-24:
+- 2021-09-24:
   - Fix AT command response delay
   - Add AT+MASK command to change channel settings for AU915, EU433 and US915
-- 2022-09-19:
+- 2021-09-19:
   - Change debug output to generic `WisBlock API LoRaWAN` instead of GNSS
-- 2022-09-12:
+- 2021-09-12:
   - Improve examples
-- 2022-09-11:
+- 2021-09-11:
   - V1.0.0 First release
