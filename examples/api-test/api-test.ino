@@ -184,7 +184,7 @@ void app_event_handler(void)
 
 			uint8_t dummy_packet[] = {0x10, 0x00, 0x00};
 
-			lmh_error_status result = send_lorawan_packet(dummy_packet, 3);
+			lmh_error_status result = send_lora_packet(dummy_packet, 3);
 			switch (result)
 			{
 			case LMH_SUCCESS:

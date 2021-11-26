@@ -21,6 +21,9 @@ void on_rx_timeout(void);
 void on_rx_crc_error(void);
 void on_cad_done(bool cadResult);
 
+uint8_t g_lora_p2p_rx_mode = RX_MODE_NONE;
+uint32_t g_lora_p2p_rx_time = 0;
+
 /**
  * @brief Initialize LoRa HW and LoRaWan MAC layer
  * 
@@ -70,7 +73,21 @@ int8_t init_lora(void)
 		g_task_wakeup_timer.start();
 	}
 
+	switch (g_lora_p2p_rx_mode)
+	{
+	default:
+	case RX_MODE_NONE:
+		// No RX mode, do not start RX
+		Radio.Sleep();
+		break;
+	case RX_MODE_RX:
+	case RX_MODE_RX_WAIT:
 	Radio.Rx(0);
+		break;
+	case RX_MODE_RX_TIMED:
+		Radio.Rx(g_lora_p2p_rx_time);
+		break;
+	}
 
 	digitalWrite(LED_BUILTIN, LOW);
 
@@ -95,7 +112,24 @@ void on_tx_done(void)
 		API_LOG("LORA", "Waking up loop task");
 		xSemaphoreGive(g_task_sem);
 	}
+	switch (g_lora_p2p_rx_mode)
+	{
+	default:
+	case RX_MODE_NONE:
+		// No RX mode, do not start RX
+		Radio.Sleep();
+		API_LOG("LORA", "TX finished - Do not start RX");
+		break;
+	case RX_MODE_RX:
+	case RX_MODE_RX_WAIT:
 	Radio.Rx(0);
+		API_LOG("LORA", "TX finished - Start RX");
+		break;
+	case RX_MODE_RX_TIMED:
+		Radio.Rx(g_lora_p2p_rx_time);
+		API_LOG("LORA", "TX finished - Start timed RX");
+		break;
+	}
 }
 
 /**@brief Function to be executed on Radio Rx Done event
@@ -119,7 +153,21 @@ void on_rx_done(uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr)
 		xSemaphoreGive(g_task_sem);
 	}
 
+	switch (g_lora_p2p_rx_mode)
+	{
+	default:
+	case RX_MODE_NONE:
+	case RX_MODE_RX_WAIT:
+	case RX_MODE_RX_TIMED:
+		// No RX mode, do not start RX
+		Radio.Sleep();
+		API_LOG("LORA", "RX finished - Stopping RX");
+		break;
+	case RX_MODE_RX:
 	Radio.Rx(0);
+		API_LOG("LORA", "RX finished - Restarting RX");
+		break;
+	}
 }
 
 /**@brief Function to be executed on Radio Tx Timeout event
@@ -136,7 +184,21 @@ void on_tx_timeout(void)
 		API_LOG("LORA", "Waking up loop task");
 		xSemaphoreGive(g_task_sem);
 	}
+	switch (g_lora_p2p_rx_mode)
+	{
+	default:
+	case RX_MODE_NONE:
+	case RX_MODE_RX_WAIT:
+	case RX_MODE_RX_TIMED:
+		// No RX mode, do not start RX
+		Radio.Sleep();
+		API_LOG("LORA", "TX timeout - Do not start RX");
+		break;
+	case RX_MODE_RX:
 	Radio.Rx(0);
+		API_LOG("LORA", "TX timeout - Restart RX");
+		break;
+	}
 }
 
 /**@brief Function to be executed on Radio Rx Timeout event
@@ -145,14 +207,42 @@ void on_rx_timeout(void)
 {
 	API_LOG("LORA", "OnRxTimeout");
 
+	switch (g_lora_p2p_rx_mode)
+	{
+	default:
+	case RX_MODE_NONE:
+	case RX_MODE_RX_WAIT:
+	case RX_MODE_RX_TIMED:
+		// No RX mode, do not start RX
+		Radio.Sleep();
+		API_LOG("LORA", "RX timeout - Do not start RX");
+		break;
+	case RX_MODE_RX:
 	Radio.Rx(0);
+		API_LOG("LORA", "RX timeout - Restart RX");
+		break;
+	}
 }
 
 /**@brief Function to be executed on Radio Rx Error event
  */
 void on_rx_crc_error(void)
 {
+	switch (g_lora_p2p_rx_mode)
+	{
+	default:
+	case RX_MODE_NONE:
+	case RX_MODE_RX_WAIT:
+	case RX_MODE_RX_TIMED:
+		// No RX mode, do not start RX
+		Radio.Sleep();
+		API_LOG("LORA", "RX CRC error - Do not start RX");
+		break;
+	case RX_MODE_RX:
 	Radio.Rx(0);
+		API_LOG("LORA", "RX CRC error - Restart RX");
+		break;
+	}
 }
 
 /**@brief Function to be executed on Radio Rx Error event
@@ -161,7 +251,21 @@ void on_cad_done(bool cadResult)
 {
 	if (cadResult)
 	{
+		switch (g_lora_p2p_rx_mode)
+		{
+		default:
+		case RX_MODE_NONE:
+		case RX_MODE_RX_WAIT:
+		case RX_MODE_RX_TIMED:
+			// No RX mode, do not start RX
+			Radio.Sleep();
+			API_LOG("LORA", "CAD failed - Do not start RX");
+			break;
+		case RX_MODE_RX:
 		Radio.Rx(0);
+			API_LOG("LORA", "CAD failed - Restart RX");
+			break;
+		}
 	}
 	else
 	{
@@ -173,7 +277,7 @@ void on_cad_done(bool cadResult)
  * @brief Prepare packet to be sent and start CAD routine
  * 
  */
-bool send_lora_packet(uint8_t *data, uint8_t size)
+bool send_p2p_packet(uint8_t *data, uint8_t size)
 {
 	if (size > 256)
 	{

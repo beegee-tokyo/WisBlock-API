@@ -64,6 +64,7 @@ LoRa® is a registered trademark or service mark of Semtech Corporation or its a
 * [AT+PTP](#atptp) Set/Get LoRa® P2P TX Power
 * [AT+P2P](#atp2p) Set/Get LoRa® P2P Configuration
 * [AT+PSEND](#atpsend) Send LoRa® P2P packet
+* [AT+PRECV](#atprecv) Set LoRa® P2P RX mode
 
 
 ### [Appendix](#appendix-1)
@@ -168,6 +169,7 @@ AT+PPL	Set P2P preamble length
 AT+PTP	Set P2P TX power
 AT+P2P	Set P2P configuration
 AT+PSEND	P2P send data
+AT+PRECV	P2P receive mode
 +++++++++++++++
 
 OK
@@ -1324,7 +1326,6 @@ AT+P2P=?
 OK
 ```
 
-
 ## AT+PSEND
 
 Description: P2P send data
@@ -1345,6 +1346,33 @@ OK
 ```
 _**REMARK**_
 Received data is not shown in the AT Command interface. The data has to be handled in the user application
+
+[Back](#content)    
+
+----
+## AT+PRECV
+
+Description: P2P receive mode
+
+This command is used to set the P2P RX mode and timeout for RX window.
+
+| Command                    | Input Parameter | Return Value                | Return Code |
+| -------------------------- | --------------- | --------------------------- | ----------- |
+| AT+PRECV?                    | -               | `AT+PRECV: P2P receive mode` | `OK`        |
+| AT+PRECV=?                    | -               | *`RX timeout in milliseconds` | `OK`        |
+| AT+PRECV=`<Input Parameter>`   | *< *`Payload`* >*   | -                       | `OK`        |
+
+**Examples**:
+
+```
+AT+PRECV=15000
+
+OK
+```
+_**REMARK**_
+- If the value is set to 65534, the device will continuously listen to P2P LoRa TX packets without any timeout. This is the same as setting the device in RX mode.
+- If the value is set to 65535, the device will listen to P2P TX packets without a timeout. But it will stop listening once a P2P LoRa packet is received to save power.
+- If the value is 0, the device will stop listening to P2P TX packets. The device is in TX mode.
 
 [Back](#content)    
 

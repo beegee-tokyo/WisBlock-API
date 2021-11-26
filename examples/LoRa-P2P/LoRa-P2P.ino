@@ -124,7 +124,7 @@ void app_event_handler(void)
 			MYLOG("APP", "Battery protection deactivated");
 		}
 
-		if (!send_lora_packet((uint8_t *)&g_lpwan_data, LPWAN_DATA_LEN))
+		if (!send_p2p_packet((uint8_t *)&g_lpwan_data, LPWAN_DATA_LEN))
 		{
 			MYLOG("APP", "Failed to send P2P packet");
 		}

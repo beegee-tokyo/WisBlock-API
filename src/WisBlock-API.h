@@ -78,8 +78,8 @@ extern bool g_enable_ble;
 
 int8_t init_lora(void);
 int8_t init_lorawan(void);
-bool send_lora_packet(uint8_t *data, uint8_t size);
-lmh_error_status send_lorawan_packet(uint8_t *data, uint8_t size, uint8_t fport = 0);
+bool send_p2p_packet(uint8_t *data, uint8_t size);
+lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport = 0);
 extern bool g_lpwan_has_joined;
 extern bool g_rx_fin_result;
 extern bool g_join_result;
@@ -159,6 +159,15 @@ extern uint8_t g_tx_data_len;
 extern bool g_lorawan_initialized;
 extern int16_t g_last_rssi;
 extern int8_t g_last_snr;
+enum P2P_RX_MODE
+{
+	RX_MODE_NONE = 0,
+	RX_MODE_RX = 1,
+	RX_MODE_RX_TIMED = 2,
+	RX_MODE_RX_WAIT = 3
+};
+extern uint8_t g_lora_p2p_rx_mode;
+extern uint32_t g_lora_p2p_rx_time;
 
 #define LORAWAN_COMPAT_MARKER 0x57
 struct s_loracompat_settings

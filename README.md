@@ -234,12 +234,12 @@ By default the BLE advertising is only active for 30 seconds after power-up/rese
 ----
 
 ## Send data over LoRaWAN
-`lmh_error_status send_lorawan_packet(uint8_t *data, uint8_t size, uint8_t fport = 0);` is used to send a data packet to the LoRaWAN server. `*data` is a pointer to the buffer containing the data, `size` is the size of the packet. If the fport is 0, the fPortdefined in the g_lorawan_settings structure is used.
+`lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport = 0);` is used to send a data packet to the LoRaWAN server. `*data` is a pointer to the buffer containing the data, `size` is the size of the packet. If the fport is 0, the fPortdefined in the g_lorawan_settings structure is used.
 
 ----
 
 ## Send data over LoRa P2P
-`lmh_error_status send_lora_packet(uint8_t *data, uint8_t size);` is used to send a data packet Over LORa P2P. `*data` is a pointer to the buffer containing the data, `size` is the size of the packet.
+`bool send_p2p_packet(uint8_t *data, uint8_t size);` is used to send a data packet Over LORa P2P. `*data` is a pointer to the buffer containing the data, `size` is the size of the packet.
 
 ----
 
@@ -529,7 +529,7 @@ void app_event_handler(void)
 
       uint8_t dummy_packet[] = {0x10, 0x00, 0x00};
 
-      lmh_error_status result = send_lorawan_packet(dummy_packet, 3);
+      lmh_error_status result = send_lora_packet(dummy_packet, 3);
       switch (result)
       {
         case LMH_SUCCESS:

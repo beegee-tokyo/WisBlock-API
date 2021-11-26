@@ -318,7 +318,7 @@ static void lpwan_confirm_tx_finished(bool result)
  * 
  * @return result of send request
  */
-lmh_error_status send_lorawan_packet(uint8_t *data, uint8_t size, uint8_t fport)
+lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport)
 {
 	if (lmh_join_status_get() != LMH_SET)
 	{

@@ -528,7 +528,81 @@ static int at_exec_p2p_send(char *str)
 		m_lora_app_data_buffer[buff_idx] = strtol(buff_parse, NULL, 16);
 		buff_idx++;
 	}
-	send_lorawan_packet(m_lora_app_data_buffer, data_size / 2);
+	send_p2p_packet(m_lora_app_data_buffer, data_size / 2);
+	return 0;
+}
+
+/**
+ * @brief Set P2P RX mode
+ * 0 => TX mode, RX disabled
+ * 1 ... 65533 => Enable RX for xxxx milliseconds
+ * 65534 => Enable continous RX (restarts after TX)
+ * 65535 => Enable RX until a packet was received, no timeout
+ * @return int 0 if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL, AT_ERRNO_PARA_NUM
+ */
+static int at_exec_p2p_receive(char *str)
+{
+	if (g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+
+	char *param = strtok(str, ":");
+
+	if (param != NULL)
+	{
+		/* check RX window size */
+		uint32_t rx_time = strtol(param, NULL, 0);
+		API_LOG("AT", "Received RX time %d", rx_time);
+
+		if (rx_time == 0)
+		{
+			// TX only mode
+			g_lora_p2p_rx_mode = RX_MODE_NONE;
+			g_lora_p2p_rx_time = 0;
+			// Put Radio into sleep mode (stops receiving)
+			Radio.Sleep();
+			API_LOG("AT", "Set RX_MODE_NONE");
+		}
+		else if (rx_time == 65534)
+		{
+			// RX continous
+			g_lora_p2p_rx_mode = RX_MODE_RX;
+			g_lora_p2p_rx_time = 0;
+			// Put Radio into continous RX mode
+			Radio.Rx(0);
+			API_LOG("AT", "Set RX_MODE_RX");
+		}
+		else if (rx_time == 65535)
+		{
+			// RX until packet received
+			g_lora_p2p_rx_mode = RX_MODE_RX_WAIT;
+			g_lora_p2p_rx_time = 0;
+			// Put Radio into continous RX mode
+			Radio.Rx(0);
+			API_LOG("AT", "Set RX_MODE_RX_WAIT");
+		}
+		else if (rx_time < 65534)
+		{
+			// RX for specific time
+			g_lora_p2p_rx_mode = RX_MODE_RX_TIMED;
+			g_lora_p2p_rx_time = rx_time;
+			// Put Radio into continous RX mode
+			Radio.Rx(rx_time);
+			API_LOG("AT", "Set RX_MODE_RX_TIMED");
+		}
+		else
+		{
+			return AT_ERRNO_PARA_VAL;
+		}
+		return 0;
+	}
+	return AT_ERRNO_PARA_NUM;
+}
+
+static int at_query_p2p_receive(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", g_lora_p2p_rx_time);
 	return 0;
 }
 
@@ -1093,6 +1167,8 @@ static int at_exec_join(char *str)
 					Radio.Rx(0);
 				}
 			}
+
+			save_settings();
 			return 0;
 		}
 
@@ -1391,7 +1467,7 @@ static int at_exec_send(char *str)
 		m_lora_app_data_buffer[buff_idx] = strtol(buff_parse, NULL, 16);
 		buff_idx++;
 	}
-	send_lorawan_packet(m_lora_app_data_buffer, data_size / 2, fPort);
+	send_lora_packet(m_lora_app_data_buffer, data_size / 2, fPort);
 	return 0;
 }
 
@@ -1524,6 +1600,7 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+PTP", "Set P2P TX power", at_query_p2p_txp, at_exec_p2p_txp, NULL},
 	{"+P2P", "Set P2P configuration", at_query_p2p_config, at_exec_p2p_config, NULL},
 	{"+PSEND", "P2P send data", NULL, at_exec_p2p_send, NULL},
+	{"+PRECV", "P2P receive mode", at_query_p2p_receive, at_exec_p2p_receive, NULL},
 };
 
 /**

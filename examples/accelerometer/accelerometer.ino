@@ -188,7 +188,7 @@ void app_event_handler(void)
 			g_acc_data.acc_z_1 = (int8_t)(acc_val[2] >> 8);
 			g_acc_data.acc_z_2 = (int8_t)(acc_val[2]);
 
-			lmh_error_status result = send_lorawan_packet((uint8_t *)&g_acc_data, 8);
+			lmh_error_status result = send_lora_packet((uint8_t *)&g_acc_data, 8);
 			switch (result)
 			{
 			case LMH_SUCCESS:
