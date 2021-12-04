@@ -3,7 +3,7 @@
 #######################################
 
 #######################################
-# Datatypes (KEYWORD1) API internal
+# Functions (KEYWORD1) API internal
 #######################################
 
 setup_app	KEYWORD1
@@ -17,10 +17,39 @@ api_set_credentials	KEYWORD1
 g_ble_uart	KEYWORD1
 send_p2p_packet	KEYWORD1
 send_lora_packet	KEYWORD1
+user_at_handler	KEYWORD1
+read_batt	KEYWORD1
+get_lora_batt	KEYWORD1
+at_serial_input	KEYWORD1
 
 #######################################
 # Globals (KEYWORD2)
 #######################################
+g_task_sem	KEYWORD2
+g_task_event_type	KEYWORD2
+g_task_wakeup_timer	KEYWORD2
+g_lora_data	KEYWORD2
+g_ble_uart	KEYWORD2
+g_ble_uart_is_connected	KEYWORD2
+g_enable_ble	KEYWORD2
+g_lpwan_has_joined	KEYWORD2
+g_rx_fin_result	KEYWORD2
+g_join_result	KEYWORD2
+otaaDevAddr	KEYWORD2
+g_lorawan_settings	KEYWORD2
+g_rx_lora_data	KEYWORD2
+g_rx_data_len	KEYWORD2
+g_tx_lora_data	KEYWORD2
+g_tx_data_len	KEYWORD2
+g_lorawan_initialized	KEYWORD2
+g_last_rssi	KEYWORD2
+g_last_snr	KEYWORD2
+g_lora_p2p_rx_mode	KEYWORD2
+g_lora_p2p_rx_time	KEYWORD2
+region_names	KEYWORD2
+g_sw_ver_1	KEYWORD2
+g_sw_ver_2	KEYWORD2
+g_sw_ver_3	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -39,3 +68,8 @@ AT_CMD	LITERAL1
 N_AT_CMD	LITERAL1
 LORA_JOIN_FIN	LITERAL1
 N_LORA_JOIN_FIN	LITERAL1
+
+RX_MODE_NONE	LITERAL1
+RX_MODE_RX	LITERAL1
+RX_MODE_RX_TIMED	LITERAL1
+RX_MODE_RX_WAIT	LITERAL1

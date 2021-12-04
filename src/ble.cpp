@@ -50,7 +50,7 @@ void init_ble(void)
 #ifdef ISP4520
 	Bluefruit.configPrphConn(250, BLE_GAP_EVENT_LENGTH_MIN, 16, 16);
 #else
-	Bluefruit.configPrphConn(91, BLE_GAP_EVENT_LENGTH_MIN, 16, 16);
+	Bluefruit.configPrphConn(250, BLE_GAP_EVENT_LENGTH_MIN, 16, 16);
 #endif
 	// Start BLE
 	Bluefruit.begin(1, 0);

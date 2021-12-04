@@ -768,6 +768,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2021-12-04
+  - Fix BLE MTU size
 - 2021-11-26
   - Keep it backward compatible, rename LoRa P2P send function
 - 2021-11-18
