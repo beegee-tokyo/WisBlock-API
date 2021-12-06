@@ -4,6 +4,9 @@ Arduino library that takes all the LoRaWAN, BLE, AT command stuff off your workl
 
 # Release Notes
 
+## V1.1.4 Fix LoRa P2P
+  - Fix bugs in LoRa P2P mode
+  
 ## V1.1.3 Fix BLE MTU size
   - Fix bug with BLE MTU size to support extended LoRaWAN config structure
   

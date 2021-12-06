@@ -172,7 +172,7 @@ void at_settings(void)
 	AT_PRINTF("   ADR %s\n", g_lorawan_settings.adr_enabled ? "enabled" : "disabled");
 	AT_PRINTF("   %s Network\n", g_lorawan_settings.public_network ? "Public" : "Private");
 	AT_PRINTF("   Dutycycle %s\n", g_lorawan_settings.duty_cycle_enabled ? "enabled" : "disabled");
-	AT_PRINTF("   Repeat time %ld\n", g_lorawan_settings.send_repeat_time);
+	AT_PRINTF("   Send Frequency %ld\n", g_lorawan_settings.send_repeat_time / 1000);
 	AT_PRINTF("   Join trials %d\n", g_lorawan_settings.join_trials);
 	AT_PRINTF("   TX Power %d\n", g_lorawan_settings.tx_power);
 	AT_PRINTF("   DR %d\n", g_lorawan_settings.data_rate);
@@ -1216,7 +1216,7 @@ static int at_exec_join(char *str)
 		}
 	}
 
-	return 0;
+	return AT_ERRNO_PARA_VAL;
 }
 
 /**
@@ -1421,7 +1421,7 @@ static int at_exec_sendfreq(char *str)
 	g_lorawan_settings.send_repeat_time = time * 1000;
 	save_settings();
 
-	if (g_lorawan_settings.send_repeat_time != 0)
+	if ((g_lorawan_settings.send_repeat_time != 0) && (g_lorawan_settings.auto_join))
 	{
 		// Now we are connected, start the timer that will wakeup the loop frequently
 		g_task_wakeup_timer.stop();

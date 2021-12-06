@@ -138,11 +138,13 @@ int8_t init_lorawan(void)
 		return -3;
 	}
 
-	// Start Join process
-	lmh_join();
-
+	API_LOG("LORA", "Begin timer");
 	// Initialize the app timer
 	g_task_wakeup_timer.begin(g_lorawan_settings.send_repeat_time, periodic_wakeup);
+
+	API_LOG("LORA", "Start Join");
+	// Start Join process
+	lmh_join();
 
 	g_lorawan_initialized = true;
 	return 0;
@@ -193,40 +195,27 @@ static void lpwan_joined_handler(void)
 	delay(100); // Just to enable the serial port to send the message
 #endif
 
-	// Class A is default in the LoRaWAN lib. If app needs different class, request change here
-	if (g_lorawan_settings.lora_class != CLASS_A)
-	{
-		// Switch to configured class
-		lmh_class_request((DeviceClass_t)g_lorawan_settings.lora_class);
-	}
-	else
-	{
-		// Wake up task to send initial packet
-		g_task_event_type |= STATUS;
+	g_join_result = true;
+	// Wake up task to report succesful join
+	g_task_event_type |= LORA_JOIN_FIN;
 		// Notify task about the event
 		if (g_task_sem != NULL)
 		{
-			API_LOG("LORA", "Waking up loop task");
+		API_LOG("LORA", "Join success, report event");
 			xSemaphoreGive(g_task_sem);
 		}
-	}
+	delay(100); // Just to enable the serial port to send the message
 
 	g_lpwan_has_joined = true;
 
 	if (g_lorawan_settings.send_repeat_time != 0)
 	{
+		API_LOG("LORA", "Start timer");
+		delay(100); // Just to enable the serial port to send the message
 		// Now we are connected, start the timer that will wakeup the loop frequently
 		g_task_wakeup_timer.start();
-	}
-
-	g_join_result = true;
-	// Wake up task to report succesful join
-	g_task_event_type |= LORA_JOIN_FIN;
-	// Notify task about the event
-	if (g_task_sem != NULL)
-	{
-		API_LOG("LORA", "Join success, report event");
-		xSemaphoreGive(g_task_sem);
+		API_LOG("LORA", "Started timer");
+		delay(100); // Just to enable the serial port to send the message
 	}
 }
 
