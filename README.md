@@ -768,7 +768,9 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
--2021-12-06
+- 2022-01-03
+  - Instead of endless loop, leave error handling to the application
+- 2021-12-06
   - Fix LoRa P2P
 - 2021-12-04
   - Fix BLE MTU size
