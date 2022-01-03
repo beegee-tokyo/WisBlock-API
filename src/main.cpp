@@ -149,14 +149,22 @@ void setup()
 	// Initialize application
 	if (!init_app())
 	{
-		// Without working LoRa we just stop here
-		while (1)
-		{
+		// Without working application we give a warning message
 			API_LOG("MAIN", "Get your application stuff in order");
-			pinMode(LED_BUILTIN, OUTPUT);
-			digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-			delay(5000);
-		}
+		// // Without working LoRa we just stop here
+		// while (1)
+		// {
+		// 	API_LOG("MAIN", "Get your application stuff in order");
+		// 	AT_PRINTF("+EVT:HW Failure");
+		// 	pinMode(LED_BUILTIN, OUTPUT);
+		// 	digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+		// 	while (Serial.available() > 0)
+		// 	{
+		// 		at_serial_input(uint8_t(Serial.read()));
+		// 		delay(5);
+		// 	}
+		// 	delay(5000);
+		// }
 	}
 }
 

@@ -4,6 +4,9 @@ Arduino library that takes all the LoRaWAN, BLE, AT command stuff off your workl
 
 # Release Notes
 
+## V1.1.5 Remove endless loop if app_init failed
+  - Instead of endless loop, leave error handling to the application
+  
 ## V1.1.4 Fix LoRa P2P
   - Fix bugs in LoRa P2P mode
   

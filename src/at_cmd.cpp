@@ -130,8 +130,8 @@ void at_settings(void)
 	AT_PRINTF("Device status:\n");
 	AT_PRINTF("   Auto join %s\n", g_lorawan_settings.auto_join ? "enabled" : "disabled");
 	AT_PRINTF("   Mode %s\n", g_lorawan_settings.lorawan_enable ? "LPWAN" : "P2P");
+	AT_PRINTF("   Network %s\n", g_lpwan_has_joined ? "joined" : "not joined");
 	AT_PRINTF("LPWAN status:\n");
-	AT_PRINTF("   Marks: %02X %02X\n", g_lorawan_settings.valid_mark_1, g_lorawan_settings.valid_mark_2);
 	AT_PRINTF("   Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
 			  g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
 			  g_lorawan_settings.node_device_eui[4], g_lorawan_settings.node_device_eui[5],
@@ -181,7 +181,6 @@ void at_settings(void)
 	AT_PRINTF("   Fport %d\n", g_lorawan_settings.app_port);
 	AT_PRINTF("   %s Message\n", g_lorawan_settings.confirmed_msg_enabled ? "Confirmed" : "Unconfirmed");
 	AT_PRINTF("   Region %s\n", region_names[g_lorawan_settings.lora_region]);
-	AT_PRINTF("   Network %s\n", g_lpwan_has_joined ? "joined" : "not joined");
 	AT_PRINTF("LoRa P2P status:\n");
 	AT_PRINTF("   P2P frequency %ld\n", g_lorawan_settings.p2p_frequency);
 	AT_PRINTF("   P2P TX Power %d\n", g_lorawan_settings.p2p_tx_power);
