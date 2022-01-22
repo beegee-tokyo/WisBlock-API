@@ -15,37 +15,60 @@
 // Example AT command to change the value of the variable new_val:
 // Query the value AT+SETVAL=?
 // Set the value AT+SETVAL=120000
+// Second AT command to show last packet content
+// Query with AT+LIST=?
 /*********************************************************************/
 int32_t new_val = 3000;
 
-bool user_at_handler(char *user_cmd, uint8_t cmd_size)
+/**
+ * @brief Returns the current value of the custom variable
+ * 
+ * @return int always 0
+ */
+static int at_query_value()
 {
-	MYLOG("APP", "Received User AT commmand >>%s<< len %d", user_cmd, cmd_size);
-
-	// Get the command itself
-	char *param;
-
-	param = strtok(user_cmd, "=");
-	MYLOG("APP", "Commmand >>%s<<", param);
-
-	// Check if the command is supported
-	if (strcmp(param, (const char *)"+SETVAL") == 0)
-	{
-		// check if it is query or set
-		param = strtok(NULL, ":");
-		MYLOG("APP", "Param string >>%s<<", param);
-
-		if (strcmp(param, (const char *)"?") == 0)
-		{
-			// It is a query, use AT_PRINTF to respond
-			AT_PRINTF("NEW_VAL: %d", new_val);
-		}
-		else
-		{
-			new_val = strtol(param, NULL, 0);
-			MYLOG("APP", "Value number >>%ld<<", new_val);
-		}
-		return true;
-	}
-	return false;
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "Custom Value: %d", new_val);
+	return 0;
 }
+
+/**
+ * @brief Command to set the custom variable
+ * 
+ * @param str the new value for the variable without the AT part
+ * @return int 0 if the command was succesfull, 5 if the parameter was wrong
+ */
+static int at_exec_value(char *str)
+{
+	new_val = strtol(str, NULL, 0);
+	MYLOG("APP", "Value number >>%ld<<", new_val);
+	return 0;
+}
+
+/**
+ * @brief Example how to show the last LoRa packet content
+ * 
+ * @return int always 0
+ */
+static int at_query_packet()
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "Packet: %02X%02X%02X%02X",
+			 g_lpwan_data.data_flag1,
+			 g_lpwan_data.data_flag2,
+			 g_lpwan_data.batt_1,
+			 g_lpwan_data.batt_2);
+	return 0;
+}
+
+/**
+ * @brief List of all available commands with short help and pointer to functions
+ * 
+ */
+atcmd_t g_user_at_cmd_list[] = {
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	// GNSS commands
+	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL},
+	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL},
+};
+
+/** Number of user defined AT commands */
+uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list) / sizeof(atcmd_t);

@@ -4,6 +4,9 @@ Arduino library that takes all the LoRaWAN, BLE, AT command stuff off your workl
 
 # Release Notes
 
+## V1.1.6 Updated custom AT command handling
+  - Make it easier to use custom AT commands and list them with AT?
+  
 ## V1.1.5 Remove endless loop if app_init failed
   - Instead of endless loop, leave error handling to the application
   

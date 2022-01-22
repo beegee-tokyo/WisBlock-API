@@ -233,9 +233,20 @@ uint8_t mv_to_percent(float mvolts);
 
 // AT command parser
 #include "at_cmd.h"
+typedef struct atcmd_s
+{
+	const char *cmd_name;		   // CMD NAME
+	const char *cmd_desc;		   // AT+CMD?
+	int (*query_cmd)(void);		   // AT+CMD=?
+	int (*exec_cmd)(char *str);	   // AT+CMD=value
+	int (*exec_cmd_no_para)(void); // AT+CMD
+} atcmd_t;
 void at_serial_input(uint8_t cmd);
 extern char *region_names[];
+extern char g_at_query_buf[];
 bool user_at_handler(char *user_cmd, uint8_t cmd_size) __attribute__((weak));
+extern atcmd_t g_user_at_cmd_list[] __attribute__((weak));
+extern uint8_t g_user_at_cmd_num __attribute__((weak));
 
 // API stuff
 void setup_app(void);

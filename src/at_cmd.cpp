@@ -12,20 +12,9 @@
 
 #include "at_cmd.h"
 
-#define AT_ERROR "+CME ERROR:"
-#define ATCMD_SIZE 160
-#define ATQUERY_SIZE 128
-
-#define AT_ERRNO_NOSUPP (1)
-#define AT_ERRNO_NOALLOW (2)
-#define AT_ERRNO_PARA_VAL (5)
-#define AT_ERRNO_PARA_NUM (6)
-#define AT_ERRNO_SYS (8)
-#define AT_CB_PRINT (0xFF)
-
 static char atcmd[ATCMD_SIZE];
 static uint16_t atcmd_index = 0;
-static char g_at_query_buf[ATQUERY_SIZE];
+char g_at_query_buf[ATQUERY_SIZE];
 
 /** LoRaWAN application data buffer. */
 uint8_t m_lora_app_data_buffer[256];
@@ -35,15 +24,6 @@ char *bandwidths[] = {(char *)"125", (char *)"250", (char *)"500", (char *)"062"
 char *region_names[] = {(char *)"AS923", (char *)"AU915", (char *)"CN470", (char *)"CN779",
 						(char *)"EU433", (char *)"EU868", (char *)"KR920", (char *)"IN865",
 						(char *)"US915", (char *)"AS923-2", (char *)"AS923-3", (char *)"AS923-4", (char *)"RU864"};
-
-typedef struct atcmd_s
-{
-	const char *cmd_name;		   // CMD NAME
-	const char *cmd_desc;		   // AT+CMD?
-	int (*query_cmd)(void);		   // AT+CMD=?
-	int (*exec_cmd)(char *str);	   // AT+CMD=value
-	int (*exec_cmd_no_para)(void); // AT+CMD
-} atcmd_t;
 
 void set_new_config(void)
 {
@@ -1624,6 +1604,19 @@ static int at_exec_list_all(void)
 			AT_PRINTF("AT%s\t%s\r\n", g_at_cmd_list[idx].cmd_name, g_at_cmd_list[idx].cmd_desc);
 		}
 	}
+
+	if (&g_user_at_cmd_list != 0)
+	{
+		AT_PRINTF("\r\n+++++++++++++++\r\n");
+		AT_PRINTF("User AT command list\r\n");
+		AT_PRINTF("+++++++++++++++\r\n");
+
+		for (unsigned int idx = 0; idx < g_user_at_cmd_num; idx++)
+		{
+			AT_PRINTF("AT%s\t%s\r\n", g_user_at_cmd_list[idx].cmd_name, g_user_at_cmd_list[idx].cmd_desc);
+		}
+	}
+
 	AT_PRINTF("+++++++++++++++\r\n");
 	return 0;
 }
@@ -1659,6 +1652,7 @@ static void at_cmd_handle(void)
 
 	rxcmd_index = tmp;
 
+	// Check for standard AT commands
 	for (i = 0; i < sizeof(g_at_cmd_list) / sizeof(atcmd_t); i++)
 	{
 		cmd_name = g_at_cmd_list[i].cmd_name;
@@ -1758,10 +1752,113 @@ static void at_cmd_handle(void)
 		break;
 	}
 
-	// Check if user defined AT commands are setup
+	// Not a standard AT command?
 	if (i == sizeof(g_at_cmd_list) / sizeof(atcmd_t))
 	{
-		if (user_at_handler != NULL)
+		// Check user defined AT command from list
+		if (g_user_at_cmd_list != NULL)
+		{
+			for (i = 0; i < g_user_at_cmd_num; i++)
+			{
+				cmd_name = g_user_at_cmd_list[i].cmd_name;
+				// Serial.printf("===rxcmd========%s================cmd_name=====%s====%d===\n", rxcmd, cmd_name, strlen(cmd_name));
+				if (strlen(cmd_name) && strncmp(rxcmd, cmd_name, strlen(cmd_name)) != 0)
+				{
+					continue;
+				}
+
+				// Serial.printf("===rxcmd_index========%d================strlen(cmd_name)=====%d=======\n", rxcmd_index, strlen(cmd_name));
+
+				if (rxcmd_index == (strlen(cmd_name) + 1) &&
+					rxcmd[strlen(cmd_name)] == '?')
+				{
+					/* test cmd */
+					if (g_user_at_cmd_list[i].cmd_desc)
+					{
+						if (strncmp(g_user_at_cmd_list[i].cmd_desc, "OK", 2) == 0)
+						{
+							snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+						}
+						else
+						{
+							snprintf(atcmd, ATCMD_SIZE, "\r\n%s:\"%s\"\r\nOK\r\n",
+									 cmd_name, g_user_at_cmd_list[i].cmd_desc);
+						}
+					}
+					else
+					{
+						snprintf(atcmd, ATCMD_SIZE, "\r\n%s\r\nOK\r\n", cmd_name);
+					}
+				}
+				else if (rxcmd_index == (strlen(cmd_name) + 2) &&
+						 strcmp(&rxcmd[strlen(cmd_name)], "=?") == 0)
+				{
+					/* query cmd */
+					if (g_user_at_cmd_list[i].query_cmd != NULL)
+					{
+						ret = g_user_at_cmd_list[i].query_cmd();
+
+						if (ret == 0)
+						{
+							snprintf(atcmd, ATCMD_SIZE, "\r\n%s:%s\r\nOK\r\n",
+									 cmd_name, g_at_query_buf);
+						}
+					}
+					else
+					{
+						ret = AT_ERRNO_NOALLOW;
+					}
+				}
+				else if (rxcmd_index > (strlen(cmd_name) + 1) &&
+						 rxcmd[strlen(cmd_name)] == '=')
+				{
+					/* exec cmd */
+					if (g_user_at_cmd_list[i].exec_cmd != NULL)
+					{
+						ret = g_user_at_cmd_list[i].exec_cmd(rxcmd + strlen(cmd_name) + 1);
+						if (ret == 0)
+						{
+							snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+						}
+						else if (ret == -1)
+						{
+							ret = AT_ERRNO_SYS;
+						}
+					}
+					else
+					{
+						ret = AT_ERRNO_NOALLOW;
+					}
+				}
+				else if (rxcmd_index == strlen(cmd_name))
+				{
+					/* exec cmd without parameter*/
+					if (g_user_at_cmd_list[i].exec_cmd_no_para != NULL)
+					{
+						ret = g_user_at_cmd_list[i].exec_cmd_no_para();
+						if (ret == 0)
+						{
+							snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+						}
+						else if (ret == -1)
+						{
+							ret = AT_ERRNO_SYS;
+						}
+					}
+					else
+					{
+						ret = AT_ERRNO_NOALLOW;
+					}
+				}
+				else
+				{
+					continue;
+				}
+				break;
+			}
+		}
+		// Check user AT command handler
+		else if (user_at_handler != NULL)
 		{
 			if (user_at_handler(rxcmd, rxcmd_index))
 			{
@@ -1773,6 +1870,7 @@ static void at_cmd_handle(void)
 				ret = AT_ERRNO_NOSUPP;
 			}
 		}
+		// No user defined AT commands available
 		else
 		{
 			ret = AT_ERRNO_NOSUPP;

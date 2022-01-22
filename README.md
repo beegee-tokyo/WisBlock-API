@@ -768,6 +768,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-01-22
+  - Make it easier to use custom AT commands and list them with AT?
 - 2022-01-03
   - Instead of endless loop, leave error handling to the application
 - 2021-12-06
