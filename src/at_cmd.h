@@ -31,6 +31,7 @@
 #define AT_ERRNO_NOALLOW (2)
 #define AT_ERRNO_PARA_VAL (5)
 #define AT_ERRNO_PARA_NUM (6)
+#define AT_ERRNO_EXEC_FAIL (7)
 #define AT_ERRNO_SYS (8)
 #define AT_CB_PRINT (0xFF)
 

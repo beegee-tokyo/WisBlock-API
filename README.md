@@ -52,18 +52,18 @@ In addition the API offers two options to setup LoRa P2P / LoRaWAN settings with
 
 # How does it work?
 
-The API is handling everything from `setup()`, `loop()`, LoRaWAN initialization, LoRaWAN events handling, BLE initialization, BLE events handling to the AT command interface.    
+The API is handling everything from **`setup()`**, **`loop()`**, LoRaWAN initialization, LoRaWAN events handling, BLE initialization, BLE events handling to the AT command interface.    
 
 _**REMARK!**_    
-The user application **MUST NOT** have the functions `setup()` and `loop()`!    
+The user application **MUST NOT** have the functions **`setup()`** and **`loop()`**!    
 
-The user application has two initialization functions, one is called at the beginning of `setup()`, the other one at the very end. The other functions are event callbacks that are called from `loop()`. It is possible to define custom events (like interrupts from a sensor) as well. 
+The user application has two initialization functions, one is called at the beginning of **`setup()`**, the other one at the very end. The other functions are event callbacks that are called from **`loop()`**. It is possible to define custom events (like interrupts from a sensor) as well. 
 
-Sensor reading, actuator control or other application tasks are handled in the `app_event_handler()`. `app_event_handler()` is called frequently, the time between calls is defined by the application. In addition `app_event_handler()` is called on custom events.
+Sensor reading, actuator control or other application tasks are handled in the **`app_event_handler()`**. **`app_event_handler()`** is called frequently, the time between calls is defined by the application. In addition **`app_event_handler()`** is called on custom events.
 
-`ble_data_handler()` is called on BLE events (BLE UART RX events for now) from `loop()`. It can be used to implement custom communication over BLE UART.
+**`ble_data_handler()`** is called on BLE events (BLE UART RX events for now) from **`loop()`**. It can be used to implement custom communication over BLE UART.
 
-`lora_data_handler()` is called on different LoRaWAN events    
+**`lora_data_handler()`** is called on different LoRaWAN events    
 - A download packet has arrived from the LoRaWAN server
 - A LoRaWAN transmission has been finished
 - Join Accept or Join Failed
@@ -81,12 +81,44 @@ All available AT commands can be found in the [AT-Commands Manual](./AT-Commands
 ----
 
 ## Extend AT command interface
-Starting with WisBlock API V1.1.2 the AT Commands can be extended by user defined AT Commands. Here is an example code how to add a user AT command. To extend the AT commands, a function **`user_at_handler`** has to be written.
-This function will be called by the AT command handler if the AT command is not recognied. 
-**`user_at_handler**` has two inputs:
-- `char * user_cmd` a pointer to an char array with the AT command
-- `uint8_t cmd_size` is the length of the AT command char array.
+Starting with WisBlock API V1.1.2 the AT Commands can be extended by user defined AT Commands. This new implementation uses the parser function of the WisBlock API AT command function. In addition, custom AT commands will be listed if the **`AT?`** is used.    
+To extend the AT commands, three steps are required:    
 
+### 1) Definition of the custom AT commands
+The custom AT commands are listed in an array with the struct atcmd_t format. Each entry consist of the AT command, the explanation text that is shown when the command is called with a ? and pointers to the functions for query, execute with parameters and execute without parameters. Here is an example for two custom AT commands:    
+```cpp
+atcmd_t g_user_at_cmd_list[] = {
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	// GNSS commands
+	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL},
+	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL},
+};
+```
+**REMARK 1**    
+For functions that are not supported by the AT command a **`NULL`** must be put into the array.    
+**REMARK 2**    
+The name **`g_user_at_cmd_list`** is fixed and cannot be changed or the custom commands are not detected.    
+
+### 2) Definition of the number of custom AT commands
+A variable with the number of custom AT commands must be provided:
+```cpp
+/** Number of user defined AT commands */
+uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list) / sizeof(atcmd_t);
+```
+**REMARK**    
+The name **`g_user_at_cmd_num`** is fixed and cannot be changed or the custom commands are not detected.
+
+### 3) The functions for query and execute
+For each custom command the query and execute commands must be written. The names of these functions must match 
+the function names used in the array of custom AT commands. The execute command receives as a parameter the value of the AT command after the **`=`** of the value. 
+
+Query functions (**`=?`**) do not receive and parameters and must always return with 0. Query functions save the result of the query in the global char array **`g_at_query_buffer`**, the array has a max size of **`ATQUERY_SIZE`** which is 128 characters.
+
+Execute functions with parameters (**`=<value>`**) receive values or settings as a pointer to an char array. This array includes only the value or parameter without the AT command itself. For example the execute function handling **`AT+SETDEV=12000`** would receive only the **`120000`**. The received value or parameter must be checked for validity and if the value of format is not matching, an **`AT_ERRNO_PARA_VAL`** must be returned. If the value or parameter is correct, the function should return **`0`**.
+
+Execute functions without parameters are used to perform an action and return the success of the action as either **`0`** if successfull or  **`AT_ERRNO_EXEC_FAIL`** if the execution failed.
+
+### Example
 This examples is used to set a variable in the application.
 
 ```c++
@@ -94,40 +126,63 @@ This examples is used to set a variable in the application.
 // Example AT command to change the value of the variable new_val:
 // Query the value AT+SETVAL=?
 // Set the value AT+SETVAL=120000
+// Second AT command to show last packet content
+// Query with AT+LIST=?
 /*********************************************************************/
 int32_t new_val = 3000;
 
-bool user_at_handler(char *user_cmd, uint8_t cmd_size)
+/**
+ * @brief Returns the current value of the custom variable
+ * 
+ * @return int always 0
+ */
+static int at_query_value()
 {
-	MYLOG("APP", "Received User AT commmand >>%s<< len %d", user_cmd, cmd_size);
-
-	// Get the command itself
-	char *param;
-
-	param = strtok(user_cmd, "=");
-	MYLOG("APP", "Commmand >>%s<<", param);
-
-	// Check if the command is supported
-	if (strcmp(param, (const char *)"+SETVAL") == 0)
-	{
-		// check if it is query or set
-		param = strtok(NULL, ":");
-		MYLOG("APP", "Param string >>%s<<", param);
-
-		if (strcmp(param, (const char *)"?") == 0)
-		{
-			// It is a query, use AT_PRINTF to respond
-			AT_PRINTF("NEW_VAL: %d", new_val);
-		}
-		else
-		{
-			new_val = strtol(param, NULL, 0);
-			MYLOG("APP", "Value number >>%ld<<", new_val);
-		}
-		return true;
-	}
-	return false;
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "Custom Value: %d", new_val);
+	return 0;
 }
+
+/**
+ * @brief Command to set the custom variable
+ * 
+ * @param str the new value for the variable without the AT part
+ * @return int 0 if the command was succesfull, 5 if the parameter was wrong
+ */
+static int at_exec_value(char *str)
+{
+	new_val = strtol(str, NULL, 0);
+	MYLOG("APP", "Value number >>%ld<<", new_val);
+	return 0;
+}
+
+/**
+ * @brief Example how to show the last LoRa packet content
+ * 
+ * @return int always 0
+ */
+static int at_query_packet()
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "Packet: %02X%02X%02X%02X",
+			 g_lpwan_data.data_flag1,
+			 g_lpwan_data.data_flag2,
+			 g_lpwan_data.batt_1,
+			 g_lpwan_data.batt_2);
+	return 0;
+}
+
+/**
+ * @brief List of all available commands with short help and pointer to functions
+ * 
+ */
+atcmd_t g_user_at_cmd_list[] = {
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	// GNSS commands
+	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL},
+	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL},
+};
+
+/** Number of user defined AT commands */
+uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list) / sizeof(atcmd_t);
 ```
 
 ----
@@ -156,21 +211,21 @@ The API provides some calls for management, to send LoRaWAN packet, to send BLE 
 
 ----
 ## Set the application version
-`void api_set_version(uint16_t sw_1 = 1, uint16_t sw_2 = 0, uint16_t sw_3 = 0);`
+**`void api_set_version(uint16_t sw_1 = 1, uint16_t sw_2 = 0, uint16_t sw_3 = 0);`**    
 This function can be called to set the application version. The application version can be requested by AT commands.
 The version number is build from three digits:    
-`sw_1` ==> major version increase on API change / not backwards compatible    
-`sw_2` ==> minor version increase on API change / backward compatible    
-`sw_3` ==> patch version increase on bugfix, no affect on API     
-If `api_set_version` is not called, the application version defaults to **`1.0.0`**.    
+**`sw_1`** ==> major version increase on API change / not backwards compatible    
+**`sw_2`** ==> minor version increase on API change / backward compatible    
+**`sw_3`** ==> patch version increase on bugfix, no affect on API     
+If **`api_set_version`** is not called, the application version defaults to **`1.0.0`**.    
 
 ----
 
 ## Set hardcoded LoRaWAN credentials
-`void api_read_credentials(void);`    
-`void api_set_credentials(void);`    
-If LoRaWAN credentials need to be hardcoded (e.g. the region, the send repeat time, ...) this can be done in `setup_app()`.
-First the saved credentials must be read from flash with `api_read_credentials();`, then credentials can be changed. After changing the credentials must be saved with `api_set_credentials()`.
+**`void api_read_credentials(void);`**    
+**`void api_set_credentials(void);`**    
+If LoRaWAN credentials need to be hardcoded (e.g. the region, the send repeat time, ...) this can be done in **`setup_app()`**.
+First the saved credentials must be read from flash with **`api_read_credentials();`**, then credentials can be changed. After changing the credentials must be saved with **`api_set_credentials()`**.     
 As the WisBlock API checks if any changes need to be saved, the changed values will be only saved on the first boot after flashing the application.     
 Example:    
 ```c++
@@ -187,7 +242,7 @@ api_set_credentials();
 ```
 
 _**REMARK 1**_    
-Hard coded credentials must be set in `void setup_app(void)`!
+Hard coded credentials must be set in **`void setup_app(void)`**!
 
 _**REMARK 2**_    
 Keep in mind that parameters that are changed from with this method can be changed over AT command or BLE _**BUT WILL BE RESET AFTER A REBOOT**_!
@@ -195,10 +250,10 @@ Keep in mind that parameters that are changed from with this method can be chang
 ----
 
 ## Set hardcoded LoRa P2P settings
-`void api_read_credentials(void);`    
-`void api_set_credentials(void);`
-If LoRa P2P settings need to be hardcoded (e.g. the frequency, bandwidth, ...) this can be done in `setup_app()`.
-First the saved settings must be read from flash with `api_read_credentials();`, then settings can be changed. After changing the settings must be saved with `api_set_credentials()`.
+**`void api_read_credentials(void);`**    
+**`void api_set_credentials(void);`**
+If LoRa P2P settings need to be hardcoded (e.g. the frequency, bandwidth, ...) this can be done in **`setup_app()`**.
+First the saved settings must be read from flash with **`api_read_credentials();`**, then settings can be changed. After changing the settings must be saved with **`api_set_credentials()`**.
 As the WisBlock API checks if any changes need to be saved, the changed values will be only saved on the first boot after flashing the application.     
 Example:    
 ```c++
@@ -218,47 +273,47 @@ api_set_credentials();
 ```
 
 _**REMARK 1**_    
-Hard coded settings must be set in `void setup_app(void)`!
+Hard coded settings must be set in **`void setup_app(void)`**!
 
 _**REMARK 2**_    
 Keep in mind that parameters that are changed from with this method can be changed over AT command or BLE _**BUT WILL BE RESET AFTER A REBOOT**_!
 
 ## Send data over BLE UART
-`g_ble_uart.print()` can be used to send data over the BLE UART. `print`, `println` and `printf` is supported.
+**`g_ble_uart.print()`** can be used to send data over the BLE UART. **`print`**, **`println`** and **`printf`** is supported.
 
 ----
 
 ## Restart BLE advertising
-By default the BLE advertising is only active for 30 seconds after power-up/reset to lower the power consumption. By calling `void restart_advertising(uint16_t timeout);` the advertising can be restarted for `timeout` seconds.
+By default the BLE advertising is only active for 30 seconds after power-up/reset to lower the power consumption. By calling **`void restart_advertising(uint16_t timeout);`** the advertising can be restarted for **`timeout`** seconds.
 
 ----
 
 ## Send data over LoRaWAN
-`lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport = 0);` is used to send a data packet to the LoRaWAN server. `*data` is a pointer to the buffer containing the data, `size` is the size of the packet. If the fport is 0, the fPortdefined in the g_lorawan_settings structure is used.
+**`lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport = 0);`** is used to send a data packet to the LoRaWAN server. **`*data`** is a pointer to the buffer containing the data, **`size`** is the size of the packet. If the fport is 0, the fPortdefined in the g_lorawan_settings structure is used.
 
 ----
 
 ## Send data over LoRa P2P
-`bool send_p2p_packet(uint8_t *data, uint8_t size);` is used to send a data packet Over LORa P2P. `*data` is a pointer to the buffer containing the data, `size` is the size of the packet.
+**`bool send_p2p_packet(uint8_t *data, uint8_t size);`** is used to send a data packet Over LORa P2P. **`*data`** is a pointer to the buffer containing the data, **`size`** is the size of the packet.
 
 ----
 
 ## Check result of LoRaWAN transmission
-After the TX cycle (including RX1 and RX2 windows) are finished, the result is hold in the global flag `g_rx_fin_result`, the event `LORA_TX_FIN` is triggered and the `lora_data_handler()` callback is called. In this callback the result can be checked and if necessary measures can be taken.
+After the TX cycle (including RX1 and RX2 windows) are finished, the result is hold in the global flag **`g_rx_fin_result`**, the event **`LORA_TX_FIN`** is triggered and the **`lora_data_handler()`** callback is called. In this callback the result can be checked and if necessary measures can be taken.
 
 ----
 
 ## Trigger custom events
-Beside of the pre-defined wake-up events of the API, additional wake_up events can be defined. These events must be handled in the `app_event_handler()` callback.
+Beside of the pre-defined wake-up events of the API, additional wake_up events can be defined. These events must be handled in the **`app_event_handler()`** callback.
 
 ----
 
 ### Event trigger definition
 An event trigger is split into two parts
-- `g_task_event_type` is holding a flag for the event.
-- `g_task_sem` is a semphore that is used to wake up the `loop()` and handle the event.    
+- **`g_task_event_type`** is holding a flag for the event.
+- **`g_task_sem`** is a semphore that is used to wake up the **`loop()`** and handle the event.    
 
-`g_task_event_type` is a 16 bit variable where each single bit represents a different event. The lower 7 bits are used for API events, the upper 9 bits can be used for custom application events.
+**`g_task_event_type`** is a 16 bit variable where each single bit represents a different event. The lower 7 bits are used for API events, the upper 9 bits can be used for custom application events.
 
 ----
 
@@ -397,7 +452,7 @@ uint8_t send_fail = 0;
 ----
 
 ## setup_app
-This function is called at the very beginning of the application start. In this function everything should be setup that is required before Arduino `setup()` is executed. This could be for example the LoRaWAN credentials.
+This function is called at the very beginning of the application start. In this function everything should be setup that is required before Arduino **`setup()`** is executed. This could be for example the LoRaWAN credentials.
 In this example we hard-coded the LoRaWAN credentials. It is strongly recommended **TO NOT DO THAT** to avoid duplicated node credentials    
 Alternative options to setup credentials are
 - over USB with [AT-Commands](./AT-Commands.md)
@@ -599,16 +654,16 @@ void ble_data_handler(void)
 ----
 
 ## lora_data_handler
-This callback is called on two different events:
+This callback is called on three different events:
 
 ### 1 LORA_DATA
 The event **LORA_DATA** is triggered if a downlink packet from the LoRaWAN server or a LoRa P2P packet has arrived. In this example we are not parsing the data, they are only printed out to the LOG and over BLE UART (if a device is connected)
 
 ### 2 LORA_TX_FIN
-The event **LORA_TX_FIN** is triggered after sending an uplink packet is finished, including the RX1 and RX2 windows. If **CONFIRMED** packets are sent, the global flag `g_rx_fin_result` contains the result of the confirmed transmission. If `g_rx_fin_result` is true, the LoRaWAN server acknowledged the uplink packet by sending an `ACK`. Otherwise the `g_rx_fin_result` is set to false, indicating that the packet was not received by the LoRaWAN server (no gateway in range, packet got damaged on the air. If **UNCONFIRMED** packets are sent or if **LoRa P2P mode** is used, the flag `g_rx_fin_result` is always true. 
+The event **LORA_TX_FIN** is triggered after sending an uplink packet is finished, including the RX1 and RX2 windows. If **CONFIRMED** packets are sent, the global flag **`g_rx_fin_result`** contains the result of the confirmed transmission. If **`g_rx_fin_result`** is true, the LoRaWAN server acknowledged the uplink packet by sending an **`ACK`**. Otherwise the **`g_rx_fin_result`** is set to false, indicating that the packet was not received by the LoRaWAN server (no gateway in range, packet got damaged on the air. If **UNCONFIRMED** packets are sent or if **LoRa P2P mode** is used, the flag **`g_rx_fin_result`** is always true. 
 
 ### 3 LORA_JOIN_FIN
-The event **LORA_JOIN_FIN** is called after the Join request/Join accept/reject cycle is finished. The global flag `g_task_event_type` contains the result of the Join request. If true, the node has joined the network. If false the join didn't succeed. In this case the join cycle could be restarted or the node could report an error.
+The event **LORA_JOIN_FIN** is called after the Join request/Join accept/reject cycle is finished. The global flag **`g_task_event_type`** contains the result of the Join request. If true, the node has joined the network. If false the join didn't succeed. In this case the join cycle could be restarted or the node could report an error.
 
 ```c++
 void lora_data_handler(void)
