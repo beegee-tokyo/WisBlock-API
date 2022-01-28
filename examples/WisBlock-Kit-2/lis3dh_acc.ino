@@ -8,9 +8,14 @@
  * @copyright Copyright (c) 2020
  * 
  */
-#include "app.h"
+// #include "app.h"
+#include <Arduino.h>
+#include <SparkFunLIS3DH.h> //http://librarymanager/All#SparkFun-LIS3DH
+
+#define INT1_PIN WB_IO3
 
 void acc_int_callback(void);
+uint16_t *read_acc(void);
 
 /** The LIS3DH sensor */
 LIS3DH acc_sensor(I2C_MODE, 0x18);
@@ -40,7 +45,6 @@ bool init_acc(void)
 
 	if (acc_sensor.begin() != 0)
 	{
-		MYLOG("ACC", "ACC sensor initialization failed");
 		return false;
 	}
 
@@ -50,16 +54,16 @@ bool init_acc(void)
 	// Sending a packet on movement.
 	//************************************************************************/
 	// // Enable interrupts
-	// data_to_write |= 0x20;									  //Z high
-	// data_to_write |= 0x08;									  //Y high
-	// data_to_write |= 0x02;									  //X high
+	// data_to_write |= 0x20;                   //Z high
+	// data_to_write |= 0x08;                   //Y high
+	// data_to_write |= 0x02;                   //X high
 	// acc_sensor.writeRegister(LIS3DH_INT1_CFG, data_to_write); // Enable interrupts on high tresholds for x, y and z
 
 	// // Set interrupt trigger range
 	// data_to_write = 0;
-	// // data_to_write |= 0x10;									  // 1/8 range
+	// // data_to_write |= 0x10;                    // 1/8 range
 	// // acc_sensor.writeRegister(LIS3DH_INT1_THS, data_to_write); // 1/8th range
-	// data_to_write |= 0x08;									  // 1/16 range
+	// data_to_write |= 0x08;                   // 1/16 range
 	// acc_sensor.writeRegister(LIS3DH_INT1_THS, data_to_write); // 1/16th range
 
 	// // Set interrupt signal length
@@ -68,8 +72,8 @@ bool init_acc(void)
 	// acc_sensor.writeRegister(LIS3DH_INT1_DURATION, data_to_write);
 
 	// acc_sensor.readRegister(&data_to_write, LIS3DH_CTRL_REG5);
-	// data_to_write &= 0xF3;									   //Clear bits of interest
-	// data_to_write |= 0x08;									   //Latch interrupt (Cleared by reading int1_src)
+	// data_to_write &= 0xF3;                    //Clear bits of interest
+	// data_to_write |= 0x08;                    //Latch interrupt (Cleared by reading int1_src)
 	// acc_sensor.writeRegister(LIS3DH_CTRL_REG5, data_to_write); // Set interrupt to latching
 
 	// // Select interrupt pin 1
@@ -111,33 +115,14 @@ bool init_acc(void)
 	return true;
 }
 
-void read_acc(void)
+uint16_t acc[3] = {0};
+
+uint16_t *read_acc(void)
 {
-	int16_t acc_x = (int16_t)(acc_sensor.readFloatAccelX() * 1000.0);
-	int16_t acc_y = (int16_t)(acc_sensor.readFloatAccelY() * 1000.0);
-	int16_t acc_z = (int16_t)(acc_sensor.readFloatAccelZ() * 1000.0);
-
-	MYLOG("ACC", "X %.3f %.3f %d", acc_sensor.readFloatAccelX(), acc_sensor.readFloatAccelX() * 1000.0, acc_x);
-	MYLOG("ACC", "Y %.3f %.3f %d", acc_sensor.readFloatAccelY(), acc_sensor.readFloatAccelY() * 1000.0, acc_y);
-	MYLOG("ACC", "Z %.3f %.3f %d", acc_sensor.readFloatAccelZ(), acc_sensor.readFloatAccelZ() * 1000.0, acc_z);
-
-	g_tracker_data.acc_x_1 = (int8_t)(acc_x >> 8);
-	g_tracker_data.acc_x_2 = (int8_t)(acc_x);
-	g_tracker_data.acc_y_1 = (int8_t)(acc_y >> 8);
-	g_tracker_data.acc_y_2 = (int8_t)(acc_y);
-	g_tracker_data.acc_z_1 = (int8_t)(acc_z >> 8);
-	g_tracker_data.acc_z_2 = (int8_t)(acc_z);
-}
-
-/**
- * @brief ACC interrupt handler
- * @note gives semaphore to wake up main loop
- * 
- */
-void acc_int_callback(void)
-{
-	g_task_event_type |= ACC_TRIGGER;
-	xSemaphoreGiveFromISR(g_task_sem, pdFALSE);
+	acc[0] = (int16_t)(acc_sensor.readFloatAccelX() * 1000.0);
+	acc[1] = (int16_t)(acc_sensor.readFloatAccelY() * 1000.0);
+	acc[2] = (int16_t)(acc_sensor.readFloatAccelZ() * 1000.0);
+	return acc;
 }
 
 /**
@@ -148,18 +133,4 @@ void clear_acc_int(void)
 {
 	uint8_t data_read;
 	acc_sensor.readRegister(&data_read, LIS3DH_INT1_SRC);
-	if (data_read & 0x40)
-		MYLOG("ACC", "Interrupt Active 0x%X\n", data_read);
-	if (data_read & 0x20)
-		MYLOG("ACC", "Z high");
-	if (data_read & 0x10)
-		MYLOG("ACC", "Z low");
-	if (data_read & 0x08)
-		MYLOG("ACC", "Y high");
-	if (data_read & 0x04)
-		MYLOG("ACC", "Y low");
-	if (data_read & 0x02)
-		MYLOG("ACC", "X high");
-	if (data_read & 0x01)
-		MYLOG("ACC", "X low");
 }

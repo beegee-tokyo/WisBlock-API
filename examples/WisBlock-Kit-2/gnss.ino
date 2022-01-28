@@ -44,7 +44,7 @@ bool init_gnss(void)
 	// // Initialize connection to GPS module
 	// Serial1.begin(9600);
 	// while (!Serial1)
-	// 	;
+	//  ;
 
 	/// \todo check if GNSS module is really connected
 	return true;
@@ -87,47 +87,41 @@ bool poll_gnss(void)
 			// Serial.print(c);
 			if (my_gnss.encode(c))
 			{
-				digitalToggle(LED_BUILTIN);
+				digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
 				if (my_gnss.location.isUpdated() && my_gnss.location.isValid())
 				{
 					has_pos = true;
 					latitude = my_gnss.location.lat() * 10000000;
 					longitude = my_gnss.location.lng() * 10000000;
-					if (g_ble_uart_is_connected)
-					{
-						g_ble_uart.printf("Lat: %.4f Lon: %.4f\n", latitude / 10000000.0, longitude / 10000000.0);
-					}
+					MYLOG("GNSS", "Lat: %.4f Lon: %.4f\n", latitude / 10000000.0, longitude / 10000000.0);
 				}
 
 				// if (my_gnss.hdop.isUpdated() && my_gnss.hdop.isValid())
 				// {
-				// 	has_hdop = true;
-				// 	double hdop_d = my_gnss.hdop.hdop();
-				// 	if (g_ble_uart_is_connected)
-				// 	{
-				// 		g_ble_uart.printf("hdop = %0.2f\n", hdop_d);
-				// 	}
-				// 	hdop = hdop_d;
+				//  has_hdop = true;
+				//  double hdop_d = my_gnss.hdop.hdop();
+				//  if (g_ble_uart_is_connected)
+				//  {
+				//    g_ble_uart.printf("hdop = %0.2f\n", hdop_d);
+				//  }
+				//  hdop = hdop_d;
 				// }
 				// else if (my_gnss.location.isUpdated() && my_gnss.location.isValid())
 				// {
-				// 	has_pos = true;
-				// 	latitude = my_gnss.location.lat() * 10000000;
-				// 	longitude = my_gnss.location.lng() * 10000000;
-				// 	if (g_ble_uart_is_connected)
-				// 	{
-				// 		g_ble_uart.printf("Lat: %.4f Lon: %.4f\n", latitude / 10000000.0, longitude / 10000000.0);
-				// 	}
+				//  has_pos = true;
+				//  latitude = my_gnss.location.lat() * 10000000;
+				//  longitude = my_gnss.location.lng() * 10000000;
+				//  if (g_ble_uart_is_connected)
+				//  {
+				//    g_ble_uart.printf("Lat: %.4f Lon: %.4f\n", latitude / 10000000.0, longitude / 10000000.0);
+				//  }
 				// }
 				else if (my_gnss.altitude.isUpdated() && my_gnss.altitude.isValid())
 				{
 					has_alt = true;
 					altitude = my_gnss.altitude.meters() * 1000;
-					if (g_ble_uart_is_connected)
-					{
-						g_ble_uart.printf("Alt: %.2f\n", altitude / 1000.0);
-						g_ble_uart.printf("Alt: %.2f\n", my_gnss.altitude.meters());
-					}
+					MYLOG("GNSS", "Alt: %.2f\n", altitude / 1000.0);
+					MYLOG("GNSS", "Alt: %.2f\n", my_gnss.altitude.meters());
 				}
 			}
 			// if (has_pos && has_alt && has_hdop)
@@ -152,19 +146,17 @@ bool poll_gnss(void)
 	if (has_pos && has_alt)
 	{
 #if MY_DEBUG > 0
-		digitalWrite(LED_CONN, HIGH);
+		digitalWrite(LED_BLUE, HIGH);
 #endif
 		/// \todo  For testing, an address in Recife, Brazil, which has both latitude and longitude negative
 		// latitude = -80487740;
 		// longitude = -349021580;
 		// altitude = 156024;
 
-		if (g_ble_uart_is_connected)
-		{
-			g_ble_uart.printf("Fixtype: %d\n", hdop);
-			g_ble_uart.printf("Lat: %.4f Lon: %.4f\n", latitude / 10000000.0, longitude / 10000000.0);
-			g_ble_uart.printf("Alt: %.2f\n", altitude / 1000.0);
-		}
+		MYLOG("GNSS", "Fixtype: %d\n", hdop);
+		MYLOG("GNSS", "Lat: %.4f Lon: %.4f\n", latitude / 10000000.0, longitude / 10000000.0);
+		MYLOG("GNSS", "Alt: %.2f\n", altitude / 1000.0);
+
 		pos_union.val32 = latitude / 1000;
 		g_tracker_data.lat_1 = pos_union.val8[2];
 		g_tracker_data.lat_2 = pos_union.val8[1];
@@ -183,13 +175,9 @@ bool poll_gnss(void)
 	else
 	{
 #if MY_DEBUG > 0
-		digitalWrite(LED_CONN, LOW);
+		digitalWrite(LED_BLUE, LOW);
 #endif
 		MYLOG("GNSS", "No valid location found");
-		if (g_ble_uart_is_connected)
-		{
-			g_ble_uart.println("No valid location found");
-		}
 		last_read_ok = false;
 		delay(1000);
 	}

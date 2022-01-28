@@ -17,9 +17,6 @@ void acc_int_handler(void);
 /** The LIS3DH sensor */
 LIS3DH acc_sensor(I2C_MODE, 0x18);
 
-/** Required for give semaphore from ISR */
-BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
 /** Flag if a x-axis movement was detected */
 bool has_x_move = false;
 /** Flag if a y-axis movement was detected */
@@ -109,10 +106,8 @@ bool init_acc(void)
  */
 void acc_int_handler(void)
 {
-	// Set the event flag
-	g_task_event_type |= ACC_TRIGGER;
 	// Wake up the task to handle it
-	xSemaphoreGiveFromISR(g_task_sem, &xHigherPriorityTaskWoken);
+	api_wake_loop(ACC_TRIGGER);
 }
 
 /**

@@ -8,12 +8,8 @@
  * @copyright Copyright (c) 2021
  * 
  */
-
+#include "main.h"
 #include <Arduino.h>
-
-/** Include the BME680 library */
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BME680.h> // Click to install library: http://librarymanager/All#Adafruit_BME680
 
 extern uint8_t collected_data[];
 

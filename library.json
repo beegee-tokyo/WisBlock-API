@@ -1,6 +1,6 @@
 {
 	"name": "WisBlock-API",
-	"version": "1.1.6",
+	"version": "1.1.7",
 	"keywords": [
 		"lora",
 		"Semtech",
@@ -13,7 +13,8 @@
 		"arduino"
 	],
 	"platforms": [
-		"nordicnrf52"
+		"nordicnrf52",
+		"mbed_rp2040"
 	],
 	"license": "MIT",
 	"authors": [
@@ -32,6 +33,11 @@
 		{
 			"owner": "beegee-tokyo",
 			"name": "SX126x-Arduino",
+			"version": "*"
+		},
+		{
+			"owner": "khoih-prog",
+			"name": "LittleFS_Mbed_RP2040",
 			"version": "*"
 		}
 	],

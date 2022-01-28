@@ -8,19 +8,22 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#ifdef NRF52_SERIES
-
 #include "WisBlock-API.h"
 
 #ifndef __AT_H__
 #define __AT_H__
 
+#ifdef NRF52_SERIES
 #define AT_PRINTF(...)                  \
 	Serial.printf(__VA_ARGS__);         \
 	if (g_ble_uart_is_connected)        \
 	{                                   \
 		g_ble_uart.printf(__VA_ARGS__); \
 	}
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+#define AT_PRINTF(...) \
+	Serial.printf(__VA_ARGS__);
 #endif
 
 #define AT_ERROR "+CME ERROR:"
@@ -35,4 +38,4 @@
 #define AT_ERRNO_SYS (8)
 #define AT_CB_PRINT (0xFF)
 
-#endif
+#endif // __AT_H__

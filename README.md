@@ -12,9 +12,9 @@ This approach makes it easy to create applications designed for low power usage.
 
 In addition the API offers two options to setup LoRa P2P / LoRaWAN settings without the need to hard-code them into the source codes.    
 - AT Commands => [AT-Commands Manual](./AT-Commands.md)
-- BLE interface to [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) :arrow_upper_right:
+- BLE interface to [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) ↗️
 
-# _**IMPORTANT: This first release supports only the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_ :arrow_upper_right:
+# _**IMPORTANT: This first release supports only the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_ ↗️ _**and the [RAKwireless WisBlock RAK11310 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11310/Overview)**_ ↗️
 
 ----
 
@@ -27,6 +27,9 @@ In addition the API offers two options to setup LoRa P2P / LoRaWAN settings with
 * [API functions](#api-functions)
 	* [Set the application version](#set-the-application-version)
 	* [Set hardcoded LoRaWAN credentials](#set-hardcoded-lorawan-credentials)
+	* [Reset WisBlock Core module](#reset_wisblock_core-module)
+	* [Wake up loop](#wake_up_loop)
+	* [Print settings to log output](#print_settings_to_log_output)
 	* [Send data over BLE UART](#send-data-over-ble-uart)
 	* [Restart BLE advertising](#restart-ble-advertising)
 	* [Send data over LoRaWAN](#send-data-over-lorawan)
@@ -62,6 +65,9 @@ The user application has two initialization functions, one is called at the begi
 Sensor reading, actuator control or other application tasks are handled in the **`app_event_handler()`**. **`app_event_handler()`** is called frequently, the time between calls is defined by the application. In addition **`app_event_handler()`** is called on custom events.
 
 **`ble_data_handler()`** is called on BLE events (BLE UART RX events for now) from **`loop()`**. It can be used to implement custom communication over BLE UART.
+
+**REMARK**    
+This function is not required on the RAK11310!    
 
 **`lora_data_handler()`** is called on different LoRaWAN events    
 - A download packet has arrived from the LoRaWAN server
@@ -221,31 +227,87 @@ If **`api_set_version`** is not called, the application version defaults to **`1
 
 ----
 
-## Set hardcoded LoRaWAN credentials
-**`void api_read_credentials(void);`**    
-**`void api_set_credentials(void);`**    
-If LoRaWAN credentials need to be hardcoded (e.g. the region, the send repeat time, ...) this can be done in **`setup_app()`**.
-First the saved credentials must be read from flash with **`api_read_credentials();`**, then credentials can be changed. After changing the credentials must be saved with **`api_set_credentials()`**.     
-As the WisBlock API checks if any changes need to be saved, the changed values will be only saved on the first boot after flashing the application.     
-Example:    
+## Reset WisBlock Core module
+**`void api_reset(void);`**    
+Performs a reset of the WisBlock Core module
+
+----
+
+## Wake up loop
+**`void api_wake_loop(uint16_t reason);`**    
+This is used to wakeup the loop with an event. The **`reason`** must be defined in **`app.h`**. After the loop woke app, it will call the **`app_event_handler()`** with the value of **`reason`** in **`g_task_event_type`**.
+
+As an example, this can be used to wakeup the device from the interrupt of an accelerometer sensor. Here as an example an extract from the **`accelerometer`** example code.
+
+In **`accelerometer.ino`** the event is defined. The first define is to set the signal, the second is to clear the event after it was handled.
 ```c++
-// Read credentials from Flash
-api_read_credentials();
-// Make changes to the credentials
-g_lorawan_settings.send_repeat_time = 240000;                   // Default is 2 minutes
-g_lorawan_settings.subband_channels = 2;                        // Default is subband 1
-g_lorawan_settings.app_port = 4;                                // Default is 2
-g_lorawan_settings.confirmed_msg_enabled = LMH_CONFIRMED_MSG;   // Default is UNCONFIRMED
-g_lorawan_settings.lora_region = LORAMAC_REGION_EU868;          // Default is AS923-3
-// Save hard coded LoRaWAN settings
-api_set_credentials();
+/** Define additional events */
+#define ACC_TRIGGER 0b1000000000000000
+#define N_ACC_TRIGGER 0b0111111111111111
+```
+Then in **`lis3dh_acc.ino`** in the interrupt callback function **`void acc_int_handler(void)`** the loop is woke up with the signal **`ACC_TRIGGER`**
+```c++
+void acc_int_handler(void)
+{
+	// Wake up the task to handle it
+	api_wake_loop(ACC_TRIGGER);
+}
+```
+And finally in **`accelerometer.ino`** the event is handled in **`app_event_handler()`**
+```c++
+	// ACC triggered event
+	if ((g_task_event_type & ACC_TRIGGER) == ACC_TRIGGER)
+	{
+		g_task_event_type &= N_ACC_TRIGGER;
+		MYLOG("APP", "ACC IRQ wakeup");
+		// Reset ACC IRQ register
+		get_acc_int();
+
+		// Set Status flag, it will trigger sending a packet
+		g_task_event_type = STATUS;
+	}
 ```
 
-_**REMARK 1**_    
-Hard coded credentials must be set in **`void setup_app(void)`**!
+----
 
-_**REMARK 2**_    
-Keep in mind that parameters that are changed from with this method can be changed over AT command or BLE _**BUT WILL BE RESET AFTER A REBOOT**_!
+## Print settings to log output
+**`void api_log_settings(void);`**    
+This function can be called to list the complete settings of the WisBlock device over USB. The output looks like:
+```txt
+Device status:
+   RAK11310
+   Auto join enabled
+   Mode LPWAN
+   Network joined
+   Send Frequency 120
+LPWAN status:
+   Dev EUI AC1F09FFFE0142C8
+   App EUI 70B3D57ED00201E1
+   App Key 2B84E0B09B68E5CB42176FE753DCEE79
+   Dev Addr 26021FB4
+   NWS Key 323D155A000DF335307A16DA0C9DF53F
+   Apps Key 3F6A66459D5EDCA63CBC4619CD61A11E
+   OTAA enabled
+   ADR disabled
+   Public Network
+   Dutycycle disabled
+   Join trials 30
+   TX Power 0
+   DR 3
+   Class 0
+   Subband 1
+   Fport 2
+   Unconfirmed Message
+   Region AS923-3
+LoRa P2P status:
+   P2P frequency 916000000
+   P2P TX Power 22
+   P2P BW 125
+   P2P SF 7
+   P2P CR 1
+   P2P Preamble length 8
+   P2P Symbol Timeout 0
+```
 
 ----
 
@@ -279,12 +341,18 @@ _**REMARK 2**_
 Keep in mind that parameters that are changed from with this method can be changed over AT command or BLE _**BUT WILL BE RESET AFTER A REBOOT**_!
 
 ## Send data over BLE UART
-**`g_ble_uart.print()`** can be used to send data over the BLE UART. **`print`**, **`println`** and **`printf`** is supported.
+**`g_ble_uart.print()`** can be used to send data over the BLE UART. **`print`**, **`println`** and **`printf`** is supported.     
+
+**REMARK**    
+This command is not available on the RAK11310!    
 
 ----
 
 ## Restart BLE advertising
 By default the BLE advertising is only active for 30 seconds after power-up/reset to lower the power consumption. By calling **`void restart_advertising(uint16_t timeout);`** the advertising can be restarted for **`timeout`** seconds.
+
+**REMARK**    
+This command is not available on the RAK11310!    
 
 ----
 
@@ -300,65 +368,6 @@ By default the BLE advertising is only active for 30 seconds after power-up/rese
 
 ## Check result of LoRaWAN transmission
 After the TX cycle (including RX1 and RX2 windows) are finished, the result is hold in the global flag **`g_rx_fin_result`**, the event **`LORA_TX_FIN`** is triggered and the **`lora_data_handler()`** callback is called. In this callback the result can be checked and if necessary measures can be taken.
-
-----
-
-## Trigger custom events
-Beside of the pre-defined wake-up events of the API, additional wake_up events can be defined. These events must be handled in the **`app_event_handler()`** callback.
-
-----
-
-### Event trigger definition
-An event trigger is split into two parts
-- **`g_task_event_type`** is holding a flag for the event.
-- **`g_task_sem`** is a semphore that is used to wake up the **`loop()`** and handle the event.    
-
-**`g_task_event_type`** is a 16 bit variable where each single bit represents a different event. The lower 7 bits are used for API events, the upper 9 bits can be used for custom application events.
-
-----
-
-### Example for a custom event using the signal of a PIR sensor to wake up the device
-```c++
-// Define the event flag and the clear flag for the event
-#define PIR_TRIGGER   0b1000000000000000
-#define N_PIR_TRIGGER 0b0111111111111111
-
-// This handler is called when the PIR trigger goes high
-// It sets the PIR_TRIGGER event and wakes up the loop()
-void pir_irq_handler(void)
-{
-	// Wake up task to handle PIR trigger
-	g_task_event_type |= PIR_TRIGGER;
-	// Notify task about the event
-	if (g_task_sem != NULL)
-	{
-		MYLOG("PIR", "PIR_TRIGGERED");
-		xSemaphoreGive(g_task_sem);
-	}
-}
-
-// PIR function setup in the app_setup() function
-void app_setup()
-{
-	...
-	// Set input pin for PIR trigger impulse
-	pinMode(WB_IO5, INPUT_PULLDOWN);
-	attachInterrupt(WB_IO5,pir_trigger_handler, RISING);
-	...
-}
-
-// Handling of the PIR event in the app_event_handler() function
-void app_event_handler(void)
-{
-	...
-	// PIR triggered event
-	if ((g_task_event_type & PIR_TRIGGER) == PIR_TRIGGER)
-	{
-    	g_task_event_type &= N_PIR_TRIGGER;
-		/// \todo do something when the PIR is triggered, e.g switch on a light over a relay
-	}
-}
-```
 
 ----
 
@@ -384,17 +393,38 @@ Alternative options to setup credentials are
 #define MY_DEBUG 1
 #endif
 
+#ifdef NRF52_SERIES
 #if MY_DEBUG > 0
-#define MYLOG(tag, ...)           \
-  do                            \
-  {                             \
-    if (tag)                  \
-      PRINTF("[%s] ", tag); \
-    PRINTF(__VA_ARGS__);      \
-    PRINTF("\n");             \
-  } while (0)
+#define MYLOG(tag, ...)                     \
+	do                                      \
+	{                                       \
+		if (tag)                            \
+			PRINTF("[%s] ", tag);           \
+		PRINTF(__VA_ARGS__);                \
+		PRINTF("\n");                       \
+		if (g_ble_uart_is_connected)        \
+		{                                   \
+			g_ble_uart.printf(__VA_ARGS__); \
+			g_ble_uart.printf("\n");        \
+		}                                   \
+	} while (0)
 #else
 #define MYLOG(...)
+#endif
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+#if MY_DEBUG > 0
+#define MYLOG(tag, ...)                  \
+	do                                   \
+	{                                    \
+		if (tag)                         \
+			Serial.printf("[%s] ", tag); \
+		Serial.printf(__VA_ARGS__);      \
+		Serial.printf("\n");             \
+	} while (0)
+#else
+#define MYLOG(...)
+#endif
 #endif
 
 /** Include the WisBlock-API */
@@ -442,9 +472,6 @@ Some flags and signals required
 /** Flag showing if TX cycle is ongoing */
 bool lora_busy = false;
 
-/** Required to give semaphore from ISR. Giving the semaphore wakes up the loop() */
-BaseType_t g_higher_priority_task_woken = pdTRUE;
-
 /** Send Fail counter **/
 uint8_t send_fail = 0;
 ```
@@ -469,19 +496,21 @@ void setup_app(void)
     if ((millis() - serial_timeout) < 5000)
     {
       delay(100);
-      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+      digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
     }
     else
     {
       break;
     }
   }
-  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(LED_GREEN, LOW);
   
   MYLOG("APP", "Setup WisBlock API Example");
 
+#ifdef NRF52_SERIES
   // Enable BLE
   g_enable_ble = true;
+#endif
 
   // Set firmware version
   api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
@@ -563,19 +592,17 @@ void app_event_handler(void)
     g_task_event_type &= N_STATUS;
     MYLOG("APP", "Timer wakeup");
 
+#ifdef NRF52_SERIES
     // If BLE is enabled, restart Advertising
     if (g_enable_ble)
     {
       restart_advertising(15);
     }
+#endif
 
     if (lora_busy)
     {
       MYLOG("APP", "LoRaWAN TX cycle not finished, skip this event");
-      if (g_ble_uart_is_connected)
-      {
-        g_ble_uart.println("LoRaWAN TX cycle not finished, skip this event");
-      }
     }
     else
     {
@@ -591,24 +618,12 @@ void app_event_handler(void)
           MYLOG("APP", "Packet enqueued");
           // Set a flag that TX cycle is running
           lora_busy = true;
-          if (g_ble_uart_is_connected)
-          {
-            g_ble_uart.println("Packet enqueued");
-          }
           break;
         case LMH_BUSY:
           MYLOG("APP", "LoRa transceiver is busy");
-          if (g_ble_uart_is_connected)
-          {
-            g_ble_uart.println("LoRa transceiver is busy");
-          }
           break;
         case LMH_ERROR:
           MYLOG("APP", "Packet error, too big to send with current DR");
-          if (g_ble_uart_is_connected)
-          {
-            g_ble_uart.println("Packet error, too big to send with current DR");
-          }
           break;
       }
     }
@@ -621,7 +636,10 @@ void app_event_handler(void)
 ## ble_data_handler
 This callback is used to handle data received over the BLE UART. If you do not need BLE UART functionality, you can remove this function completely.
 In this example we forward the received BLE UART data to the AT command interpreter. This way, we can submit AT commands either over the USB port or over the BLE UART port.    
+BLE communication is only supported on the RAK4631. The RAK11310 does not have BLE.
+
 ```c++
+#ifdef NRF52_SERIES
 void ble_data_handler(void)
 {
   if (g_enable_ble)
@@ -649,6 +667,7 @@ void ble_data_handler(void)
     }
   }
 }
+#endif
 ```
 
 ----
@@ -688,15 +707,6 @@ void lora_data_handler(void)
     }
     lora_busy = false;
     MYLOG("APP", "%s", log_buff);
-
-    if (g_ble_uart_is_connected && g_enable_ble)
-    {
-      for (int idx = 0; idx < g_rx_data_len; idx++)
-      {
-        g_ble_uart.printf("%02X ", g_rx_lora_data[idx]);
-      }
-      g_ble_uart.println("");
-    }
   }
 
   // LoRa TX finished handling
@@ -705,10 +715,6 @@ void lora_data_handler(void)
     g_task_event_type &= N_LORA_TX_FIN;
 
     MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-    if (g_ble_uart_is_connected)
-    {
-      g_ble_uart.printf("LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-    }
 
     if (!g_rx_fin_result)
     {
@@ -786,6 +792,9 @@ in the file **`WisBlock-API`**
     0 -> the blue LED will be used to indicate BLE status
     1 -> the blue LED will not used
 
+_**REMARK**_    
+RAK11310 has no BLE and the blue LED can be used for other purposes.    
+
 ----
 
 ## PlatformIO
@@ -823,6 +832,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-01-25
+  - Add experimental support for RAK11310
 - 2022-01-22
   - Make it easier to use custom AT commands and list them with AT?
 - 2022-01-03

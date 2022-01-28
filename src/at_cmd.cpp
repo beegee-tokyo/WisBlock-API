@@ -8,8 +8,6 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#ifdef NRF52_SERIES
-
 #include "at_cmd.h"
 
 static char atcmd[ATCMD_SIZE];
@@ -108,9 +106,16 @@ static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length)
 void at_settings(void)
 {
 	AT_PRINTF("Device status:\n");
+#ifdef NRF52_SERIES
+	AT_PRINTF("   RAK4631\n");
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+	AT_PRINTF("   RAK11310\n");
+#endif
 	AT_PRINTF("   Auto join %s\n", g_lorawan_settings.auto_join ? "enabled" : "disabled");
 	AT_PRINTF("   Mode %s\n", g_lorawan_settings.lorawan_enable ? "LPWAN" : "P2P");
 	AT_PRINTF("   Network %s\n", g_lpwan_has_joined ? "joined" : "not joined");
+	AT_PRINTF("   Send Frequency %ld\n", g_lorawan_settings.send_repeat_time / 1000);
 	AT_PRINTF("LPWAN status:\n");
 	AT_PRINTF("   Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
 			  g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
@@ -152,7 +157,6 @@ void at_settings(void)
 	AT_PRINTF("   ADR %s\n", g_lorawan_settings.adr_enabled ? "enabled" : "disabled");
 	AT_PRINTF("   %s Network\n", g_lorawan_settings.public_network ? "Public" : "Private");
 	AT_PRINTF("   Dutycycle %s\n", g_lorawan_settings.duty_cycle_enabled ? "enabled" : "disabled");
-	AT_PRINTF("   Send Frequency %ld\n", g_lorawan_settings.send_repeat_time / 1000);
 	AT_PRINTF("   Join trials %d\n", g_lorawan_settings.join_trials);
 	AT_PRINTF("   TX Power %d\n", g_lorawan_settings.tx_power);
 	AT_PRINTF("   DR %d\n", g_lorawan_settings.data_rate);
@@ -206,7 +210,7 @@ static int at_exec_mode(char *str)
 	if (need_restart)
 	{
 		delay(100);
-		sd_nvic_SystemReset();
+		api_reset();
 	}
 	return 0;
 }
@@ -1190,7 +1194,7 @@ static int at_exec_join(char *str)
 		{
 			// If auto join is set, restart the device to start join process
 			delay(100);
-			sd_nvic_SystemReset();
+			api_reset();
 			return 0;
 		}
 	}
@@ -1400,13 +1404,7 @@ static int at_exec_sendfreq(char *str)
 	g_lorawan_settings.send_repeat_time = time * 1000;
 	save_settings();
 
-	if ((g_lorawan_settings.send_repeat_time != 0) && (g_lorawan_settings.auto_join))
-	{
-		// Now we are connected, start the timer that will wakeup the loop frequently
-		g_task_wakeup_timer.stop();
-		g_task_wakeup_timer.setPeriod(g_lorawan_settings.send_repeat_time);
-		g_task_wakeup_timer.start();
-	}
+	api_timer_restart(g_lorawan_settings.send_repeat_time);
 
 	return 0;
 }
@@ -1507,7 +1505,7 @@ static int at_query_version(void)
 static int at_exec_reboot(void)
 {
 	delay(100);
-	sd_nvic_SystemReset();
+	api_reset();
 	return 0;
 }
 
@@ -1926,6 +1924,7 @@ void at_serial_input(uint8_t cmd)
 	}
 }
 
+#ifdef NRF52_SERIES
 /**
  * @brief Callback when data over USB arrived
  * 
@@ -1939,5 +1938,91 @@ void tud_cdc_rx_cb(uint8_t itf)
 		xSemaphoreGiveFromISR(g_task_sem, pdFALSE);
 	}
 }
+#endif
 
+#ifdef ARDUINO_ARCH_RP2040
+/** The event handler thread */
+Thread _thread_handle_serial(osPriorityNormal, 4096);
+
+/** Thread id for lora event thread */
+osThreadId _serial_task_thread = NULL;
+
+void wb_serial_event(void)
+{
+	API_LOG("USB", "RX callback");
+	// Notify loop task
+	api_wake_loop(AT_CMD);
+}
+
+void serial1_rx_handler(void)
+{
+	if (_serial_task_thread != NULL)
+	{
+		g_task_event_type |= AT_CMD;
+		osSignalSet(_serial_task_thread, AT_CMD);
+	}
+}
+
+// Task to handle timer events
+void _serial_task()
+{
+	_serial_task_thread = osThreadGetId();
+	// attachInterrupt(SERIAL1_RX, serial1_rx_handler, RISING);
+
+	// Flush for serial USB RX
+	if (Serial.available())
+	{
+		while (Serial.available() > 0)
+		{
+			Serial.read();
+			delay(10);
+		}
+	}
+
+	// Flush for serial 1 RX
+	if (Serial1.available())
+	{
+		while (Serial1.available() > 0)
+		{
+			Serial1.read();
+			delay(10);
+		}
+	}
+
+	while (true)
+	{
+		// Wait for serial USB RX
+		if (Serial.available())
+		{
+			while (Serial.available() > 0)
+			{
+				at_serial_input(uint8_t(Serial.read()));
+				delay(5);
+			}
+		}
+
+		// Wait for serial 1 RX
+		// osEvent event = osSignalWait(0, osWaitForever);
+		if (Serial1.available())
+		{
+			while (Serial1.available() > 0)
+			{
+				at_serial_input(uint8_t(Serial1.read()));
+				delay(5);
+			}
+		}
+		// delay(100);
+		delay(3000);
+		yield();
+	}
+}
+
+bool init_serial_task(void)
+{
+	_thread_handle_serial.start(_serial_task);
+	_thread_handle_serial.set_priority(osPriorityNormal);
+
+	/// \todo how to detect that the task is really created
+	return true;
+}
 #endif

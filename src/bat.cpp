@@ -8,19 +8,26 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#ifdef NRF52_SERIES
-
 #include "WisBlock-API.h"
 
+#ifdef NRF52_SERIES
 /** Millivolts per LSB 3.0V ADC range and 12-bit ADC resolution = 3000mV/4096 */
 #define VBAT_MV_PER_LSB (0.73242188F)
 /** Compensation factor for the VBAT divider */
 #define VBAT_DIVIDER_COMP (1.73)
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+/** Millivolts per LSB 3.0V ADC range and 12-bit ADC resolution = 3000mV/4096 */
+#define VBAT_MV_PER_LSB (0.806F)
+/** Compensation factor for the VBAT divider */
+#define VBAT_DIVIDER_COMP (1.846F)
+#endif
+
 /** Real milli Volts per LSB including compensation */
 #define REAL_VBAT_MV_PER_LSB (VBAT_DIVIDER_COMP * VBAT_MV_PER_LSB)
 
 /** Analog input for battery level */
-uint32_t vbat_pin = A0;
+uint32_t vbat_pin = WB_A0;
 
 /**
  * @brief Initialize the battery analog input
@@ -28,8 +35,10 @@ uint32_t vbat_pin = A0;
  */
 void init_batt(void)
 {
+#ifdef NRF52_SERIES
 	// Set the analog reference to 3.0V (default = 3.6V)
 	analogReference(AR_INTERNAL_3_0);
+#endif
 
 	// Set the resolution to 12-bit (0..4095)
 	analogReadResolution(12); // Can be 8, 10, 12 or 14
@@ -97,5 +106,3 @@ uint8_t get_lora_batt(void)
 	}
 	return (mv_to_percent(read_val / 10) * 2.54);
 }
-
-#endif

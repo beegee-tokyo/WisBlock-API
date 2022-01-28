@@ -32,5 +32,7 @@ jobs:
         mv Adafruit_BME680 /home/runner/Arduino/libraries/Adafruit_BME680
         git clone --quiet https://github.com/mikalhart/TinyGPSPlus
         mv TinyGPSPlus /home/runner/Arduino/libraries/TinyGPSPlus
+        git clone --quiet https://github.com/khoih-prog/LittleFS_Mbed_RP2040
+        mv LittleFS_Mbed_RP2040 /home/runner/Arduino/libraries/LittleFS_Mbed_RP2040
     - name: test platforms
-      run: python3 ci/build_platform.py rak4631
+      run: python3 ci/build_platform.py rak4631 rak11300

@@ -8,7 +8,6 @@
  * @copyright Copyright (c) 2021
  * 
  */
-
 #include "app.h"
 
 Adafruit_BME680 bme;

@@ -17,17 +17,38 @@
 #define MY_DEBUG 1
 #endif
 
+#ifdef NRF52_SERIES
 #if MY_DEBUG > 0
-#define MYLOG(tag, ...)           \
-	do                            \
-	{                             \
-		if (tag)                  \
-			PRINTF("[%s] ", tag); \
-		PRINTF(__VA_ARGS__);      \
-		PRINTF("\n");             \
+#define MYLOG(tag, ...)                     \
+	do                                      \
+	{                                       \
+		if (tag)                            \
+			PRINTF("[%s] ", tag);           \
+		PRINTF(__VA_ARGS__);                \
+		PRINTF("\n");                       \
+		if (g_ble_uart_is_connected)        \
+		{                                   \
+			g_ble_uart.printf(__VA_ARGS__); \
+			g_ble_uart.printf("\n");        \
+		}                                   \
 	} while (0)
 #else
 #define MYLOG(...)
+#endif
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+#if MY_DEBUG > 0
+#define MYLOG(tag, ...)                  \
+	do                                   \
+	{                                    \
+		if (tag)                         \
+			Serial.printf("[%s] ", tag); \
+		Serial.printf(__VA_ARGS__);      \
+		Serial.printf("\n");             \
+	} while (0)
+#else
+#define MYLOG(...)
+#endif
 #endif
 
 /** Include the WisBlock-API */
@@ -66,9 +87,6 @@ char g_ble_dev_name[10] = "RAK-TEST";
 /** Flag showing if TX cycle is ongoing */
 bool lora_busy = false;
 
-/** Required to give semaphore from ISR. Giving the semaphore wakes up the loop() */
-BaseType_t g_higher_priority_task_woken = pdTRUE;
-
 /** Send Fail counter **/
 uint8_t send_fail = 0;
 
@@ -86,19 +104,21 @@ void setup_app(void)
 		if ((millis() - serial_timeout) < 5000)
 		{
 			delay(100);
-			digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+			digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
 		}
 		else
 		{
 			break;
 		}
 	}
-	digitalWrite(LED_BUILTIN, LOW);
+	digitalWrite(LED_GREEN, LOW);
 
 	MYLOG("APP", "Setup WisBlock API Example");
 
+#ifdef NRF52_SERIES
 	// Enable BLE
 	g_enable_ble = true;
+#endif
 
 	// Set firmware version
 	api_set_version(SW_VERSION_1, SW_VERSION_2, SW_VERSION_3);
@@ -163,19 +183,16 @@ void app_event_handler(void)
 		g_task_event_type &= N_STATUS;
 		MYLOG("APP", "Timer wakeup");
 
+#ifdef NRF52_SERIES
 		// If BLE is enabled, restart Advertising
 		if (g_enable_ble)
 		{
 			restart_advertising(15);
 		}
-
+#endif
 		if (lora_busy)
 		{
 			MYLOG("APP", "LoRaWAN TX cycle not finished, skip this event");
-			if (g_ble_uart_is_connected)
-			{
-				g_ble_uart.println("LoRaWAN TX cycle not finished, skip this event");
-			}
 		}
 		else
 		{
@@ -191,30 +208,19 @@ void app_event_handler(void)
 				MYLOG("APP", "Packet enqueued");
 				// Set a flag that TX cycle is running
 				lora_busy = true;
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("Packet enqueued");
-				}
 				break;
 			case LMH_BUSY:
 				MYLOG("APP", "LoRa transceiver is busy");
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("LoRa transceiver is busy");
-				}
 				break;
 			case LMH_ERROR:
 				MYLOG("APP", "Packet error, too big to send with current DR");
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("Packet error, too big to send with current DR");
-				}
 				break;
 			}
 		}
 	}
 }
 
+#ifdef NRF52_SERIES
 /**
    @brief Handle BLE UART data
 
@@ -246,6 +252,7 @@ void ble_data_handler(void)
 		}
 	}
 }
+#endif
 
 /**
    @brief Handle received LoRa Data
@@ -289,15 +296,6 @@ void lora_data_handler(void)
 		}
 		lora_busy = false;
 		MYLOG("APP", "%s", log_buff);
-
-		if (g_ble_uart_is_connected && g_enable_ble)
-		{
-			for (int idx = 0; idx < g_rx_data_len; idx++)
-			{
-				g_ble_uart.printf("%02X ", g_rx_lora_data[idx]);
-			}
-			g_ble_uart.println("");
-		}
 	}
 
 	// LoRa TX finished handling
@@ -306,10 +304,6 @@ void lora_data_handler(void)
 		g_task_event_type &= N_LORA_TX_FIN;
 
 		MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-		if (g_ble_uart_is_connected)
-		{
-			g_ble_uart.printf("LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-		}
 
 		if (!g_rx_fin_result)
 		{
@@ -320,7 +314,7 @@ void lora_data_handler(void)
 			{
 				// Too many failed sendings, reset node and try to rejoin
 				delay(100);
-				sd_nvic_SystemReset();
+				api_reset();
 			}
 		}
 

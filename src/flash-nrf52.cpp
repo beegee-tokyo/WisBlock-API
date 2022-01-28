@@ -19,7 +19,7 @@ s_loracompat_settings g_flash_content_compat;
 #include <InternalFileSystem.h>
 using namespace Adafruit_LittleFS_Namespace;
 
-static const char settings_name[] = "RAK";
+const char settings_name[] = "RAK";
 
 File lora_file(InternalFS);
 
@@ -46,10 +46,11 @@ void init_flash(void)
 	if (!lora_file)
 	{
 		API_LOG("FLASH", "File doesn't exist, force format");
-		delay(100);
+		delay(1000);
 		flash_reset();
 		lora_file.open(settings_name, FILE_O_READ);
 	}
+
 	uint8_t markers[2] = {0};
 	lora_file.read(markers, 2);
 	if ((markers[0] == 0xAA) && (markers[1] == LORAWAN_COMPAT_MARKER))

@@ -1,9 +1,13 @@
-# SX126x-API
+# WisBlock-API
 ----
-Arduino library that takes all the LoRaWAN, BLE, AT command stuff off your workload. You concentrate on your application and leave the rest to the API. It is made as a companion to the [SX126x-Arduino LoRaWAN library](https://github.com/beegee-tokyo/SX126x-Arduino)    
+Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN, BLE, AT command stuff off your workload. You concentrate on your application and leave the rest to the API. It is made as a companion to the [SX126x-Arduino LoRaWAN library](https://github.com/beegee-tokyo/SX126x-Arduino)    
 
 # Release Notes
 
+## V1.1.7 Add experimental support for RAK11310
+  - Move more Core specific functions into the API functions
+  - API functions support RAK4631 and RAK11310
+  
 ## V1.1.6 Updated custom AT command handling
   - Make it easier to use custom AT commands and list them with AT?
   

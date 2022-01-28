@@ -16,9 +16,6 @@
 /** Set the device name, max length is 10 characters */
 char g_ble_dev_name[10] = "RAK-TEST";
 
-/** Required for give semaphore from ISR */
-BaseType_t g_higher_priority_task_woken = pdTRUE;
-
 /** Send Fail counter **/
 uint8_t send_fail = 0;
 
@@ -49,7 +46,7 @@ void setup_app(void)
 		if ((millis() - serial_timeout) < 1000)
 		{
 			delay(100);
-			digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+			digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
 		}
 		else
 		{
@@ -57,8 +54,10 @@ void setup_app(void)
 		}
 	}
 #endif
+#ifdef NRF52_SERIES
 	// Enable BLE
 	g_enable_ble = true;
+#endif
 }
 
 /**
@@ -87,6 +86,7 @@ void app_event_handler(void)
 		g_task_event_type &= N_STATUS;
 		MYLOG("APP", "Timer wakeup");
 
+#ifdef NRF52_SERIES
 		// If BLE is enabled, restart Advertising
 		if (g_enable_ble)
 		{
@@ -95,6 +95,7 @@ void app_event_handler(void)
 				restart_advertising(60);
 			}
 		}
+#endif
 
 		if (!low_batt_protection)
 		{
@@ -110,17 +111,15 @@ void app_event_handler(void)
 		if (batt_level.batt16 < 290)
 		{
 			// Battery is very low, change send time to 1 hour to protect battery
-			low_batt_protection = true;						   // Set low_batt_protection active
-			g_task_wakeup_timer.setPeriod(1 * 60 * 60 * 1000); // Set send time to one hour
-			g_task_wakeup_timer.reset();
+			low_batt_protection = true;			   // Set low_batt_protection active
+			api_timer_restart(1 * 60 * 60 * 1000); // Set send time to one hour
 			MYLOG("APP", "Battery protection activated");
 		}
 		else if ((batt_level.batt16 > 380) && low_batt_protection)
 		{
 			// Battery is higher than 4V, change send time back to original setting
 			low_batt_protection = false;
-			g_task_wakeup_timer.setPeriod(g_lorawan_settings.send_repeat_time);
-			g_task_wakeup_timer.reset();
+			api_timer_restart(g_lorawan_settings.send_repeat_time);
 			MYLOG("APP", "Battery protection deactivated");
 		}
 
@@ -131,6 +130,7 @@ void app_event_handler(void)
 	}
 }
 
+#ifdef NRF52_SERIES
 /**
    @brief Handle BLE UART data
 
@@ -155,6 +155,7 @@ void ble_data_handler(void)
 		}
 	}
 }
+#endif
 
 /**
    @brief Handle received LoRa Data
@@ -168,16 +169,12 @@ void lora_data_handler(void)
 		g_task_event_type &= N_LORA_TX_FIN;
 
 		MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-		if (g_ble_uart_is_connected)
-		{
-			g_ble_uart.printf("LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-		}
 	}
 
 	// LoRa data handling
 	if ((g_task_event_type & LORA_DATA) == LORA_DATA)
 	{
-		digitalToggle(LED_BLUE);
+		digitalWrite(LED_BLUE, !digitalRead(LED_BLUE));
 		/**************************************************************/
 		/**************************************************************/
 		/// \todo LoRa data arrived
@@ -195,14 +192,5 @@ void lora_data_handler(void)
 		}
 
 		MYLOG("APP", "%s", log_buff);
-
-		if (g_ble_uart_is_connected && g_enable_ble)
-		{
-			for (int idx = 0; idx < g_rx_data_len; idx++)
-			{
-				g_ble_uart.printf("%02X ", g_rx_lora_data[idx]);
-			}
-			g_ble_uart.println("");
-		}
 	}
 }

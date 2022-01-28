@@ -3,15 +3,14 @@
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief LoRa configuration over BLE
  * @version 0.1
- * @date 2021-01-10
+ * @date 2022-01-23
  * 
- * @copyright Copyright (c) 2021
+ * @copyright Copyright (c) 2022
  * 
  */
-#ifdef NRF52_SERIES
-
 #include "WisBlock-API.h"
 
+#ifdef NRF52_SERIES
 /** Semaphore used by events to wake up loop task */
 SemaphoreHandle_t g_task_sem = NULL;
 
@@ -32,10 +31,32 @@ bool g_enable_ble = false;
 void periodic_wakeup(TimerHandle_t unused)
 {
 	// Switch on LED to show we are awake
-	digitalWrite(LED_BUILTIN, HIGH);
-	g_task_event_type |= STATUS;
-	xSemaphoreGiveFromISR(g_task_sem, pdFALSE);
+	digitalWrite(LED_GREEN, HIGH);
+	api_wake_loop(STATUS);
 }
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+/** Loop thread ID */
+osThreadId loop_thread = NULL;
+
+/** Timer for periodic sending */
+TimerEvent_t g_task_wakeup_timer;
+
+/** Flag for the event type */
+volatile uint16_t g_task_event_type = NO_EVENT;
+
+/**
+ * @brief Timer event that wakes up the loop task frequently
+ * 
+ * @param unused 
+ */
+void periodic_wakeup(void)
+{
+	// Switch on LED to show we are awake
+	digitalWrite(LED_GREEN, HIGH);
+	api_wake_loop(STATUS);
+}
+#endif
 
 /**
  * @brief Arduino setup function. Called once after power-up or reset
@@ -43,18 +64,21 @@ void periodic_wakeup(TimerHandle_t unused)
  */
 void setup()
 {
+
+#ifdef NRF52_SERIES
 	// Create the task event semaphore
 	g_task_sem = xSemaphoreCreateBinary();
 	// Initialize semaphore
 	xSemaphoreGive(g_task_sem);
+#endif
 
 	// Initialize the built in LED
-	pinMode(LED_BUILTIN, OUTPUT);
-	digitalWrite(LED_BUILTIN, LOW);
+	pinMode(LED_GREEN, OUTPUT);
+	digitalWrite(LED_GREEN, LOW);
 
 	// Initialize the connection status LED
-	pinMode(LED_CONN, OUTPUT);
-	digitalWrite(LED_CONN, HIGH);
+	pinMode(LED_BLUE, OUTPUT);
+	digitalWrite(LED_BLUE, HIGH);
 
 #if API_DEBUG > 0
 	// Initialize Serial for debug output
@@ -67,7 +91,7 @@ void setup()
 		if ((millis() - serial_timeout) < 5000)
 		{
 			delay(100);
-			digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+			digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
 		}
 		else
 		{
@@ -76,7 +100,7 @@ void setup()
 	}
 #endif
 
-	digitalWrite(LED_BUILTIN, HIGH);
+	digitalWrite(LED_GREEN, HIGH);
 
 	// Call app setup for special settings
 	setup_app();
@@ -85,12 +109,18 @@ void setup()
 	API_LOG("MAIN", "WisBlock API LoRaWAN");
 	API_LOG("MAIN", "====================");
 
+#ifdef ARDUINO_ARCH_RP2040
+	// Initialize background task for Serial port handling
+	init_serial_task();
+#endif
+
 	// Initialize battery reading
 	init_batt();
 
 	// Get LoRa parameter
 	init_flash();
 
+#ifdef NRF52_SERIES
 	if (g_enable_ble)
 	{
 		// Init BLE
@@ -99,11 +129,16 @@ void setup()
 	else
 	{
 		// BLE is not activated, switch off blue LED
-		digitalWrite(LED_CONN, LOW);
+		digitalWrite(LED_BLUE, LOW);
 	}
 
 	// Take the semaphore so the loop will go to sleep until an event happens
 	xSemaphoreTake(g_task_sem, 10);
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+	// RAK11310 does not have BLE, switch off blue LED
+	digitalWrite(LED_BLUE, LOW);
+#endif
 
 	// Check if auto join is enabled
 	if (g_lorawan_settings.auto_join)
@@ -129,8 +164,8 @@ void setup()
 			while (1)
 			{
 				API_LOG("MAIN", "Get your LoRa stuff in order");
-				pinMode(LED_BUILTIN, OUTPUT);
-				digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+				pinMode(LED_GREEN, OUTPUT);
+				digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
 				delay(5000);
 			}
 		}
@@ -139,7 +174,7 @@ void setup()
 	else
 	{
 		// Put radio into sleep mode
-		lora_rak4630_init();
+		api_init_lora();
 		Radio.Sleep();
 
 		API_LOG("MAIN", "Auto join is disabled, waiting for connect command");
@@ -150,14 +185,14 @@ void setup()
 	if (!init_app())
 	{
 		// Without working application we give a warning message
-			API_LOG("MAIN", "Get your application stuff in order");
+		API_LOG("MAIN", "Get your application stuff in order");
 		// // Without working LoRa we just stop here
 		// while (1)
 		// {
 		// 	API_LOG("MAIN", "Get your application stuff in order");
 		// 	AT_PRINTF("+EVT:HW Failure");
-		// 	pinMode(LED_BUILTIN, OUTPUT);
-		// 	digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+		// 	pinMode(LED_GREEN, OUTPUT);
+		// 	digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
 		// 	while (Serial.available() > 0)
 		// 	{
 		// 		at_serial_input(uint8_t(Serial.read()));
@@ -174,11 +209,14 @@ void setup()
  */
 void loop()
 {
+#ifdef ARDUINO_ARCH_RP2040
+	loop_thread = osThreadGetId();
+#endif
 	// Sleep until we are woken up by an event
-	if (xSemaphoreTake(g_task_sem, portMAX_DELAY) == pdTRUE)
+	api_wait_wake();
 	{
 		// Switch on green LED to show we are awake
-		digitalWrite(LED_BUILTIN, HIGH);
+		digitalWrite(LED_GREEN, HIGH);
 		while (g_task_event_type != NO_EVENT)
 		{
 			// Application specific event handler (timer event or others)
@@ -193,6 +231,7 @@ void loop()
 			// Handle LoRa data events
 			lora_data_handler();
 
+#ifdef NRF52_SERIES
 			// Handle BLE configuration event
 			if ((g_task_event_type & BLE_CONFIG) == BLE_CONFIG)
 			{
@@ -217,6 +256,7 @@ void loop()
 					}
 				}
 			}
+#endif
 
 			// Serial input event
 			if ((g_task_event_type & AT_CMD) == AT_CMD)
@@ -236,12 +276,16 @@ void loop()
 		}
 		Serial.flush();
 		g_task_event_type = 0;
-		// Go back to sleep
-		xSemaphoreTake(g_task_sem, 10);
 		// Switch off blue LED to show we go to sleep
-		digitalWrite(LED_BUILTIN, LOW);
+		digitalWrite(LED_GREEN, LOW);
 		delay(10);
+		// Go back to sleep
+#ifdef NRF52_SERIES
+
+		xSemaphoreTake(g_task_sem, 10);
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+		yield();
+#endif
 	}
 }
-
-#endif

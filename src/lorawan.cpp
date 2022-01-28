@@ -8,8 +8,6 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#ifdef NRF52_SERIES
-
 #include "WisBlock-API.h"
 
 /** LoRaWAN setting from flash */
@@ -96,11 +94,7 @@ uint32_t otaaDevAddr = 0;
 int8_t init_lorawan(void)
 {
 	// Initialize LoRa chip.
-#ifdef _VARIANT_ISP4520_
-	if (lora_isp4520_init(SX1262) != 0)
-#else
-	if (lora_rak4630_init() != 0)
-#endif
+	if (api_init_lora() != 0)
 	{
 		API_LOG("LORA", "Failed to initialize SX1262");
 		return -1;
@@ -140,7 +134,7 @@ int8_t init_lorawan(void)
 
 	API_LOG("LORA", "Begin timer");
 	// Initialize the app timer
-	g_task_wakeup_timer.begin(g_lorawan_settings.send_repeat_time, periodic_wakeup);
+	api_timer_init();
 
 	API_LOG("LORA", "Start Join");
 	// Start Join process
@@ -163,14 +157,9 @@ void lpwan_join_fail_handler(void)
 	// Restart Join procedure
 	API_LOG("LORA", "Restart network join request");
 	g_join_result = false;
-	// Wake up task to report failed join
-	g_task_event_type |= LORA_JOIN_FIN;
-	// Notify task about the event
-	if (g_task_sem != NULL)
-	{
-		API_LOG("LORA", "Join failed, report event");
-		xSemaphoreGive(g_task_sem);
-	}
+
+	// Notify loop task
+	api_wake_loop(LORA_JOIN_FIN);
 }
 
 /**
@@ -178,7 +167,7 @@ void lpwan_join_fail_handler(void)
  */
 static void lpwan_joined_handler(void)
 {
-	digitalWrite(LED_BUILTIN, LOW);
+	digitalWrite(LED_GREEN, LOW);
 
 	otaaDevAddr = lmh_getDevAddr();
 
@@ -196,14 +185,10 @@ static void lpwan_joined_handler(void)
 #endif
 
 	g_join_result = true;
-	// Wake up task to report succesful join
-	g_task_event_type |= LORA_JOIN_FIN;
-		// Notify task about the event
-		if (g_task_sem != NULL)
-		{
-		API_LOG("LORA", "Join success, report event");
-			xSemaphoreGive(g_task_sem);
-		}
+
+	// Notify loop task
+	api_wake_loop(LORA_JOIN_FIN);
+
 	delay(100); // Just to enable the serial port to send the message
 
 	g_lpwan_has_joined = true;
@@ -213,7 +198,7 @@ static void lpwan_joined_handler(void)
 		API_LOG("LORA", "Start timer");
 		delay(100); // Just to enable the serial port to send the message
 		// Now we are connected, start the timer that will wakeup the loop frequently
-		g_task_wakeup_timer.start();
+		api_timer_start();
 		API_LOG("LORA", "Started timer");
 		delay(100); // Just to enable the serial port to send the message
 	}
@@ -236,13 +221,9 @@ static void lpwan_rx_handler(lmh_app_data_t *app_data)
 	// Copy the data into loop data buffer
 	memcpy(g_rx_lora_data, app_data->buffer, app_data->buffsize);
 	g_rx_data_len = app_data->buffsize;
-	g_task_event_type |= LORA_DATA;
-	// Notify task about the event
-	if (g_task_sem != NULL)
-	{
-		API_LOG("LORA", "Waking up loop task");
-		xSemaphoreGive(g_task_sem);
-	}
+
+	// Notify loop task
+	api_wake_loop(LORA_DATA);
 }
 
 /**
@@ -254,15 +235,10 @@ static void lpwan_class_confirm_handler(DeviceClass_t Class)
 {
 	API_LOG("LORA", "switch to class %c done", "ABC"[Class]);
 
-	// Wake up task to send initial packet
-	g_task_event_type |= STATUS;
-	// Notify task about the event
-	if (g_task_sem != NULL)
-	{
-		API_LOG("LORA", "Waking up loop task");
-		xSemaphoreGive(g_task_sem);
-	}
 	g_lpwan_has_joined = true;
+
+	// Notify loop task
+	api_wake_loop(STATUS);
 }
 
 /**
@@ -273,14 +249,9 @@ static void lpwan_unconfirm_tx_finished(void)
 {
 	API_LOG("LORA", "Uncomfirmed TX finished");
 	g_rx_fin_result = true;
-	// Wake up task to send initial packet
-	g_task_event_type |= LORA_TX_FIN;
-	// Notify task about the event
-	if (g_task_sem != NULL)
-	{
-		API_LOG("LORA", "Waking up loop task");
-		xSemaphoreGive(g_task_sem);
-	}
+
+	// Notify loop task
+	api_wake_loop(LORA_TX_FIN);
 }
 
 /**
@@ -292,14 +263,9 @@ static void lpwan_confirm_tx_finished(bool result)
 {
 	API_LOG("LORA", "Comfirmed TX finished with result %s", result ? "ACK" : "NAK");
 	g_rx_fin_result = result;
-	// Wake up task to send initial packet
-	g_task_event_type |= LORA_TX_FIN;
-	// Notify task about the event
-	if (g_task_sem != NULL)
-	{
-		API_LOG("LORA", "Waking up loop task");
-		xSemaphoreGive(g_task_sem);
-	}
+
+	// Notify loop task
+	api_wake_loop(LORA_TX_FIN);
 }
 
 /**
@@ -331,5 +297,3 @@ lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport)
 
 	return lmh_send(&m_lora_app_data, g_lorawan_settings.confirmed_msg_enabled);
 }
-
-#endif

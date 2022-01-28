@@ -60,7 +60,7 @@ void init_ble(void)
 
 #if NO_BLE_LED > 0
 	Bluefruit.autoConnLed(false);
-	digitalWrite(LED_CONN, LOW);
+	digitalWrite(LED_BLUE, LOW);
 #endif
 
 	// Create device name

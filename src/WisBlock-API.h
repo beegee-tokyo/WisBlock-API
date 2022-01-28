@@ -8,8 +8,6 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#ifdef NRF52_SERIES
-
 #ifndef SX126x_API_H
 #define SX126x_API_H
 
@@ -24,6 +22,7 @@
 #endif
 
 #if API_DEBUG > 0
+#ifdef NRF52_SERIES
 #define API_LOG(tag, ...)         \
 	do                            \
 	{                             \
@@ -32,18 +31,52 @@
 		PRINTF(__VA_ARGS__);      \
 		PRINTF("\n");             \
 	} while (0)
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+#define API_LOG(tag, ...)                \
+	do                                   \
+	{                                    \
+		if (tag)                         \
+			Serial.printf("[%s] ", tag); \
+		Serial.printf(__VA_ARGS__);      \
+		Serial.printf("\n");             \
+	} while (0)
+#endif
 #else
 #define API_LOG(...)
 #endif
 
 #include <Arduino.h>
+#include <LoRaWan-Arduino.h>
+
+#ifdef NRF52_SERIES
 #include <nrf_nvic.h>
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+#include <mbed.h>
+#include <rtos.h>
+#include <multicore.h>
+#include <time.h>
+
+using namespace rtos;
+using namespace mbed;
+using namespace std::chrono_literals;
+using namespace std::chrono;
+
+#endif
 
 // Main loop stuff
+#ifdef NRF52_SERIES
 void periodic_wakeup(TimerHandle_t unused);
 extern SemaphoreHandle_t g_task_sem;
-extern volatile uint16_t g_task_event_type;
 extern SoftwareTimer g_task_wakeup_timer;
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+void periodic_wakeup(void);
+extern osThreadId loop_thread;
+extern TimerEvent_t g_task_wakeup_timer;
+#endif
+extern volatile uint16_t g_task_event_type;
 
 /** Wake up events, more events can be defined in app.h */
 #define NO_EVENT 0
@@ -62,6 +95,33 @@ extern SoftwareTimer g_task_wakeup_timer;
 #define LORA_JOIN_FIN 0b0000000001000000
 #define N_LORA_JOIN_FIN 0b1111111110111111
 
+/** Wake signal for RAK11310 */
+#define SIGNAL_WAKE 0x001
+
+#ifdef ARDUINO_ARCH_RP2040
+// //***************************************************
+// // Signals to wake up the loop() binary coded!!!!
+// // Use only one bit per signal!!!!
+// //***************************************************
+// /** Unconfirmed TX finished */
+// #define SIGNAL_UNCONF_TX 0x0001
+// /** Confirmed TX finished, ACK received */
+// #define SIGNAL_CONF_TX_ACK 0x0002
+// /** Confirmed TX failed, no ACK received */
+// #define SIGNAL_CONF_TX_NAK 0x0004
+// /** Periodic sending triggered */
+// #define SIGNAL_SEND 0x0008
+// /** Join success */
+// #define SIGNAL_JOIN_SUCCESS 0x0010
+// /** Join success */
+// #define SIGNAL_JOIN_FAIL 0x0020
+// /** LoRaWAN packet received */
+// #define SIGNAL_RX 0x0040
+// /** Start Join */
+// #define SIGNAL_JOIN 0x0080
+#endif
+
+#ifdef NRF52_SERIES
 // BLE
 #include <bluefruit.h>
 void init_ble(void);
@@ -72,10 +132,9 @@ extern BLEUart g_ble_uart;
 extern bool g_ble_uart_is_connected;
 extern char g_ble_dev_name[];
 extern bool g_enable_ble;
+#endif
 
 // LoRa
-#include <LoRaWan-Arduino.h>
-
 int8_t init_lora(void);
 int8_t init_lorawan(void);
 bool send_p2p_packet(uint8_t *data, uint8_t size);
@@ -247,6 +306,10 @@ extern char g_at_query_buf[];
 bool user_at_handler(char *user_cmd, uint8_t cmd_size) __attribute__((weak));
 extern atcmd_t g_user_at_cmd_list[] __attribute__((weak));
 extern uint8_t g_user_at_cmd_num __attribute__((weak));
+void at_settings(void);
+#ifdef ARDUINO_ARCH_RP2040
+bool init_serial_task(void);
+#endif
 
 // API stuff
 void setup_app(void);
@@ -258,10 +321,34 @@ void lora_data_handler(void);
 void api_set_version(uint16_t sw_1 = 1, uint16_t sw_2 = 0, uint16_t sw_3 = 0);
 void api_read_credentials(void);
 void api_set_credentials(void);
+void api_reset(void);
+void api_wait_wake(void);
+void api_wake_loop(uint16_t reason);
+uint32_t api_init_lora(void);
+void api_timer_init(void);
+void api_timer_start(void);
+void api_timer_restart(uint32_t new_time);
+void api_log_settings(void);
+
+bool api_fs_init(void);
+void api_fs_format(const char *filename);
+bool api_file_open_read(const char *filename);
+bool api_file_open_write(const char *filename);
+void api_file_read(uint8_t *destination, uint16_t size);
+void api_file_write(uint8_t *source, uint32_t size);
+void api_file_remove(const char *filename);
+void api_file_close(const char *filename);
+extern const char settings_name[];
+
+// Read/Write for WisBlock-API, module independent
+enum
+{
+	WB_FILE_READ = 0,
+	WB_FILE_WRITE = 1,
+};
+
 extern uint16_t g_sw_ver_1; // major version increase on API change / not backwards compatible
 extern uint16_t g_sw_ver_2; // minor version increase on API change / backward compatible
 extern uint16_t g_sw_ver_3; // patch version increase on bugfix, no affect on API
 
 #endif // SX126x-API_H
-
-#endif // NRF52_SERIES

@@ -11,6 +11,15 @@
 
 #include "app.h"
 
+#ifdef NRF52_SERIES
+/** Timer to wakeup task frequently and send message */
+SoftwareTimer delayed_sending;
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+/** Timer for periodic sending */
+TimerEvent_t delayed_sending;
+#endif
+
 /** Set the device name, max length is 10 characters */
 char g_ble_dev_name[10] = "RAK-GNSS";
 
@@ -20,9 +29,6 @@ bool lora_busy = false;
 /** Timer since last position message was sent */
 time_t last_pos_send = 0;
 /** Timer for delayed sending to keep duty cycle */
-SoftwareTimer delayed_sending;
-/** Required for give semaphore from ISR */
-BaseType_t g_higher_priority_task_woken = pdTRUE;
 
 /** Battery level uinion */
 batt_s batt_level;
@@ -36,8 +42,30 @@ time_t min_delay = 45000;
 /** Flag if BME680 was found */
 bool has_env = false;
 
-// Forward declaration
-void send_delayed(TimerHandle_t unused);
+#ifdef NRF52_SERIES
+/**
+ * @brief Timer function used to avoid sending packages too often.
+ *       Delays the next package by 10 seconds
+ * 
+ * @param unused 
+ *      Timer handle, not used
+ */
+void send_delayed(TimerHandle_t unused)
+{
+	api_wake_loop(STATUS);
+}
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+/**
+ * @brief Timer function used to avoid sending packages too often.
+ *      Delays the next package by 10 seconds
+ * 
+ */
+void send_delayed(void)
+{
+	api_wake_loop(STATUS);
+}
+#endif
 
 /**
  * @brief Application specific setup functions
@@ -45,27 +73,29 @@ void send_delayed(TimerHandle_t unused);
  */
 void setup_app(void)
 {
-  Serial.begin(115200);
-  time_t serial_timeout = millis();
-  // On nRF52840 the USB serial is not available immediately
-  while (!Serial)
-  {
-    if ((millis() - serial_timeout) < 5000)
-    {
-      delay(100);
-      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-    }
-    else
-    {
-      break;
-    }
-  }
-  digitalWrite(LED_BUILTIN, LOW);
+	Serial.begin(115200);
+	time_t serial_timeout = millis();
+	// On nRF52840 the USB serial is not available immediately
+	while (!Serial)
+	{
+		if ((millis() - serial_timeout) < 5000)
+		{
+			delay(100);
+			digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
+		}
+		else
+		{
+			break;
+		}
+	}
+	digitalWrite(LED_GREEN, LOW);
 
-  MYLOG("APP", "Setup WisBlock Kit 2 Example");
+	MYLOG("APP", "Setup WisBlock Kit 2 Example");
 
+#ifdef NRF52_SERIES
 	// Enable BLE
 	g_enable_ble = true;
+#endif
 }
 
 /**
@@ -87,19 +117,24 @@ bool init_app(void)
 	Wire.setClock(400000);
 
 	// Initialize GNSS module
-  MYLOG("APP", "Initialize uBlox GNSS");
+	MYLOG("APP", "Initialize uBlox GNSS");
 	init_result = init_gnss();
-  MYLOG("APP", "Result %s", init_result ? "success" : "failed");
-  
+	MYLOG("APP", "Result %s", init_result ? "success" : "failed");
+
 	// Initialize Temperature sensor
-  MYLOG("APP", "Initialize BME680");
+	MYLOG("APP", "Initialize BME680");
 	has_env = init_bme();
-  MYLOG("APP", "Result %s", has_env ? "success" : "failed");
+	MYLOG("APP", "Result %s", has_env ? "success" : "failed");
 
 	// Initialize ACC sensor
-  MYLOG("APP", "Initialize Accelerometer");
-	init_result |= init_acc();
-  MYLOG("APP", "Result %s", init_result ? "success" : "failed");
+	MYLOG("APP", "Initialize Accelerometer");
+
+	if (!init_acc())
+	{
+		MYLOG("ACC", "ACC sensor initialization failed");
+		init_result |= false;
+	}
+	MYLOG("APP", "Result %s", init_result ? "success" : "failed");
 
 	if (g_lorawan_settings.send_repeat_time != 0)
 	{
@@ -112,7 +147,15 @@ bool init_app(void)
 		min_delay = 30000;
 	}
 	// Set to 1/2 of programmed send interval or 30 seconds
-	delayed_sending.begin(min_delay, send_delayed, NULL, false);
+#ifdef NRF52_SERIES
+	delayed_sending.begin(g_lorawan_settings.send_repeat_time, send_delayed);
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+	delayed_sending.oneShot = false;
+	delayed_sending.ReloadValue = g_lorawan_settings.send_repeat_time;
+	TimerInit(&delayed_sending, send_delayed);
+	TimerSetValue(&delayed_sending, g_lorawan_settings.send_repeat_time);
+#endif
 
 	// Power down GNSS module
 	// pinMode(WB_IO2, OUTPUT);
@@ -133,19 +176,16 @@ void app_event_handler(void)
 		g_task_event_type &= N_STATUS;
 		MYLOG("APP", "Timer wakeup");
 
+#ifdef NRF52_SERIES
 		// If BLE is enabled, restart Advertising
 		if (g_enable_ble)
 		{
 			restart_advertising(15);
 		}
-
+#endif
 		if (lora_busy)
 		{
 			MYLOG("APP", "LoRaWAN TX cycle not finished, skip this event");
-			if (g_ble_uart_is_connected)
-			{
-				g_ble_uart.println("LoRaWAN TX cycle not finished, skip this event");
-			}
 		}
 		else
 		{
@@ -156,18 +196,10 @@ void app_event_handler(void)
 			if (poll_gnss())
 			{
 				MYLOG("APP", "Valid GNSS position");
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("Valid GNSS position");
-				}
 			}
 			else
 			{
 				MYLOG("APP", "No valid GNSS position");
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("No valid GNSS position");
-				}
 			}
 
 			if (has_env)
@@ -177,7 +209,14 @@ void app_event_handler(void)
 			}
 
 			// Get ACC values
-			read_acc();
+			uint16_t *acc = read_acc();
+
+			g_tracker_data.acc_x_1 = (int8_t)(acc[0] >> 8);
+			g_tracker_data.acc_x_2 = (int8_t)(acc[0]);
+			g_tracker_data.acc_y_1 = (int8_t)(acc[1] >> 8);
+			g_tracker_data.acc_y_2 = (int8_t)(acc[1]);
+			g_tracker_data.acc_z_1 = (int8_t)(acc[2] >> 8);
+			g_tracker_data.acc_z_2 = (int8_t)(acc[2]);
 
 			// Get battery level
 			// g_tracker_data.batt = mv_to_percent(read_batt());
@@ -216,24 +255,12 @@ void app_event_handler(void)
 				MYLOG("APP", "Packet enqueued");
 				/// \todo set a flag that TX cycle is running
 				lora_busy = true;
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("Packet enqueued");
-				}
 				break;
 			case LMH_BUSY:
 				MYLOG("APP", "LoRa transceiver is busy");
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("LoRa transceiver is busy");
-				}
 				break;
 			case LMH_ERROR:
 				MYLOG("APP", "Packet error, too big to send with current DR");
-				if (g_ble_uart_is_connected)
-				{
-					g_ble_uart.println("Packet error, too big to send with current DR");
-				}
 				break;
 			}
 		}
@@ -244,10 +271,6 @@ void app_event_handler(void)
 	{
 		g_task_event_type &= N_ACC_TRIGGER;
 		MYLOG("APP", "ACC triggered");
-		if (g_ble_uart_is_connected)
-		{
-			g_ble_uart.println("ACC triggered");
-		}
 
 		// Check time since last send
 		bool send_now = true;
@@ -258,28 +281,30 @@ void app_event_handler(void)
 				send_now = false;
 				if (!delayed_active)
 				{
+					// delayed_sending.stop();
+#ifdef NRF52_SERIES
 					delayed_sending.stop();
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+					TimerStop(&delayed_sending);
+#endif
 					MYLOG("APP", "Expired time %d", (int)(millis() - last_pos_send));
 					MYLOG("APP", "Max delay time %d", (int)min_delay);
-					if (g_ble_uart_is_connected)
-					{
-						g_ble_uart.printf("Expired time %d\n", (millis() - last_pos_send));
-						g_ble_uart.printf("Max delay time %d\n", min_delay);
-					}
+
 					time_t wait_time = abs(min_delay - (millis() - last_pos_send) >= 0) ? (min_delay - (millis() - last_pos_send)) : min_delay;
 					MYLOG("APP", "Wait time %ld", (long)wait_time);
-					if (g_ble_uart_is_connected)
-					{
-						g_ble_uart.printf("Wait time %d\n", wait_time);
-					}
 
 					MYLOG("APP", "Only %lds since last position message, send delayed in %lds", (long)((millis() - last_pos_send) / 1000), (long)(wait_time / 1000));
-					if (g_ble_uart_is_connected)
-					{
-						g_ble_uart.printf("Only %ds since last pos msg, delay by %ds\n", ((millis() - last_pos_send) / 1000), (wait_time / 1000));
-					}
+
+#ifdef NRF52_SERIES
 					delayed_sending.setPeriod(wait_time);
 					delayed_sending.start();
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+					TimerSetValue(&delayed_sending, wait_time);
+					TimerStart(&delayed_sending);
+#endif
+
 					delayed_active = true;
 				}
 			}
@@ -296,11 +321,12 @@ void app_event_handler(void)
 		// Reset the standard timer
 		if (g_lorawan_settings.send_repeat_time != 0)
 		{
-			g_task_wakeup_timer.reset();
+			api_timer_restart(g_lorawan_settings.send_repeat_time);
 		}
 	}
 }
 
+#ifdef NRF52_SERIES
 /**
  * @brief Handle BLE UART data
  * 
@@ -325,6 +351,7 @@ void ble_data_handler(void)
 		}
 	}
 }
+#endif
 
 /**
  * @brief Handle received LoRa Data
@@ -368,15 +395,6 @@ void lora_data_handler(void)
 		}
 		lora_busy = false;
 		MYLOG("APP", "%s", log_buff);
-
-		if (g_ble_uart_is_connected && g_enable_ble)
-		{
-			for (int idx = 0; idx < g_rx_data_len; idx++)
-			{
-				g_ble_uart.printf("%02X ", g_rx_lora_data[idx]);
-			}
-			g_ble_uart.println("");
-		}
 	}
 
 	// LoRa TX finished handling
@@ -385,10 +403,6 @@ void lora_data_handler(void)
 		g_task_event_type &= N_LORA_TX_FIN;
 
 		MYLOG("APP", "LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-		if (g_ble_uart_is_connected)
-		{
-			g_ble_uart.printf("LPWAN TX cycle %s", g_rx_fin_result ? "finished ACK" : "failed NAK");
-		}
 
 		/// \todo reset flag that TX cycle is running
 		lora_busy = false;
@@ -396,14 +410,11 @@ void lora_data_handler(void)
 }
 
 /**
- * @brief Timer function used to avoid sending packages too often.
- * 			Delays the next package by 10 seconds
+ * @brief ACC interrupt handler
+ * @note gives semaphore to wake up main loop
  * 
- * @param unused 
- * 			Timer handle, not used
  */
-void send_delayed(TimerHandle_t unused)
+void acc_int_callback(void)
 {
-	g_task_event_type |= STATUS;
-	xSemaphoreGiveFromISR(g_task_sem, &g_higher_priority_task_woken);
+	api_wake_loop(ACC_TRIGGER);
 }
