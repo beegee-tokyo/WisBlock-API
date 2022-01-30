@@ -4,6 +4,9 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## V1.1.8 Add more API functions
+  - Add more API functions and update README
+
 ## V1.1.7 Add experimental support for RAK11310
   - Move more Core specific functions into the API functions
   - API functions support RAK4631 and RAK11310

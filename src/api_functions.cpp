@@ -173,6 +173,25 @@ void api_timer_start(void)
 #endif
 }
 
+/**
+ * @brief Stop the timer for frequent sending
+ * 
+ */
+void api_timer_stop(void)
+{
+#ifdef NRF52_SERIES
+	g_task_wakeup_timer.stop();
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+	TimerStop(&g_task_wakeup_timer);
+#endif
+}
+
+/**
+ * @brief Restart the time with a new time
+ * 
+ * @param new_time 
+ */
 void api_timer_restart(uint32_t new_time)
 {
 #ifdef NRF52_SERIES

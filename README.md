@@ -28,8 +28,10 @@ In addition the API offers two options to setup LoRa P2P / LoRaWAN settings with
 	* [Set the application version](#set-the-application-version)
 	* [Set hardcoded LoRaWAN credentials](#set-hardcoded-lorawan-credentials)
 	* [Reset WisBlock Core module](#reset_wisblock_core-module)
-	* [Wake up loop](#wake_up_loop)
-	* [Print settings to log output](#print_settings_to_log_output)
+	* [Wake up loop](#wake-up-loop)
+	* [Print settings to log output](#print-settings-to-log-output)
+	* [Stop application wakeup timer](#stop-application-wakeup-timer)
+	* [Restart application timer with a new value](#restart-application-timer-with-a-new-value)    
 	* [Send data over BLE UART](#send-data-over-ble-uart)
 	* [Restart BLE advertising](#restart-ble-advertising)
 	* [Send data over LoRaWAN](#send-data-over-lorawan)
@@ -308,6 +310,18 @@ LoRa P2P status:
    P2P Preamble length 8
    P2P Symbol Timeout 0
 ```
+
+----
+
+## Stop application wakeup timer
+**`void api_timer_stop(void)`**    
+Stops the timer that wakes up the MCU frequently.
+
+----
+
+## Restart application timer with a new value
+**`void api_timer_restart(uint32_t new_time)`**    
+Restarts the timer with a new value. The value is in milliseconds
 
 ----
 
@@ -832,6 +846,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-01-30
+  - Add more API functions and update README
 - 2022-01-25
   - Add experimental support for RAK11310
 - 2022-01-22

@@ -327,6 +327,7 @@ void api_wake_loop(uint16_t reason);
 uint32_t api_init_lora(void);
 void api_timer_init(void);
 void api_timer_start(void);
+void api_timer_stop(void);
 void api_timer_restart(uint32_t new_time);
 void api_log_settings(void);
 
