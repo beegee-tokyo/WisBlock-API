@@ -80,25 +80,23 @@ This function is not required on the RAK11310!
 
 ## Flow
 ```mermaid
-flowchart TD
+graph TD
 A[Boot] -->|Startup| B(setup)
     B --> |1| D(setup_app)
-        D --> B
+        D --> B(setup)
     B --> |2| E[Initialize LoRa and BLE]
-        E --> B
-    B --> |3| F(init_app)
-        F --> B
-    B --> | 4 Start loop| C(loop)
-        C --> G(sleeping)
-        C <--> |handle sensor event| H(app_event_handler)
-        C <--> |handle lora event| I(lora_data_handler)
-        C <--> |handle BLE event| J(ble_data_handler)
-            K[LoRa Event] --> |Wake up| G
-    G --> C
-            L[Sensor Event] --> |Wake up| G    
-    G --> C
-            M[BLE Event] --> |Wake up| G   
-    G --> C
+        E --> B(setup)
+    B --> |3| G(init_app)
+        G --> K(setup finished)
+    K --> | Start loop| I(loop)
+        Q[LoRa Event] --> |Wake up| J
+        O[Sensor Event] --> |Wake up| J    
+        P[BLE Event] --> |Wake up| J   
+        I --> J(sleeping)
+        I <--> |handle sensor event| L(app_event_handler)
+        I <--> |handle lora event| M(lora_data_handler)
+        I <--> |handle BLE event| N(ble_data_handler)
+    J --> I
 ```
 
 ----
