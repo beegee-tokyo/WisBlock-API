@@ -78,6 +78,31 @@ This function is not required on the RAK11310!
 
 ----
 
+## Flow
+```mermaid
+flowchart TD
+A[Boot] -->|Startup| B(setup)
+    B --> |1| D(setup_app)
+        D --> B
+    B --> |2| E[Initialize LoRa and BLE]
+        E --> B
+    B --> |3| F(init_app)
+        F --> B
+    B --> | 4 Start loop| C(loop)
+        C --> G(sleeping)
+        C <--> |handle sensor event| H(app_event_handler)
+        C <--> |handle lora event| I(lora_data_handler)
+        C <--> |handle BLE event| J(ble_data_handler)
+            K[LoRa Event] --> |Wake up| G
+    G --> C
+            L[Sensor Event] --> |Wake up| G    
+    G --> C
+            M[BLE Event] --> |Wake up| G   
+    G --> C
+```
+
+----
+
 ## Block diagram of the API and application part
 ![Block diagram](./assets/Structure.png)    
 
