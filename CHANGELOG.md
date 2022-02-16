@@ -4,6 +4,9 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## V1.1.9 Remove sleep limitation
+  - Send frequency was limited to 3600 seconds, set it to unlimited
+  
 ## V1.1.8 Add more API functions
   - Add more API functions and update README
 

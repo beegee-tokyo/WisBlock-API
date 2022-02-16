@@ -846,6 +846,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-02-16
+  - Remove send duration limit of 3600 seconds
 - 2022-01-30
   - Add more API functions and update README
 - 2022-01-25

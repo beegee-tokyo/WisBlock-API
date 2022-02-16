@@ -169,8 +169,8 @@ struct s_lorawan_settings
 	bool public_network = true;
 	// Flag to enable duty cycle
 	bool duty_cycle_enabled = false;
-	// In milliseconds: 2 * 60 * 1000 => 2 minutes
-	uint32_t send_repeat_time = 120000;
+	// Default is off
+	uint32_t send_repeat_time = 0;
 	// Number of join retries
 	uint8_t join_trials = 5;
 	// TX power 0 .. 10

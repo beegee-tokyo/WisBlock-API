@@ -1389,14 +1389,14 @@ static int at_query_sendfreq(void)
 /**
  * @brief AT+SENDFREQ=<value> Set current send frequency
  * 
- * @param str send frequency in seconds between 0 (disabled) and 3600
+ * @param str send frequency in seconds between 0 (disabled)
  * @return int 
  */
 static int at_exec_sendfreq(char *str)
 {
-	long time = strtol(str, NULL, 0);
+	long time = strtoul(str, NULL, 0);
 
-	if ((time < 0) || (time > 3600))
+	if (time < 0)
 	{
 		return AT_ERRNO_PARA_VAL;
 	}
