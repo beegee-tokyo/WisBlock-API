@@ -1275,9 +1275,9 @@ OK
 
 ## AT+PTP
 
-Description: P2P mode coding rate
+Description: P2P mode TX power
 
-This command is used to access and configure P2P mode coding rate. (4/5=1, 4/6=2, 4/7=3, 4/8=4)
+This command is used to access and configure P2P mode TX power (0 = lowest, 22 = highest).
 
 | Command                    | Input Parameter | Return Value                | Return Code |
 | -------------------------- | --------------- | --------------------------- | ----------- |
