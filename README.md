@@ -92,11 +92,26 @@ A[Boot] -->|Startup| B(setup)
         Q[LoRa Event] --> |Wake up| J
         O[Sensor Event] --> |Wake up| J    
         P[BLE Event] --> |Wake up| J   
+        R[AT command] --> |Wake up| J   
+        T[Timer] --> |Wake up| J   
         I --> J(sleeping)
-        I <--> |handle sensor event| L(app_event_handler)
-        I <--> |handle lora event| M(lora_data_handler)
-        I <--> |handle BLE event| N(ble_data_handler)
-    J --> I
+        K --> T
+        J <--> L(app_event_handler)
+        J <--> M(lora_data_handler)
+        J <--> N(ble_data_handler)
+        J <--> S(AT Command handler)
+        L <--> U(read sensors)
+        M <--> V(join, tx and rx events)
+        N <--> W(handle BLE AT commands)
+        S <--> AA(user AT commands)
+        U <--> L
+        V <--> M
+        W <--> N
+        AA <--> S
+        L <--> J
+        M <--> J
+        N <--> J
+        S <--> J
 ```
 
 ----
