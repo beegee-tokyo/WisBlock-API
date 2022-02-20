@@ -869,6 +869,10 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-02-20
+  - If auto join for LPWAN is disabled, LoRa P2P mode is not working. Fixed.
+- 2022-02-18
+  - Change response of AT+P2P=? to show bandwidth instead of index number
 - 2022-02-16
   - Remove send duration limit of 3600 seconds
 - 2022-01-30

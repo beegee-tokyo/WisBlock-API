@@ -4,6 +4,11 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## V1.1.10 P2P bug fix
+  - If auto join for LPWAN is disabled, LoRa P2P mode is not working. Fixed.
+  - Change response of AT+P2P=? to show bandwidth instead of index number
+  - Thanks at @kongduino for finding both problems.
+
 ## V1.1.9 Remove sleep limitation
   - Send frequency was limited to 3600 seconds, set it to unlimited
   

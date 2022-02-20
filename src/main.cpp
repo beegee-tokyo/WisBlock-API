@@ -140,6 +140,12 @@ void setup()
 	digitalWrite(LED_BLUE, LOW);
 #endif
 
+	// If P2P mode, override auto join setting
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		g_lorawan_settings.auto_join = true;
+	}
+
 	// Check if auto join is enabled
 	if (g_lorawan_settings.auto_join)
 	{
