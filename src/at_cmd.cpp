@@ -373,10 +373,10 @@ static int at_exec_p2p_txp(char *str)
 
 static int at_query_p2p_config(void)
 {
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld:%d:%d:%d:%d:%d",
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld:%d:%s:%d:%d:%d",
 			 g_lorawan_settings.p2p_frequency,
 			 g_lorawan_settings.p2p_sf,
-			 g_lorawan_settings.p2p_bandwidth,
+			 bandwidths[g_lorawan_settings.p2p_bandwidth],
 			 g_lorawan_settings.p2p_cr,
 			 g_lorawan_settings.p2p_preamble_len,
 			 g_lorawan_settings.p2p_tx_power);
