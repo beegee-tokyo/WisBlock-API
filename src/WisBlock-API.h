@@ -306,7 +306,7 @@ extern char *region_names[];
 extern char g_at_query_buf[];
 bool user_at_handler(char *user_cmd, uint8_t cmd_size) __attribute__((weak));
 // extern atcmd_t g_user_at_cmd_list[] __attribute__((weak));
-extern atcmd_t *g_user_at_cmd_list;
+extern atcmd_t *g_user_at_cmd_list __attribute__((weak));
 extern uint8_t g_user_at_cmd_num __attribute__((weak));
 void at_settings(void);
 #ifdef ARDUINO_ARCH_RP2040
