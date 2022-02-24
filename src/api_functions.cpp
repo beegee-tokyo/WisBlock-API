@@ -10,6 +10,9 @@
  */
 #include "WisBlock-API.h"
 
+// Define alternate pdMS_TO_TICKS that casts uint64_t for long intervals due to limitation in nrf52840 BSP
+#define mypdMS_TO_TICKS(xTimeInMs) ((TickType_t)(((uint64_t)(xTimeInMs)*configTICK_RATE_HZ) / 1000))
+
 #ifdef SW_VERSION_1
 uint16_t g_sw_ver_1 = SW_VERSION_1; // major version increase on API change / not backwards compatible
 #else
@@ -149,7 +152,8 @@ uint32_t api_init_lora(void)
 void api_timer_init(void)
 {
 #ifdef NRF52_SERIES
-	g_task_wakeup_timer.begin(g_lorawan_settings.send_repeat_time, periodic_wakeup);
+	// g_task_wakeup_timer.begin(g_lorawan_settings.send_repeat_time, periodic_wakeup);
+	g_task_wakeup_timer = xTimerCreate(NULL, mypdMS_TO_TICKS(g_lorawan_settings.send_repeat_time), true, NULL, periodic_wakeup);
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	g_task_wakeup_timer.oneShot = false;
@@ -166,7 +170,19 @@ void api_timer_init(void)
 void api_timer_start(void)
 {
 #ifdef NRF52_SERIES
-	g_task_wakeup_timer.start();
+	// g_task_wakeup_timer.start();
+	if (isInISR())
+	{
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		xTimerChangePeriodFromISR(g_task_wakeup_timer, mypdMS_TO_TICKS(g_lorawan_settings.send_repeat_time), &xHigherPriorityTaskWoken);
+		xTimerStartFromISR(g_task_wakeup_timer, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+	}
+	else
+	{
+		xTimerChangePeriod(g_task_wakeup_timer, mypdMS_TO_TICKS(g_lorawan_settings.send_repeat_time), 0);
+		xTimerStart(g_task_wakeup_timer, 0);
+	}
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	TimerStart(&g_task_wakeup_timer);
@@ -180,7 +196,18 @@ void api_timer_start(void)
 void api_timer_stop(void)
 {
 #ifdef NRF52_SERIES
-	g_task_wakeup_timer.stop();
+	// g_task_wakeup_timer.stop();
+	if (isInISR())
+	{
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		xTimerStopFromISR(g_task_wakeup_timer, &xHigherPriorityTaskWoken);
+		portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+	}
+	else
+	{
+		xTimerStop(g_task_wakeup_timer, 0);
+	}
+
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	TimerStop(&g_task_wakeup_timer);
@@ -195,7 +222,8 @@ void api_timer_stop(void)
 void api_timer_restart(uint32_t new_time)
 {
 #ifdef NRF52_SERIES
-	g_task_wakeup_timer.stop();
+	// g_task_wakeup_timer.stop();
+	api_timer_stop();
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	TimerStop(&g_task_wakeup_timer);
@@ -203,8 +231,25 @@ void api_timer_restart(uint32_t new_time)
 	if ((g_lorawan_settings.send_repeat_time != 0) && (g_lorawan_settings.auto_join))
 	{
 #ifdef NRF52_SERIES
-		g_task_wakeup_timer.setPeriod(new_time);
-		g_task_wakeup_timer.start();
+		// g_task_wakeup_timer.setPeriod(new_time);
+		// g_task_wakeup_timer.start();
+		BaseType_t active = xTimerIsTimerActive(g_task_wakeup_timer);
+		bool ret = true;
+
+		if (isInISR())
+		{
+			BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+			ret = (pdPASS == xTimerChangePeriodFromISR(g_task_wakeup_timer, mypdMS_TO_TICKS(new_time), &xHigherPriorityTaskWoken));
+			portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+		}
+		else
+		{
+			xTimerChangePeriod(g_task_wakeup_timer, mypdMS_TO_TICKS(new_time), 0);
+		}
+
+		// Change period of inactive timer will also start it !!
+		if (!active)
+			api_timer_stop();
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 		TimerSetValue(&g_task_wakeup_timer, new_time);

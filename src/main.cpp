@@ -15,7 +15,7 @@
 SemaphoreHandle_t g_task_sem = NULL;
 
 /** Timer to wakeup task frequently and send message */
-SoftwareTimer g_task_wakeup_timer;
+TimerHandle_t g_task_wakeup_timer;
 
 /** Flag for the event type */
 volatile uint16_t g_task_event_type = NO_EVENT;

@@ -63,7 +63,7 @@ static int at_query_packet()
  * @brief List of all available commands with short help and pointer to functions
  * 
  */
-atcmd_t g_user_at_cmd_list[] = {
+atcmd_t g_user_at_cmd_list_example[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// GNSS commands
 	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL},
@@ -72,3 +72,6 @@ atcmd_t g_user_at_cmd_list[] = {
 
 /** Number of user defined AT commands */
 uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list) / sizeof(atcmd_t);
+
+/** Pointer to the AT command list */
+atcmd_t *g_user_at_cmd_list = g_user_at_cmd_list_example;

@@ -69,7 +69,8 @@ using namespace std::chrono;
 #ifdef NRF52_SERIES
 void periodic_wakeup(TimerHandle_t unused);
 extern SemaphoreHandle_t g_task_sem;
-extern SoftwareTimer g_task_wakeup_timer;
+// extern SoftwareTimer g_task_wakeup_timer;
+extern TimerHandle_t g_task_wakeup_timer;
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 void periodic_wakeup(void);
@@ -304,7 +305,8 @@ void at_serial_input(uint8_t cmd);
 extern char *region_names[];
 extern char g_at_query_buf[];
 bool user_at_handler(char *user_cmd, uint8_t cmd_size) __attribute__((weak));
-extern atcmd_t g_user_at_cmd_list[] __attribute__((weak));
+// extern atcmd_t g_user_at_cmd_list[] __attribute__((weak));
+extern atcmd_t *g_user_at_cmd_list;
 extern uint8_t g_user_at_cmd_num __attribute__((weak));
 void at_settings(void);
 #ifdef ARDUINO_ARCH_RP2040

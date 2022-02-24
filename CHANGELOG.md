@@ -4,6 +4,11 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## V1.1.11 Fix long sleep problem
+  - Define alternate pdMS_TO_TICKS that casts uint64_t for long intervals due to limitation in nrf52840 BSP
+  - Switch from using SoftwareTimer for nRF52 to using xTimer due to above problem
+  - Change handling of user AT commands for more flexibility
+
 ## V1.1.10 P2P bug fix
   - If auto join for LPWAN is disabled, LoRa P2P mode is not working. Fixed.
   - Change response of AT+P2P=? to show bandwidth instead of index number
