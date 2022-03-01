@@ -1756,9 +1756,10 @@ static void at_cmd_handle(void)
 		// Check user defined AT command from list
 		if (g_user_at_cmd_list != NULL)
 		{
-			for (i = 0; i < g_user_at_cmd_num; i++)
+			int j = 0;
+			for (j = 0; j < g_user_at_cmd_num; j++)
 			{
-				cmd_name = g_user_at_cmd_list[i].cmd_name;
+				cmd_name = g_user_at_cmd_list[j].cmd_name;
 				// Serial.printf("===rxcmd========%s================cmd_name=====%s====%d===\n", rxcmd, cmd_name, strlen(cmd_name));
 				if (strlen(cmd_name) && strncmp(rxcmd, cmd_name, strlen(cmd_name)) != 0)
 				{
@@ -1771,16 +1772,16 @@ static void at_cmd_handle(void)
 					rxcmd[strlen(cmd_name)] == '?')
 				{
 					/* test cmd */
-					if (g_user_at_cmd_list[i].cmd_desc)
+					if (g_user_at_cmd_list[j].cmd_desc)
 					{
-						if (strncmp(g_user_at_cmd_list[i].cmd_desc, "OK", 2) == 0)
+						if (strncmp(g_user_at_cmd_list[j].cmd_desc, "OK", 2) == 0)
 						{
 							snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
 						}
 						else
 						{
 							snprintf(atcmd, ATCMD_SIZE, "\r\n%s:\"%s\"\r\nOK\r\n",
-									 cmd_name, g_user_at_cmd_list[i].cmd_desc);
+									 cmd_name, g_user_at_cmd_list[j].cmd_desc);
 						}
 					}
 					else
@@ -1792,9 +1793,9 @@ static void at_cmd_handle(void)
 						 strcmp(&rxcmd[strlen(cmd_name)], "=?") == 0)
 				{
 					/* query cmd */
-					if (g_user_at_cmd_list[i].query_cmd != NULL)
+					if (g_user_at_cmd_list[j].query_cmd != NULL)
 					{
-						ret = g_user_at_cmd_list[i].query_cmd();
+						ret = g_user_at_cmd_list[j].query_cmd();
 
 						if (ret == 0)
 						{
@@ -1811,9 +1812,9 @@ static void at_cmd_handle(void)
 						 rxcmd[strlen(cmd_name)] == '=')
 				{
 					/* exec cmd */
-					if (g_user_at_cmd_list[i].exec_cmd != NULL)
+					if (g_user_at_cmd_list[j].exec_cmd != NULL)
 					{
-						ret = g_user_at_cmd_list[i].exec_cmd(rxcmd + strlen(cmd_name) + 1);
+						ret = g_user_at_cmd_list[j].exec_cmd(rxcmd + strlen(cmd_name) + 1);
 						if (ret == 0)
 						{
 							snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
@@ -1831,9 +1832,9 @@ static void at_cmd_handle(void)
 				else if (rxcmd_index == strlen(cmd_name))
 				{
 					/* exec cmd without parameter*/
-					if (g_user_at_cmd_list[i].exec_cmd_no_para != NULL)
+					if (g_user_at_cmd_list[j].exec_cmd_no_para != NULL)
 					{
-						ret = g_user_at_cmd_list[i].exec_cmd_no_para();
+						ret = g_user_at_cmd_list[j].exec_cmd_no_para();
 						if (ret == 0)
 						{
 							snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
@@ -1853,6 +1854,11 @@ static void at_cmd_handle(void)
 					continue;
 				}
 				break;
+			}
+			if (j == g_user_at_cmd_num)
+			{
+				API_LOG("AT", "Not a user AT command");
+				ret = AT_ERRNO_NOSUPP;
 			}
 		}
 		// Check user AT command handler
