@@ -246,10 +246,6 @@ void api_timer_restart(uint32_t new_time)
 		{
 			xTimerChangePeriod(g_task_wakeup_timer, mypdMS_TO_TICKS(new_time), 0);
 		}
-
-		// Change period of inactive timer will also start it !!
-		if (!active)
-			api_timer_stop();
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 		TimerSetValue(&g_task_wakeup_timer, new_time);

@@ -3,7 +3,7 @@
 | <center><img src="../assets/rakstar.jpg" alt="RAKstar" width=50%></center>  | <center><img src="../assets/RAK-Whirls.png" alt="RAKWireless" width=50%></center> | <center><img src="../assets/WisBlock.png" alt="WisBlock" width=50%></center> | <center><img src="../assets/Yin_yang-48x48.png" alt="BeeGee" width=50%></center>  |
 | -- | -- | -- | -- |
 
-There are 4 examples to explain the usage of the API. In all examples the API callbacks and the additional functions (sensor readings, IRQ handling, GNSS location service) are separated into their own sketches.    
+There are 5 examples to explain the usage of the API. In all examples the API callbacks and the additional functions (sensor readings, IRQ handling, GNSS location service) are separated into their own sketches.    
 The simplest example just sends a 3 byte packet with the values 0x10, 0x00, 0x00.    
 The other examples send their data encoded in the same format as RAKwireless WisNode devices. An explanation of the data format can be found in the RAKwireless [Documentation Center](https://docs.rakwireless.com/Product-Categories/WisTrio/RAK7205-5205/Quickstart/#decoding-sensor-data-on-chirpstack-and-ttn). A ready to use packet decoder can be found in the RAKwireless Github repos in [RUI_LoRa_node_payload_decoder](https://github.com/RAKWireless/RUI_LoRa_node_payload_decoder)
 
@@ -34,6 +34,14 @@ This is an example application for the RAKwireless WisBlock Kit 2 (plus an optio
 - [RAK1904 Acceleration Sensor](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1904/Overview/)
 - [RAK1910 Location Sensor](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1910/Overview/)
 - [RAK1906 Environment Sensor](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK1906/Overview/)
+
+## LoRa P2P communication
+[LoRa P2P](./LoRa-P2P) 
+Simple example that shows how to implement LoRa P2P communication.
+
+### Used hardware
+- [RAK5005-O Base Board](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK5005-O/Overview/)
+- [RAK4631 Core](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview/)
 
 ## Interrupt Triggered Event
 [accelerometer](./accelerometer)     

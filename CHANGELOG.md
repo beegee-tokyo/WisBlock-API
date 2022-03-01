@@ -4,6 +4,9 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## 1.1.12 Fix timer bug
+  - If timer is restarted with a new time, there was a bug that actually stopped the timer
+  
 ## V1.1.11 Fix long sleep problem
   - Define alternate pdMS_TO_TICKS that casts uint64_t for long intervals due to limitation in nrf52840 BSP
   - Switch from using SoftwareTimer for nRF52 to using xTimer due to above problem
