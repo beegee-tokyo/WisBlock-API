@@ -884,6 +884,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-04-03
+  - Fix LoRa P2P bug. In LoRa P2P the automatic sending did not work because g_lpwan_has_joined stayed on false.
 - 2022-03-01
   - Fix timer bug. If timer is restarted with a new time, there was a bug that actually stopped the timer
 - 2022-02-24

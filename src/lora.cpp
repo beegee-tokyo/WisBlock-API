@@ -4,9 +4,9 @@
  * @brief LoRaWAN initialization & handler
  * @version 0.1
  * @date 2021-09-15
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #include "WisBlock-API.h"
 
@@ -24,7 +24,7 @@ uint32_t g_lora_p2p_rx_time = 0;
 
 /**
  * @brief Initialize LoRa HW and LoRaWan MAC layer
- * 
+ *
  * @return int8_t result
  *  0 => OK
  * -1 => SX126x HW init failure
@@ -90,6 +90,7 @@ int8_t init_lora(void)
 	digitalWrite(LED_GREEN, LOW);
 
 	g_lorawan_initialized = true;
+	g_lpwan_has_joined = true;
 
 	API_LOG("LORA", "LoRa initialized");
 	return 0;
@@ -261,7 +262,7 @@ void on_cad_done(bool cadResult)
 
 /**
  * @brief Prepare packet to be sent and start CAD routine
- * 
+ *
  */
 bool send_p2p_packet(uint8_t *data, uint8_t size)
 {

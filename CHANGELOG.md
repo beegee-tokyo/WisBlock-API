@@ -4,6 +4,9 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## 1.1.13 Fix LoRa P2P bug
+  - In LoRa P2P the automatic sending did not work because g_lpwan_has_joined stayed on false.
+  
 ## 1.1.12 Fix timer bug
   - If timer is restarted with a new time, there was a bug that actually stopped the timer
   
