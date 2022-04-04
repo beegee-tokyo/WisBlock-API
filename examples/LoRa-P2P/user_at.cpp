@@ -71,7 +71,7 @@ atcmd_t g_user_at_cmd_list_example[] = {
 };
 
 /** Number of user defined AT commands */
-uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list) / sizeof(atcmd_t);
+uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list_example) / sizeof(atcmd_t);
 
 /** Pointer to the AT command list */
 atcmd_t *g_user_at_cmd_list = g_user_at_cmd_list_example;

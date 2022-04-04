@@ -133,12 +133,14 @@ To extend the AT commands, three steps are required:
 ### 1) Definition of the custom AT commands
 The custom AT commands are listed in an array with the struct atcmd_t format. Each entry consist of the AT command, the explanation text that is shown when the command is called with a ? and pointers to the functions for query, execute with parameters and execute without parameters. Here is an example for two custom AT commands:    
 ```cpp
-atcmd_t g_user_at_cmd_list[] = {
+atcmd_t g_user_at_cmd_list_example[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// GNSS commands
 	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL},
 	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL},
 };
+
+atcmd_t *g_user_at_cmd_list = g_user_at_cmd_list_example;
 ```
 **REMARK 1**    
 For functions that are not supported by the AT command a **`NULL`** must be put into the array.    
@@ -149,7 +151,7 @@ The name **`g_user_at_cmd_list`** is fixed and cannot be changed or the custom c
 A variable with the number of custom AT commands must be provided:
 ```cpp
 /** Number of user defined AT commands */
-uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list) / sizeof(atcmd_t);
+uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list_example) / sizeof(atcmd_t);
 ```
 **REMARK**    
 The name **`g_user_at_cmd_num`** is fixed and cannot be changed or the custom commands are not detected.
@@ -220,15 +222,17 @@ static int at_query_packet()
  * @brief List of all available commands with short help and pointer to functions
  * 
  */
-atcmd_t g_user_at_cmd_list[] = {
+atcmd_t g_user_at_cmd_list_example[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
 	// GNSS commands
 	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL},
 	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL},
 };
 
+atcmd_t *g_user_at_cmd_list = g_user_at_cmd_list_example;
+
 /** Number of user defined AT commands */
-uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list) / sizeof(atcmd_t);
+uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list_example) / sizeof(atcmd_t);
 ```
 
 ----
