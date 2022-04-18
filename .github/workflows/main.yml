@@ -35,7 +35,7 @@ jobs:
         git clone --quiet https://github.com/khoih-prog/LittleFS_Mbed_RP2040
         mv LittleFS_Mbed_RP2040 /home/runner/Arduino/libraries/LittleFS_Mbed_RP2040
         
-        git clone --quiet https://github.com/RAKWireless/RAKwireless_Storage
+        git clone https://github.com/RAKWireless/RAKwireless_Storage
         mv RAKwireless_Storage /home/runner/Arduino/libraries/RAKwireless_Storage
 
     - name: test platforms
