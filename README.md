@@ -396,6 +396,55 @@ Hard coded settings must be set in **`void setup_app(void)`**!
 _**REMARK 2**_    
 Keep in mind that parameters that are changed from with this method can be changed over AT command or BLE _**BUT WILL BE RESET AFTER A REBOOT**_!
 
+----
+
+## External non-volatile memory access
+
+Read and write functions for external NV memory. In WisBlock API, the external NV memory is used to store the LoRa/LoRaWAN credentials. The credentials are stored starting from address 0 (or 1st sector if it is Flash memory).    
+
+The first module that is supported is the WisBlock RAK15001 Flash module. 
+
+### Read from NV memory
+This function reads data from the external NV memory. It supports for now only the RAK15001. The Flash is divided into 512 sectors with 4096 bytes each. Sector 0 is reserved, but any other sector can be used for user data.
+
+```
+/**
+ * @brief Read data from a sector of a WisBlock NVRAM Module
+ * 		RAK15001 => 
+ * 			Sector 0 is reserved for device settings
+ * 			Sector size is 4096 bytes max
+ *
+ * @param sector 
+ * 		RAK15001 => Sector to read data from. Valid 1 to 511
+ * @param buffer Buffer to write data into
+ * @param size Number of bytes
+ * @return true if success
+ * @return false if failed
+ */
+bool api_read_ext_nvram(uint16_t sector, uint8_t *buffer, uint16_t size)
+```
+### Write to NV memory
+This function writes data to the external NV memory. It supports for now only the RAK15001. The Flash is divided into 512 sectors with 4096 bytes each. Sector 0 is reserved, but any other sector can be used for user data.    
+
+```
+/**
+ * @brief Write data into a sector of a WisBlock NVRAM Module
+ * 		RAK15001 => 
+ * 			Sector 0 is reserved for device settings
+ * 			Sector size is 4096 bytes max
+ *
+ * @param sector 
+ * 		RAK15001 => Sector to write data into. Valid 1 to 511
+ * @param buffer Buffer with the data to write
+ * @param size Number of bytes
+ * @return true if success
+ * @return false if failed
+ */
+bool api_write_ext_nvram(uint16_t sector, uint8_t *buffer, uint16_t size)
+```
+
+----
+
 ## Send data over BLE UART
 **`g_ble_uart.print()`** can be used to send data over the BLE UART. **`print`**, **`println`** and **`printf`** is supported.     
 
@@ -888,6 +937,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-04-18
+  - Add support for external NV memory. Prioritize usage of external NV memory over MCU flash memory.
 - 2022-04-03
   - Fix LoRa P2P bug. In LoRa P2P the automatic sending did not work because g_lpwan_has_joined stayed on false.
 - 2022-03-01

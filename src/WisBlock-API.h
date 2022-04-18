@@ -284,6 +284,9 @@ void init_flash(void);
 bool save_settings(void);
 void log_settings(void);
 void flash_reset(void);
+extern bool init_flash_done;
+extern bool g_ext_nvram;
+extern bool g_rak15001_flash;
 
 // Battery
 void init_batt(void);
@@ -342,6 +345,9 @@ void api_file_write(uint8_t *source, uint32_t size);
 void api_file_remove(const char *filename);
 void api_file_close(const char *filename);
 extern const char settings_name[];
+
+bool api_read_ext_nvram(uint16_t sector, uint8_t *buffer, uint16_t size);
+bool api_write_ext_nvram(uint16_t sector, uint8_t *buffer, uint16_t size);
 
 // Read/Write for WisBlock-API, module independent
 enum

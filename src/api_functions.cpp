@@ -29,6 +29,10 @@ uint16_t g_sw_ver_3 = SW_VERSION_3; // patch version increase on bugfix, no affe
 uint16_t g_sw_ver_3 = 0; // patch version increase on bugfix, no affect on API
 #endif
 
+// External functions
+bool read_rak15001(uint16_t sector, uint8_t *buffer, uint16_t size);
+bool write_rak15001(uint16_t sector, uint8_t *buffer, uint16_t size);
+
 /**
  * @brief Set application version
  * 
@@ -85,7 +89,7 @@ void api_wait_wake(void)
 {
 #ifdef NRF52_SERIES
 	// Wait until semaphore is released (FreeRTOS)
-	xSemaphoreTake(g_task_sem, portMAX_DELAY) == pdTRUE;
+	xSemaphoreTake(g_task_sem, portMAX_DELAY);
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	bool got_signal = false;
@@ -233,13 +237,11 @@ void api_timer_restart(uint32_t new_time)
 #ifdef NRF52_SERIES
 		// g_task_wakeup_timer.setPeriod(new_time);
 		// g_task_wakeup_timer.start();
-		BaseType_t active = xTimerIsTimerActive(g_task_wakeup_timer);
-		bool ret = true;
 
 		if (isInISR())
 		{
 			BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-			ret = (pdPASS == xTimerChangePeriodFromISR(g_task_wakeup_timer, mypdMS_TO_TICKS(new_time), &xHigherPriorityTaskWoken));
+			xTimerChangePeriodFromISR(g_task_wakeup_timer, mypdMS_TO_TICKS(new_time), &xHigherPriorityTaskWoken);
 			portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 		}
 		else
@@ -261,4 +263,58 @@ void api_timer_restart(uint32_t new_time)
 void api_log_settings(void)
 {
 	at_settings();
+}
+
+/**
+ * @brief Read data from a sector of a WisBlock NVRAM Module
+ * 		RAK15001 => 
+ * 			Sector 0 is reserved for device settings
+ * 			Sector size is 4096 bytes max
+ *
+ * @param sector 
+ * 		RAK15001 => Sector to read data from. Valid 1 to 511
+ * @param buffer Buffer to write data into
+ * @param size Number of bytes
+ * @return true if success
+ * @return false if failed
+ */
+bool api_read_ext_nvram(uint16_t sector, uint8_t *buffer, uint16_t size)
+{
+	if (g_rak15001_flash)
+	{
+		if (sector == 0)
+		{
+			API_LOG("API", "RAK15001 Sector 0 is reserved");
+			return false;
+		}
+		return read_rak15001(sector, buffer, size);
+	}
+	return false;
+}
+
+/**
+ * @brief Write data into a sector of a WisBlock NVRAM Module
+ * 		RAK15001 => 
+ * 			Sector 0 is reserved for device settings
+ * 			Sector size is 4096 bytes max
+ *
+ * @param sector 
+ * 		RAK15001 => Sector to write data into. Valid 1 to 511
+ * @param buffer Buffer with the data to write
+ * @param size Number of bytes
+ * @return true if success
+ * @return false if failed
+ */
+bool api_write_ext_nvram(uint16_t sector, uint8_t *buffer, uint16_t size)
+{
+	if (g_rak15001_flash)
+	{
+		if (sector == 0)
+		{
+			API_LOG("API", "RAK15001 Sector 0 is reserved");
+			return false;
+		}
+		return write_rak15001(sector, buffer, size);
+	}
+	return false;
 }

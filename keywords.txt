@@ -14,6 +14,16 @@ lora_data_handler	KEYWORD1
 api_set_version	KEYWORD1
 api_read_credentials	KEYWORD1
 api_set_credentials	KEYWORD1
+api_reset	KEYWORD1
+api_wait_wake	KEYWORD1
+api_wake_loop	KEYWORD1
+api_init_lora	KEYWORD1
+api_timer_init	KEYWORD1
+api_timer_start	KEYWORD1
+api_timer_stop	KEYWORD1
+api_timer_restart	KEYWORD1
+api_read_ext_nvram	KEYWORD1
+api_write_ext_nvram	KEYWORD1
 g_ble_uart	KEYWORD1
 send_p2p_packet	KEYWORD1
 send_lora_packet	KEYWORD1

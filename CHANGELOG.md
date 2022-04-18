@@ -4,6 +4,9 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## 1.1.14 External NV memory support
+  - Add support for external NV memory. Prioritize usage of external NV memory over MCU flash memory.
+  
 ## 1.1.13 Fix LoRa P2P bug
   - In LoRa P2P the automatic sending did not work because g_lpwan_has_joined stayed on false.
   

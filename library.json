@@ -1,6 +1,6 @@
 {
 	"name": "WisBlock-API",
-	"version": "1.1.13",
+	"version": "1.1.14",
 	"keywords": [
 		"lora",
 		"Semtech",
@@ -38,6 +38,11 @@
 		{
 			"owner": "khoih-prog",
 			"name": "LittleFS_Mbed_RP2040",
+			"version": "*"
+		},
+		{
+			"owner": "beegee-tokyo",
+			"name": "RAKwireless Storage",
 			"version": "*"
 		}
 	],
