@@ -29,7 +29,7 @@ void flash_int_reset(void);
  * @brief Initialize access to nRF52 internal file system
  * 
  */
-void init_int_flash(void)
+void init_flash(void)
 {
 	if (init_flash_done)
 	{
@@ -113,7 +113,7 @@ void init_int_flash(void)
  * @return boolean 
  * 			result of saving
  */
-boolean save_int_settings(void)
+boolean save_settings(void)
 {
 	bool result = true;
 	// Read saved content
@@ -153,7 +153,7 @@ boolean save_int_settings(void)
  * @brief Reset content of the filesystem
  * 
  */
-void flash_int_reset(void)
+void flash_reset(void)
 {
 	InternalFS.format();
 	if (lora_file.open(settings_name, FILE_O_WRITE))

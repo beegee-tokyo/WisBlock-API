@@ -4,6 +4,9 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## 1.1.15 Remove xternal NV memory support
+  - Removed support for external NV memory. Better to keep this on application level
+
 ## 1.1.14 External NV memory support
   - Add support for external NV memory. Prioritize usage of external NV memory over MCU flash memory.
   

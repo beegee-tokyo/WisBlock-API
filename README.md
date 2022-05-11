@@ -937,6 +937,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-05-11
+  - Removed support for external NV memory. Better to keep this on application level
 - 2022-04-18
   - Add support for external NV memory. Prioritize usage of external NV memory over MCU flash memory.
 - 2022-04-03

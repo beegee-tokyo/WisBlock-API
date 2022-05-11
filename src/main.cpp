@@ -23,6 +23,9 @@ volatile uint16_t g_task_event_type = NO_EVENT;
 /** Flag if BLE should be enabled */
 bool g_enable_ble = false;
 
+/** Flag if data flash was initialized */
+bool init_flash_done;
+
 /**
  * @brief Timer event that wakes up the loop task frequently
  * 
