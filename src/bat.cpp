@@ -43,8 +43,10 @@ void init_batt(void)
 	// Set the resolution to 12-bit (0..4095)
 	analogReadResolution(12); // Can be 8, 10, 12 or 14
 
+#ifdef NRF52_SERIES
 	// Set the sampling time to 10us
 	analogSampleTime(10);
+#endif
 }
 
 /**
