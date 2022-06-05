@@ -4,6 +4,12 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## 1.1.16 Small improvements
+  - Make AT commands accept lower and upper case
+  - AT+BAT=? returns battery level in volt instead of 0 - 254
+  - BLE name changed to part of DevEUI for easier recognition of a device
+  - Change ADC sampling time to 10 us for better accuracy
+
 ## 1.1.15 Remove external NV memory support
   - Removed support for external NV memory. Better to keep this on application level
 

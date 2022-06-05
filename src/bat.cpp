@@ -42,6 +42,9 @@ void init_batt(void)
 
 	// Set the resolution to 12-bit (0..4095)
 	analogReadResolution(12); // Can be 8, 10, 12 or 14
+
+	// Set the sampling time to 10us
+	analogSampleTime(10);
 }
 
 /**

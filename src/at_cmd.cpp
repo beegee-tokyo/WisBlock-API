@@ -597,7 +597,7 @@ static int at_query_p2p_receive(void)
 static int at_query_region(void)
 {
 	// 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR920 7: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4 12: RU864
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.lora_region);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d %s", g_lorawan_settings.lora_region, region_names[g_lorawan_settings.lora_region]);
 
 	return 0;
 }
@@ -1456,7 +1456,14 @@ static int at_exec_send(char *str)
 static int at_query_battery(void)
 {
 	// Battery level is from 1 to 254, 254 meaning fully charged.
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", get_lora_batt());
+	// snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", get_lora_batt());
+	uint16_t read_val = 0;
+	for (int i = 0; i < 5; i++)
+	{
+		read_val += read_batt();
+	}
+	// Battery level is in Volt
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%.2f V", (float)(read_val / 5000.0));
 
 	return 0;
 }
@@ -1912,6 +1919,13 @@ void at_serial_input(uint8_t cmd)
 		Serial.printf(" \b");
 	}
 
+	// Convert to uppercase
+	if (cmd >= 'a' && cmd <= 'z')
+	{
+		cmd = toupper(cmd);
+	}
+
+	// Check valid character
 	if ((cmd >= '0' && cmd <= '9') || (cmd >= 'a' && cmd <= 'z') ||
 		(cmd >= 'A' && cmd <= 'Z') || cmd == '?' || cmd == '+' || cmd == ':' ||
 		cmd == '=' || cmd == ' ' || cmd == ',')

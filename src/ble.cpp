@@ -75,9 +75,12 @@ void init_ble(void)
 			(uint8_t)(addr_low >> 8), (uint8_t)(addr_low >> 16), (uint8_t)(addr_low >> 24));
 #else
 	/** Device name for RAK4631 */
+	// sprintf(helper_string, "%s-%02X%02X%02X%02X%02X%02X", g_ble_dev_name,
+	// 		(uint8_t)(addr_high), (uint8_t)(addr_high >> 8), (uint8_t)(addr_low),
+	// 		(uint8_t)(addr_low >> 8), (uint8_t)(addr_low >> 16), (uint8_t)(addr_low >> 24));
 	sprintf(helper_string, "%s-%02X%02X%02X%02X%02X%02X", g_ble_dev_name,
-			(uint8_t)(addr_high), (uint8_t)(addr_high >> 8), (uint8_t)(addr_low),
-			(uint8_t)(addr_low >> 8), (uint8_t)(addr_low >> 16), (uint8_t)(addr_low >> 24));
+			(uint8_t)(g_lorawan_settings.node_device_eui[2]), (uint8_t)(g_lorawan_settings.node_device_eui[3]),
+			(uint8_t)(g_lorawan_settings.node_device_eui[4]), (uint8_t)(g_lorawan_settings.node_device_eui[5]), (uint8_t)(g_lorawan_settings.node_device_eui[6]), (uint8_t)(g_lorawan_settings.node_device_eui[7]));
 #endif
 
 	Bluefruit.setName(helper_string);

@@ -19,6 +19,25 @@ In LoRaWAN® Class C mode the received data is not shown in the AT Command inter
 In P2P LoRa® mode the received data is not shown in the AT Command interface. The data has to be handled in the user application
 
 _**REMARK 5**_
+Even this AT commands are very similar to the AT commands in RAKwireless RUI3, there are differences. The main difference is in the setting of the region. The numbers assigned for the different regions are different.
+
+| Region   | WisBlock-API region number | RUI3 region number |
+| ---      | ---                        | ---                |
+| AS923-1  | 0                          | 8                  |
+| AU915    | 1                          | 6                  |
+| CN470    | 2                          | 1                  |
+| CN779    | 3                          | na                 |
+| EU433    | 4                          | 0                  |
+| EU868    | 5                          | 4                  |
+| KR920    | 6                          | 7                  |
+| IN865    | 7                          | 3                  |
+| US915    | 8                          | 5                  |
+| AS923-2  | 9                          | 9                  |
+| AS923-3  | 10                         | 10                 |
+| AS923-4  | 11                         | 11                 |
+| RU864    | 12                         | 2                  |
+
+_**REMARK 6**_    
 LoRa® is a registered trademark or service mark of Semtech Corporation or its affiliates. LoRaWAN® is a licensed mark.
 
 ----
@@ -934,7 +953,7 @@ This command allows to read the battery voltage of the device
 | AT+BAT?                    | -               | `AT+BAT:  Get battery level` | `OK`                     |
 | AT+BAT=?                   | -               | *< value >*                              | `OK` or `AT+PARAM_ERROR` |
 
-_**The battery level is returned as a value between 0 and 255**_
+_**The battery level is returned in volt**_
 
 **Examples**:
 
@@ -946,7 +965,7 @@ OK
 
 AT+BAT=?
 
-+BAT:254
++BAT:3.54V
 OK
 ```
 

@@ -937,6 +937,11 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-06-05
+  - Make AT commands accept lower and upper case
+  - AT+BAT=? returns battery level in volt instead of 0 - 254
+  - BLE name changed to part of DevEUI for easier recognition of a device
+  - Change ADC sampling time to 10 us for better accuracy
 - 2022-05-11
   - Removed support for external NV memory. Better to keep this on application level
 - 2022-04-18
