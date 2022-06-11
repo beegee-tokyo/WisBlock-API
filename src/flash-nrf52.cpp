@@ -171,21 +171,21 @@ void flash_reset(void)
  */
 void ble_log_settings(void)
 {
-	g_ble_uart.printf("Saved settings:");
+	api_ble_printf("Saved settings:\n");
 	delay(50);
-	g_ble_uart.printf("Marks: %02X %02X", g_lorawan_settings.valid_mark_1, g_lorawan_settings.valid_mark_2);
+	api_ble_printf("Marks: %02X %02X\n", g_lorawan_settings.valid_mark_1, g_lorawan_settings.valid_mark_2);
 	delay(50);
-	g_ble_uart.printf("Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
+	api_ble_printf("Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
 					  g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
 					  g_lorawan_settings.node_device_eui[4], g_lorawan_settings.node_device_eui[5],
 					  g_lorawan_settings.node_device_eui[6], g_lorawan_settings.node_device_eui[7]);
 	delay(50);
-	g_ble_uart.printf("App EUI %02X%02X%02X%02X%02X%02X%02X%02X", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
+	api_ble_printf("App EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
 					  g_lorawan_settings.node_app_eui[2], g_lorawan_settings.node_app_eui[3],
 					  g_lorawan_settings.node_app_eui[4], g_lorawan_settings.node_app_eui[5],
 					  g_lorawan_settings.node_app_eui[6], g_lorawan_settings.node_app_eui[7]);
 	delay(50);
-	g_ble_uart.printf("App Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+	api_ble_printf("App Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
 					  g_lorawan_settings.node_app_key[0], g_lorawan_settings.node_app_key[1],
 					  g_lorawan_settings.node_app_key[2], g_lorawan_settings.node_app_key[3],
 					  g_lorawan_settings.node_app_key[4], g_lorawan_settings.node_app_key[5],
@@ -195,9 +195,9 @@ void ble_log_settings(void)
 					  g_lorawan_settings.node_app_key[12], g_lorawan_settings.node_app_key[13],
 					  g_lorawan_settings.node_app_key[14], g_lorawan_settings.node_app_key[15]);
 	delay(50);
-	g_ble_uart.printf("Dev Addr %08lX", g_lorawan_settings.node_dev_addr);
+	api_ble_printf("Dev Addr %08lX", g_lorawan_settings.node_dev_addr);
 	delay(50);
-	g_ble_uart.printf("NWS Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+	api_ble_printf("NWS Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
 					  g_lorawan_settings.node_nws_key[0], g_lorawan_settings.node_nws_key[1],
 					  g_lorawan_settings.node_nws_key[2], g_lorawan_settings.node_nws_key[3],
 					  g_lorawan_settings.node_nws_key[4], g_lorawan_settings.node_nws_key[5],
@@ -207,7 +207,7 @@ void ble_log_settings(void)
 					  g_lorawan_settings.node_nws_key[12], g_lorawan_settings.node_nws_key[13],
 					  g_lorawan_settings.node_nws_key[14], g_lorawan_settings.node_nws_key[15]);
 	delay(50);
-	g_ble_uart.printf("Apps Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
+	api_ble_printf("Apps Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
 					  g_lorawan_settings.node_apps_key[0], g_lorawan_settings.node_apps_key[1],
 					  g_lorawan_settings.node_apps_key[2], g_lorawan_settings.node_apps_key[3],
 					  g_lorawan_settings.node_apps_key[4], g_lorawan_settings.node_apps_key[5],
@@ -217,49 +217,49 @@ void ble_log_settings(void)
 					  g_lorawan_settings.node_apps_key[12], g_lorawan_settings.node_apps_key[13],
 					  g_lorawan_settings.node_apps_key[14], g_lorawan_settings.node_apps_key[15]);
 	delay(50);
-	g_ble_uart.printf("OTAA %s", g_lorawan_settings.otaa_enabled ? "enabled" : "disabled");
+	api_ble_printf("OTAA %s\n", g_lorawan_settings.otaa_enabled ? "enabled" : "disabled");
 	delay(50);
-	g_ble_uart.printf("ADR %s", g_lorawan_settings.adr_enabled ? "enabled" : "disabled");
+	api_ble_printf("ADR %s\n", g_lorawan_settings.adr_enabled ? "enabled" : "disabled");
 	delay(50);
-	g_ble_uart.printf("%s Network", g_lorawan_settings.public_network ? "Public" : "Private");
+	api_ble_printf("%s Network\n", g_lorawan_settings.public_network ? "Public" : "Private");
 	delay(50);
-	g_ble_uart.printf("Dutycycle %s", g_lorawan_settings.duty_cycle_enabled ? "enabled" : "disabled");
+	api_ble_printf("Dutycycle %s\n", g_lorawan_settings.duty_cycle_enabled ? "enabled" : "disabled");
 	delay(50);
-	g_ble_uart.printf("Repeat time %ld", g_lorawan_settings.send_repeat_time);
+	api_ble_printf("Repeat time %ld\n", g_lorawan_settings.send_repeat_time);
 	delay(50);
-	g_ble_uart.printf("Join trials %d", g_lorawan_settings.join_trials);
+	api_ble_printf("Join trials %d\n", g_lorawan_settings.join_trials);
 	delay(50);
-	g_ble_uart.printf("TX Power %d", g_lorawan_settings.tx_power);
+	api_ble_printf("TX Power %d\n", g_lorawan_settings.tx_power);
 	delay(50);
-	g_ble_uart.printf("DR %d", g_lorawan_settings.data_rate);
+	api_ble_printf("DR %d\n", g_lorawan_settings.data_rate);
 	delay(50);
-	g_ble_uart.printf("Class %d", g_lorawan_settings.lora_class);
+	api_ble_printf("Class %d\n", g_lorawan_settings.lora_class);
 	delay(50);
-	g_ble_uart.printf("Subband %d", g_lorawan_settings.subband_channels);
+	api_ble_printf("Subband %d\n", g_lorawan_settings.subband_channels);
 	delay(50);
-	g_ble_uart.printf("Auto join %s", g_lorawan_settings.auto_join ? "enabled" : "disabled");
+	api_ble_printf("Auto join %s\n", g_lorawan_settings.auto_join ? "enabled" : "disabled");
 	delay(50);
-	g_ble_uart.printf("Fport %d", g_lorawan_settings.app_port);
+	api_ble_printf("Fport %d\n", g_lorawan_settings.app_port);
 	delay(50);
-	g_ble_uart.printf("%s Message", g_lorawan_settings.confirmed_msg_enabled ? "Confirmed" : "Unconfirmed");
+	api_ble_printf("%s Message\n", g_lorawan_settings.confirmed_msg_enabled ? "Confirmed" : "Unconfirmed");
 	delay(50);
-	g_ble_uart.printf("Region %s", region_names[g_lorawan_settings.lora_region]);
+	api_ble_printf("Region %s\n", region_names[g_lorawan_settings.lora_region]);
 	delay(50);
-	g_ble_uart.printf("Mode %s", g_lorawan_settings.lorawan_enable ? "LPWAN" : "P2P");
+	api_ble_printf("Mode %s\n", g_lorawan_settings.lorawan_enable ? "LPWAN" : "P2P");
 	delay(50);
-	g_ble_uart.printf("P2P frequency %ld", g_lorawan_settings.p2p_frequency);
+	api_ble_printf("P2P frequency %ld\n", g_lorawan_settings.p2p_frequency);
 	delay(50);
-	g_ble_uart.printf("P2P TX Power %d", g_lorawan_settings.p2p_tx_power);
+	api_ble_printf("P2P TX Power %d\n", g_lorawan_settings.p2p_tx_power);
 	delay(50);
-	g_ble_uart.printf("P2P BW %d", g_lorawan_settings.p2p_bandwidth);
+	api_ble_printf("P2P BW %d\n", g_lorawan_settings.p2p_bandwidth);
 	delay(50);
-	g_ble_uart.printf("P2P SF %d", g_lorawan_settings.p2p_sf);
+	api_ble_printf("P2P SF %d\n", g_lorawan_settings.p2p_sf);
 	delay(50);
-	g_ble_uart.printf("P2P CR %d", g_lorawan_settings.p2p_cr);
+	api_ble_printf("P2P CR %d\n", g_lorawan_settings.p2p_cr);
 	delay(50);
-	g_ble_uart.printf("P2P Preamble length %d", g_lorawan_settings.p2p_preamble_len);
+	api_ble_printf("P2P Preamble length %d\n", g_lorawan_settings.p2p_preamble_len);
 	delay(50);
-	g_ble_uart.printf("P2P Symbol Timeout %d", g_lorawan_settings.p2p_symbol_timeout);
+	api_ble_printf("P2P Symbol Timeout %d\n", g_lorawan_settings.p2p_symbol_timeout);
 	delay(50);
 }
 

@@ -14,6 +14,8 @@ static char atcmd[ATCMD_SIZE];
 static uint16_t atcmd_index = 0;
 char g_at_query_buf[ATQUERY_SIZE];
 
+bool has_custom_at = false;
+
 /** LoRaWAN application data buffer. */
 uint8_t m_lora_app_data_buffer[256];
 
@@ -111,6 +113,9 @@ void at_settings(void)
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	AT_PRINTF("   RAK11310\n");
+#endif
+#ifdef ESP32
+	AT_PRINTF("   RAK11200\n");
 #endif
 	AT_PRINTF("   Auto join %s\n", g_lorawan_settings.auto_join ? "enabled" : "disabled");
 	AT_PRINTF("   Mode %s\n", g_lorawan_settings.lorawan_enable ? "LPWAN" : "P2P");
@@ -1757,7 +1762,16 @@ static void at_cmd_handle(void)
 		break;
 	}
 
+#ifndef ESP32
+	// ESP32 has a problem with weak declarations of functions
+	if (g_user_at_cmd_list != NULL)
+	{
+		has_custom_at = true;
+	}
+#endif
 	// Not a standard AT command?
+	if (has_custom_at)
+	{
 	if (i == sizeof(g_at_cmd_list) / sizeof(atcmd_t))
 	{
 		// Check user defined AT command from list
@@ -1887,6 +1901,7 @@ static void at_cmd_handle(void)
 			ret = AT_ERRNO_NOSUPP;
 		}
 	}
+	}
 
 	if (ret != 0 && ret != AT_CB_PRINT)
 	{
@@ -1956,6 +1971,20 @@ void tud_cdc_rx_cb(uint8_t itf)
 	if (g_task_sem != NULL)
 	{
 		xSemaphoreGiveFromISR(g_task_sem, pdFALSE);
+	}
+}
+#endif
+#ifdef ESP32
+static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+/**
+ * @brief Callback when data over USB arrived
+ */
+void usb_rx_cb(void)
+{
+	g_task_event_type |= AT_CMD;
+	if (g_task_sem != NULL)
+	{
+		xSemaphoreGiveFromISR(g_task_sem, &xHigherPriorityTaskWoken);
 	}
 }
 #endif

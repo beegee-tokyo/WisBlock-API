@@ -21,7 +21,19 @@
 		g_ble_uart.printf(__VA_ARGS__); \
 	}
 #endif
-#ifdef ARDUINO_ARCH_RP2040
+#ifdef ESP32
+#define AT_PRINTF(...)                                                  \
+	Serial.printf(__VA_ARGS__);                                         \
+	if (g_ble_uart_is_connected)                                        \
+	{                                                                   \
+		char buff[255];                                                 \
+		int len = sprintf(buff, __VA_ARGS__);                           \
+		uart_tx_characteristic->setValue((uint8_t *)buff, (size_t)len); \
+		uart_tx_characteristic->notify(true);                           \
+		delay(50);                                                      \
+	}
+#endif
+#if defined ARDUINO_ARCH_RP2040
 #define AT_PRINTF(...) \
 	Serial.printf(__VA_ARGS__);
 #endif
