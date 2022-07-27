@@ -937,6 +937,9 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-07-27
+  - Correct AT command manual
+  - Added EPD display (custom 4.2" display for now)
 - 2022-06-05
   - Make AT commands accept lower and upper case
   - AT+BAT=? returns battery level in volt instead of 0 - 254
