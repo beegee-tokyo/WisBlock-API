@@ -4,9 +4,9 @@
  * @brief Includes and global declarations
  * @version 0.1
  * @date 2021-01-10
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #ifndef SX126x_API_H
 #define SX126x_API_H
@@ -113,29 +113,6 @@ extern volatile uint16_t g_task_event_type;
 
 /** Wake signal for RAK11310 */
 #define SIGNAL_WAKE 0x001
-
-#ifdef ARDUINO_ARCH_RP2040
-// //***************************************************
-// // Signals to wake up the loop() binary coded!!!!
-// // Use only one bit per signal!!!!
-// //***************************************************
-// /** Unconfirmed TX finished */
-// #define SIGNAL_UNCONF_TX 0x0001
-// /** Confirmed TX finished, ACK received */
-// #define SIGNAL_CONF_TX_ACK 0x0002
-// /** Confirmed TX failed, no ACK received */
-// #define SIGNAL_CONF_TX_NAK 0x0004
-// /** Periodic sending triggered */
-// #define SIGNAL_SEND 0x0008
-// /** Join success */
-// #define SIGNAL_JOIN_SUCCESS 0x0010
-// /** Join success */
-// #define SIGNAL_JOIN_FAIL 0x0020
-// /** LoRaWAN packet received */
-// #define SIGNAL_RX 0x0040
-// /** Start Join */
-// #define SIGNAL_JOIN 0x0080
-#endif
 
 #if defined NRF52_SERIES
 // BLE

@@ -4,9 +4,9 @@
  * @brief Battery reading functions
  * @version 0.1
  * @date 2021-04-24
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #include "WisBlock-API.h"
 
@@ -31,7 +31,7 @@ uint32_t vbat_pin = WB_A0;
 
 /**
  * @brief Initialize the battery analog input
- * 
+ *
  */
 void init_batt(void)
 {
@@ -52,7 +52,7 @@ void init_batt(void)
 /**
  * @brief Read the analog value from the battery analog pin
  * and convert it to milli volt
- * 
+ *
  * @return float Battery level in milli volts 0 ... 4200
  */
 float read_batt(void)
@@ -71,7 +71,7 @@ float read_batt(void)
 /**
  * @brief Estimate the battery level in percentage
  * from milli volts
- * 
+ *
  * @param mvolts Milli volts measured from analog pin
  * @return uint8_t Battery level as percentage (0 to 100)
  */
@@ -99,7 +99,7 @@ uint8_t mv_to_percent(float mvolts)
  * @brief Read the battery level as value
  * between 0 and 254. This is used in LoRaWan status requests
  * as the battery level
- * 
+ *
  * @return uint8_t Battery level as value between 0 and 254
  */
 uint8_t get_lora_batt(void)

@@ -4,9 +4,9 @@
  * @brief Initialize, read and write parameters from/to internal flash memory
  * @version 0.1
  * @date 2021-01-10
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #ifdef NRF52_SERIES
 
@@ -27,7 +27,7 @@ void flash_int_reset(void);
 
 /**
  * @brief Initialize access to nRF52 internal file system
- * 
+ *
  */
 void init_flash(void)
 {
@@ -109,8 +109,8 @@ void init_flash(void)
 
 /**
  * @brief Save changed settings if required
- * 
- * @return boolean 
+ *
+ * @return boolean
  * 			result of saving
  */
 boolean save_settings(void)
@@ -151,7 +151,7 @@ boolean save_settings(void)
 
 /**
  * @brief Reset content of the filesystem
- * 
+ *
  */
 void flash_reset(void)
 {
@@ -167,7 +167,7 @@ void flash_reset(void)
 
 /**
  * @brief Printout of all settings
- * 
+ *
  */
 void ble_log_settings(void)
 {

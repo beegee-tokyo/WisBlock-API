@@ -4,9 +4,9 @@
  * @brief AT command parser
  * @version 0.1
  * @date 2021-04-27
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #include "at_cmd.h"
 
@@ -42,7 +42,7 @@ void set_new_config(void)
 
 /**
  * @brief Convert Hex string into uint8_t array
- * 
+ *
  * @param hex Hex string
  * @param bin uint8_t
  * @param bin_length Length of array
@@ -103,7 +103,7 @@ static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length)
 
 /**
  * @brief Print out all parameters over UART and BLE
- * 
+ *
  */
 void at_settings(void)
 {
@@ -596,7 +596,7 @@ static int at_query_p2p_receive(void)
 
 /**
  * @brief AT+BAND=? Get regional frequency band
- * 
+ *
  * @return int always 0
  */
 static int at_query_region(void)
@@ -708,7 +708,7 @@ static int at_exec_mask(char *str)
 
 /**
  * @brief AT+NJM=? Return current join modus
- * 
+ *
  * @return int always 0
  */
 static int at_query_joinmode(void)
@@ -722,7 +722,7 @@ static int at_query_joinmode(void)
 
 /**
  * @brief AT+NJM=x Set current join modus
- * 
+ *
  * @param str 1 = OTAA 0 = ABP
  * @return int 0 if valid parameter
  */
@@ -747,7 +747,7 @@ static int at_exec_joinmode(char *str)
 
 /**
  * @brief AT+DEVEUI=? Get current Device EUI
- * 
+ *
  * @return int always 0
  */
 static int at_query_deveui(void)
@@ -793,7 +793,7 @@ static int at_exec_deveui(char *str)
 
 /**
  * @brief AT+APPEUI=? Get current Application (Join) EUI
- * 
+ *
  * @return int always 0
  */
 static int at_query_appeui(void)
@@ -813,7 +813,7 @@ static int at_query_appeui(void)
 
 /**
  * @brief AT+APPEUI=<XXXXXXXXXXXXXXXX> Set current Application (Join) EUI
- * 
+ *
  * @return int 0 if App EUI has correct length and was valid HEX
  */
 static int at_exec_appeui(char *str)
@@ -839,7 +839,7 @@ static int at_exec_appeui(char *str)
 
 /**
  * @brief AT+APPKEY=? Get current Application Key
- * 
+ *
  * @return int always 0
  */
 static int at_query_appkey(void)
@@ -860,7 +860,7 @@ static int at_query_appkey(void)
 
 /**
  * @brief AT+APPKEY=<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX> Set current Application (Join) EUI
- * 
+ *
  * @return int 0 if App Key has correct length and was valid HEX
  */
 static int at_exec_appkey(char *str)
@@ -886,7 +886,7 @@ static int at_exec_appkey(char *str)
 
 /**
  * @brief AT+DEVADDR=? Get device address
- * 
+ *
  * @return int always 0
  */
 static int at_query_devaddr(void)
@@ -904,7 +904,7 @@ static int at_query_devaddr(void)
 
 /**
  * @brief AT+DEVADDR=<XXXXXXXX> Set device address
- * 
+ *
  * @return int 0 if device address has correct length and was valid HEX
  */
 static int at_exec_devaddr(char *str)
@@ -937,7 +937,7 @@ static int at_exec_devaddr(char *str)
 
 /**
  * @brief AT+APPSKEY=? Get application session key
- * 
+ *
  * @return int always 0
  */
 static int at_query_appskey(void)
@@ -959,7 +959,7 @@ static int at_query_appskey(void)
 
 /**
  * @brief AT+APPSKEY=<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX> Set application session key
- * 
+ *
  * @return int 0 if App session Key has correct length and was valid HEX
  */
 static int at_exec_appskey(char *str)
@@ -985,7 +985,7 @@ static int at_exec_appskey(char *str)
 
 /**
  * @brief AT+NWSKEY=? Get network session key
- * 
+ *
  * @return int always 0
  */
 static int at_query_nwkskey(void)
@@ -1007,7 +1007,7 @@ static int at_query_nwkskey(void)
 
 /**
  * @brief AT+NWSKEY=<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX> Set network session key
- * 
+ *
  * @return int 0 if Network session key has correct length and was valid HEX
  */
 static int at_exec_nwkskey(char *str)
@@ -1033,7 +1033,7 @@ static int at_exec_nwkskey(char *str)
 
 /**
  * @brief AT+CLASS=? Get device class
- * 
+ *
  * @return int always 0
  */
 static int at_query_class(void)
@@ -1045,7 +1045,7 @@ static int at_query_class(void)
 
 /**
  * @brief AT+CLASS=X Set device class
- * 
+ *
  * @param str Class A or C, B not supported
  * @return int if class was valid
  */
@@ -1075,7 +1075,7 @@ static int at_exec_class(char *str)
 
 /**
  * @brief AT+NJM=? Get join mode
- * 
+ *
  * @return int always 0
  */
 static int at_query_join(void)
@@ -1099,7 +1099,7 @@ static int at_query_join(void)
  * Param2 = Auto-Join config: 1 for Auto-join on power up) , 0 for no auto-join.
  * Param3 = Reattempt interval: 7 - 255 seconds (ignored)
  * Param4 = No. of join attempts: 0 - 255
- * 
+ *
  * @param str parameters as string
  * @return int 0 if all parameters were valid
  */
@@ -1209,7 +1209,7 @@ static int at_exec_join(char *str)
 
 /**
  * @brief AT+NJS Get current join status
- * 
+ *
  * @return int always 0
  */
 static int at_query_join_status()
@@ -1228,7 +1228,7 @@ static int at_query_join_status()
 
 /**
  * @brief AT+CFM=? Get current confirm/unconfirmed packet status
- * 
+ *
  * @return int always 0
  */
 static int at_query_confirm(void)
@@ -1239,7 +1239,7 @@ static int at_query_confirm(void)
 
 /**
  * @brief AT+CFM=X Set confirmed / unconfirmed packet sending
- * 
+ *
  * @param str 0 = unconfirmed 1 = confirmed packet
  * @return int 0 if correct parameter
  */
@@ -1265,7 +1265,7 @@ static int at_exec_confirm(char *str)
 
 /**
  * @brief AT+DR=? Get current datarate
- * 
+ *
  * @return int always 0
  */
 static int at_query_datarate(void)
@@ -1276,7 +1276,7 @@ static int at_query_datarate(void)
 
 /**
  * @brief AT+DR=X Set datarate
- * 
+ *
  * @param str 0 to 15, depending on region
  * @return int 0 if correct parameter
  */
@@ -1305,7 +1305,7 @@ static int at_exec_datarate(char *str)
 
 /**
  * @brief AT+ADR=? Get current adaptive datarate status
- * 
+ *
  * @return int always 0
  */
 static int at_query_adr(void)
@@ -1316,7 +1316,7 @@ static int at_query_adr(void)
 
 /**
  * @brief AT+ADR=X Enable/disable adaptive datarate
- * 
+ *
  * @param str 0 = disable, 1 = enable ADR
  * @return int 0 if correct parameter
  */
@@ -1345,7 +1345,7 @@ static int at_exec_adr(char *str)
 
 /**
  * @brief AT+TXP=? Get current TX power setting
- * 
+ *
  * @return int always 0
  */
 static int at_query_txpower(void)
@@ -1356,7 +1356,7 @@ static int at_query_txpower(void)
 
 /**
  * @brief AT+TXP Set TX power
- * 
+ *
  * @param str TX power 0 to 10
  * @return int always 0
  */
@@ -1380,13 +1380,13 @@ static int at_exec_txpower(char *str)
 	save_settings();
 
 	lmh_tx_power_set(tx_power);
-	
+
 	return 0;
 }
 
 /**
  * @brief AT+SENDFREQ=? Get current send frequency
- * 
+ *
  * @return int always 0
  */
 static int at_query_sendfreq(void)
@@ -1399,9 +1399,9 @@ static int at_query_sendfreq(void)
 
 /**
  * @brief AT+SENDFREQ=<value> Set current send frequency
- * 
+ *
  * @param str send frequency in seconds between 0 (disabled)
- * @return int 
+ * @return int
  */
 static int at_exec_sendfreq(char *str)
 {
@@ -1461,7 +1461,7 @@ static int at_exec_send(char *str)
 
 /**
  * @brief AT+BATT=? Get current battery value (0 to 255)
- * 
+ *
  * @return int always 0
  */
 static int at_query_battery(void)
@@ -1481,7 +1481,7 @@ static int at_query_battery(void)
 
 /**
  * @brief AT+RSSI=? Get RSSI of last received package
- * 
+ *
  * @return int always 0
  */
 static int at_query_rssi(void)
@@ -1493,7 +1493,7 @@ static int at_query_rssi(void)
 
 /**
  * @brief AT+SNR=? Get SNR of last received package
- * 
+ *
  * @return int always 0
  */
 static int at_query_snr(void)
@@ -1505,7 +1505,7 @@ static int at_query_snr(void)
 
 /**
  * @brief AT+VER=? Get firmware version and build date
- * 
+ *
  * @return int always 0
  */
 static int at_query_version(void)
@@ -1517,7 +1517,7 @@ static int at_query_version(void)
 
 /**
  * @brief ATZ Initiate a system reset
- * 
+ *
  * @return int always 0
  */
 static int at_exec_reboot(void)
@@ -1537,7 +1537,7 @@ static int at_query_status(void)
 
 /**
  * @brief ATR Restore flash defaults
- * 
+ *
  * @return int always 0
  */
 static int at_exec_restore(void)
@@ -1550,7 +1550,7 @@ static int at_exec_list_all(void);
 
 /**
  * @brief List of all available commands with short help and pointer to functions
- * 
+ *
  */
 static atcmd_t g_at_cmd_list[] = {
 	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
@@ -1600,7 +1600,7 @@ static atcmd_t g_at_cmd_list[] = {
 
 /**
  * @brief List all available commands with short help
- * 
+ *
  * @return int always 0
  */
 static int at_exec_list_all(void)
@@ -1639,7 +1639,7 @@ static int at_exec_list_all(void)
 
 /**
  * @brief Handle received AT command
- * 
+ *
  */
 static void at_cmd_handle(void)
 {
@@ -1778,135 +1778,135 @@ static void at_cmd_handle(void)
 	// Not a standard AT command?
 	if (has_custom_at)
 	{
-	if (i == sizeof(g_at_cmd_list) / sizeof(atcmd_t))
-	{
-		// Check user defined AT command from list
-		if (g_user_at_cmd_list != NULL)
+		if (i == sizeof(g_at_cmd_list) / sizeof(atcmd_t))
 		{
-			int j = 0;
-			for (j = 0; j < g_user_at_cmd_num; j++)
+			// Check user defined AT command from list
+			if (g_user_at_cmd_list != NULL)
 			{
-				cmd_name = g_user_at_cmd_list[j].cmd_name;
-				// Serial.printf("===rxcmd========%s================cmd_name=====%s====%d===\n", rxcmd, cmd_name, strlen(cmd_name));
-				if (strlen(cmd_name) && strncmp(rxcmd, cmd_name, strlen(cmd_name)) != 0)
+				int j = 0;
+				for (j = 0; j < g_user_at_cmd_num; j++)
 				{
-					continue;
-				}
-
-				// Serial.printf("===rxcmd_index========%d================strlen(cmd_name)=====%d=======\n", rxcmd_index, strlen(cmd_name));
-
-				if (rxcmd_index == (strlen(cmd_name) + 1) &&
-					rxcmd[strlen(cmd_name)] == '?')
-				{
-					/* test cmd */
-					if (g_user_at_cmd_list[j].cmd_desc)
+					cmd_name = g_user_at_cmd_list[j].cmd_name;
+					// Serial.printf("===rxcmd========%s================cmd_name=====%s====%d===\n", rxcmd, cmd_name, strlen(cmd_name));
+					if (strlen(cmd_name) && strncmp(rxcmd, cmd_name, strlen(cmd_name)) != 0)
 					{
-						if (strncmp(g_user_at_cmd_list[j].cmd_desc, "OK", 2) == 0)
+						continue;
+					}
+
+					// Serial.printf("===rxcmd_index========%d================strlen(cmd_name)=====%d=======\n", rxcmd_index, strlen(cmd_name));
+
+					if (rxcmd_index == (strlen(cmd_name) + 1) &&
+						rxcmd[strlen(cmd_name)] == '?')
+					{
+						/* test cmd */
+						if (g_user_at_cmd_list[j].cmd_desc)
 						{
-							snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+							if (strncmp(g_user_at_cmd_list[j].cmd_desc, "OK", 2) == 0)
+							{
+								snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+							}
+							else
+							{
+								snprintf(atcmd, ATCMD_SIZE, "\r\n%s:\"%s\"\r\nOK\r\n",
+										 cmd_name, g_user_at_cmd_list[j].cmd_desc);
+							}
 						}
 						else
 						{
-							snprintf(atcmd, ATCMD_SIZE, "\r\n%s:\"%s\"\r\nOK\r\n",
-									 cmd_name, g_user_at_cmd_list[j].cmd_desc);
+							snprintf(atcmd, ATCMD_SIZE, "\r\n%s\r\nOK\r\n", cmd_name);
 						}
 					}
-					else
+					else if (rxcmd_index == (strlen(cmd_name) + 2) &&
+							 strcmp(&rxcmd[strlen(cmd_name)], "=?") == 0)
 					{
-						snprintf(atcmd, ATCMD_SIZE, "\r\n%s\r\nOK\r\n", cmd_name);
-					}
-				}
-				else if (rxcmd_index == (strlen(cmd_name) + 2) &&
-						 strcmp(&rxcmd[strlen(cmd_name)], "=?") == 0)
-				{
-					/* query cmd */
-					if (g_user_at_cmd_list[j].query_cmd != NULL)
-					{
-						ret = g_user_at_cmd_list[j].query_cmd();
+						/* query cmd */
+						if (g_user_at_cmd_list[j].query_cmd != NULL)
+						{
+							ret = g_user_at_cmd_list[j].query_cmd();
 
-						if (ret == 0)
+							if (ret == 0)
+							{
+								snprintf(atcmd, ATCMD_SIZE, "\r\n%s:%s\r\nOK\r\n",
+										 cmd_name, g_at_query_buf);
+							}
+						}
+						else
 						{
-							snprintf(atcmd, ATCMD_SIZE, "\r\n%s:%s\r\nOK\r\n",
-									 cmd_name, g_at_query_buf);
+							ret = AT_ERRNO_NOALLOW;
+						}
+					}
+					else if (rxcmd_index > (strlen(cmd_name) + 1) &&
+							 rxcmd[strlen(cmd_name)] == '=')
+					{
+						/* exec cmd */
+						if (g_user_at_cmd_list[j].exec_cmd != NULL)
+						{
+							ret = g_user_at_cmd_list[j].exec_cmd(rxcmd + strlen(cmd_name) + 1);
+							if (ret == 0)
+							{
+								snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+							}
+							else if (ret == -1)
+							{
+								ret = AT_ERRNO_SYS;
+							}
+						}
+						else
+						{
+							ret = AT_ERRNO_NOALLOW;
+						}
+					}
+					else if (rxcmd_index == strlen(cmd_name))
+					{
+						/* exec cmd without parameter*/
+						if (g_user_at_cmd_list[j].exec_cmd_no_para != NULL)
+						{
+							ret = g_user_at_cmd_list[j].exec_cmd_no_para();
+							if (ret == 0)
+							{
+								snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+							}
+							else if (ret == -1)
+							{
+								ret = AT_ERRNO_SYS;
+							}
+						}
+						else
+						{
+							ret = AT_ERRNO_NOALLOW;
 						}
 					}
 					else
 					{
-						ret = AT_ERRNO_NOALLOW;
+						continue;
 					}
+					break;
 				}
-				else if (rxcmd_index > (strlen(cmd_name) + 1) &&
-						 rxcmd[strlen(cmd_name)] == '=')
+				if (j == g_user_at_cmd_num)
 				{
-					/* exec cmd */
-					if (g_user_at_cmd_list[j].exec_cmd != NULL)
-					{
-						ret = g_user_at_cmd_list[j].exec_cmd(rxcmd + strlen(cmd_name) + 1);
-						if (ret == 0)
-						{
-							snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
-						}
-						else if (ret == -1)
-						{
-							ret = AT_ERRNO_SYS;
-						}
-					}
-					else
-					{
-						ret = AT_ERRNO_NOALLOW;
-					}
+					API_LOG("AT", "Not a user AT command");
+					ret = AT_ERRNO_NOSUPP;
 				}
-				else if (rxcmd_index == strlen(cmd_name))
+			}
+			// Check user AT command handler
+			else if (user_at_handler != NULL)
+			{
+				if (user_at_handler(rxcmd, rxcmd_index))
 				{
-					/* exec cmd without parameter*/
-					if (g_user_at_cmd_list[j].exec_cmd_no_para != NULL)
-					{
-						ret = g_user_at_cmd_list[j].exec_cmd_no_para();
-						if (ret == 0)
-						{
-							snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
-						}
-						else if (ret == -1)
-						{
-							ret = AT_ERRNO_SYS;
-						}
-					}
-					else
-					{
-						ret = AT_ERRNO_NOALLOW;
-					}
+					ret = 0;
+					snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
 				}
 				else
 				{
-					continue;
+					ret = AT_ERRNO_NOSUPP;
 				}
-				break;
 			}
-			if (j == g_user_at_cmd_num)
-			{
-				API_LOG("AT", "Not a user AT command");
-				ret = AT_ERRNO_NOSUPP;
-			}
-		}
-		// Check user AT command handler
-		else if (user_at_handler != NULL)
-		{
-			if (user_at_handler(rxcmd, rxcmd_index))
-			{
-				ret = 0;
-				snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
-			}
+			// No user defined AT commands available
 			else
 			{
 				ret = AT_ERRNO_NOSUPP;
 			}
 		}
-		// No user defined AT commands available
-		else
-		{
-			ret = AT_ERRNO_NOSUPP;
-		}
-	}
 	}
 
 	if (ret != 0 && ret != AT_CB_PRINT)
@@ -1926,7 +1926,7 @@ static void at_cmd_handle(void)
 
 /**
  * @brief Get Serial input and start parsing
- * 
+ *
  * @param cmd received character
  */
 void at_serial_input(uint8_t cmd)
@@ -1968,7 +1968,7 @@ void at_serial_input(uint8_t cmd)
 #ifdef NRF52_SERIES
 /**
  * @brief Callback when data over USB arrived
- * 
+ *
  * @param itf unused
  */
 void tud_cdc_rx_cb(uint8_t itf)

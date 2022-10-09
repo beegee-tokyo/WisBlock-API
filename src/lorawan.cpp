@@ -4,9 +4,9 @@
  * @brief LoRaWAN initialization & handler
  * @version 0.1
  * @date 2021-01-10
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #include "WisBlock-API.h"
 
@@ -61,7 +61,7 @@ static void lpwan_confirm_tx_finished(bool result);
 bool send_lpwan_packet(void);
 
 /**@brief Structure containing LoRaWAN parameters, needed for lmh_init()
- * 
+ *
  * Set structure members to
  * LORAWAN_ADR_ON or LORAWAN_ADR_OFF to enable or disable adaptive data rate
  * LORAWAN_DEFAULT_DATARATE OR DR_0 ... DR_5 for default data rate or specific data rate selection
@@ -69,7 +69,7 @@ bool send_lpwan_packet(void);
  * JOINREQ_NBTRIALS or a specific number to set the number of trials to join the network
  * LORAWAN_DEFAULT_TX_POWER or a specific number to set the TX power used
  * LORAWAN_DUTYCYCLE_ON or LORAWAN_DUTYCYCLE_OFF to enable or disable duty cycles
- *                   Please note that ETSI mandates duty cycled transmissions. 
+ *                   Please note that ETSI mandates duty cycled transmissions.
  */
 static lmh_param_t lora_param_init;
 
@@ -84,7 +84,7 @@ uint32_t otaaDevAddr = 0;
 
 /**
  * @brief Initialize LoRa HW and LoRaWan MAC layer
- * 
+ *
  * @return int8_t result
  *  0 => OK
  * -1 => SX126x HW init failure
@@ -234,7 +234,7 @@ static void lpwan_rx_handler(lmh_app_data_t *app_data)
 
 /**
  * @brief Callback for class switch confirmation
- * 
+ *
  * @param Class The new class
  */
 static void lpwan_class_confirm_handler(DeviceClass_t Class)
@@ -249,7 +249,7 @@ static void lpwan_class_confirm_handler(DeviceClass_t Class)
 
 /**
  * @brief Called after unconfirmed packet was sent
- * 
+ *
  */
 static void lpwan_unconfirm_tx_finished(void)
 {
@@ -262,7 +262,7 @@ static void lpwan_unconfirm_tx_finished(void)
 
 /**
  * @brief Called after confirmed packet was sent
- * 
+ *
  * @param result Result of sending true = ACK received false = No ACK
  */
 static void lpwan_confirm_tx_finished(bool result)
@@ -276,14 +276,14 @@ static void lpwan_confirm_tx_finished(bool result)
 
 /**
  * @brief Send a LoRaWan package
- * 
+ *
  * @return result of send request
  */
 lmh_error_status send_lora_packet(uint8_t *data, uint8_t size, uint8_t fport)
 {
 	if (lmh_join_status_get() != LMH_SET)
 	{
-		//Not joined, try again later
+		// Not joined, try again later
 		API_LOG("LORA", "Did not join network, skip sending frame");
 		return LMH_ERROR;
 	}

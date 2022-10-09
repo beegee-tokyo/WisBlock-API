@@ -484,7 +484,7 @@ void start_ble_adv(void)
 	}
 	else
 	{
-	ble_advertising->start(0);
+		ble_advertising->start(0);
 	}
 	g_ble_is_on = true;
 }

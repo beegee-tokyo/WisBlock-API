@@ -4,9 +4,9 @@
  * @brief LoRa configuration over BLE
  * @version 0.1
  * @date 2022-01-23
- * 
+ *
  * @copyright Copyright (c) 2022
- * 
+ *
  */
 #include "WisBlock-API.h"
 
@@ -28,8 +28,8 @@ bool g_enable_ble = false;
 
 /**
  * @brief Timer event that wakes up the loop task frequently
- * 
- * @param unused 
+ *
+ * @param unused
  */
 void periodic_wakeup(TimerHandle_t unused)
 {
@@ -51,8 +51,8 @@ volatile uint16_t g_task_event_type = NO_EVENT;
 
 /**
  * @brief Timer event that wakes up the loop task frequently
- * 
- * @param unused 
+ *
+ * @param unused
  */
 void periodic_wakeup(void)
 {
@@ -90,7 +90,7 @@ void periodic_wakeup(void)
 
 /**
  * @brief Arduino setup function. Called once after power-up or reset
- * 
+ *
  */
 void setup()
 {
@@ -245,7 +245,7 @@ void setup()
 
 /**
  * @brief Arduino loop task. Called in a loop from the FreeRTOS task handler
- * 
+ *
  */
 void loop()
 {

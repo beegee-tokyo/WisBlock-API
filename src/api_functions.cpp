@@ -4,9 +4,9 @@
  * @brief Application settings
  * @version 0.1
  * @date 2021-09-09
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #include "WisBlock-API.h"
 
@@ -31,7 +31,7 @@ uint16_t g_sw_ver_3 = 0; // patch version increase on bugfix, no affect on API
 
 /**
  * @brief Set application version
- * 
+ *
  * @param sw_1 SW version major number
  * @param sw_2 SW version minor number
  * @param sw_3 SW version patch number
@@ -45,7 +45,7 @@ void api_set_version(uint16_t sw_1, uint16_t sw_2, uint16_t sw_3)
 
 /**
  * @brief Inform API that hard coded LoRaWAN credentials are used
- * 
+ *
  */
 void api_set_credentials(void)
 {
@@ -54,7 +54,7 @@ void api_set_credentials(void)
 
 /**
  * @brief Force reading the LoRaWAN credentials
- * 
+ *
  */
 void api_read_credentials(void)
 {
@@ -63,7 +63,7 @@ void api_read_credentials(void)
 
 /**
  * @brief System reset
- * 
+ *
  */
 void api_reset(void)
 {
@@ -82,7 +82,7 @@ void api_reset(void)
  * @brief Waits for a trigger to wake up
  *    On FreeRTOS the trigger is release of a semaphore
  *    On mbed the trigger is an OS signal
- * 
+ *
  */
 void api_wait_wake(void)
 {
@@ -106,7 +106,7 @@ void api_wait_wake(void)
 
 /**
  * @brief Wake up loop task
- * 
+ *
  * @param reason for wakeup
  */
 void api_wake_loop(uint16_t reason)
@@ -131,7 +131,7 @@ void api_wake_loop(uint16_t reason)
 
 /**
  * @brief Initialize LoRa transceiver
- * 
+ *
  * @return uint32_t result of initialization, 0 = success
  */
 uint32_t api_init_lora(void)
@@ -153,7 +153,7 @@ uint32_t api_init_lora(void)
 
 /**
  * @brief Initialize the timer for frequent sending
- * 
+ *
  */
 void api_timer_init(void)
 {
@@ -173,7 +173,7 @@ void api_timer_init(void)
 
 /**
  * @brief Start the timer for frequent sending
- * 
+ *
  */
 void api_timer_start(void)
 {
@@ -202,7 +202,7 @@ void api_timer_start(void)
 
 /**
  * @brief Stop the timer for frequent sending
- * 
+ *
  */
 void api_timer_stop(void)
 {
@@ -230,8 +230,8 @@ void api_timer_stop(void)
 
 /**
  * @brief Restart the time with a new time
- * 
- * @param new_time 
+ *
+ * @param new_time
  */
 void api_timer_restart(uint32_t new_time)
 {
@@ -275,7 +275,7 @@ void api_timer_restart(uint32_t new_time)
 
 /**
  * @brief Print current device status over USB
- * 
+ *
  */
 void api_log_settings(void)
 {

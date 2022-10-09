@@ -4,9 +4,9 @@
  * @brief AT command parsing includes & defines
  * @version 0.1
  * @date 2021-04-27
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #include "WisBlock-API.h"
 

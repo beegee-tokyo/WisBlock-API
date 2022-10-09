@@ -4,9 +4,9 @@
  * @brief BLE initialization & device configuration
  * @version 0.1
  * @date 2021-01-10
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 #ifdef NRF52_SERIES
 
@@ -39,7 +39,7 @@ bool g_ble_uart_is_connected = false;
 
 /**
  * @brief Initialize BLE and start advertising
- * 
+ *
  */
 void init_ble(void)
 {
@@ -127,14 +127,14 @@ void init_ble(void)
 	Bluefruit.Advertising.addTxPower();
 
 	/* Start Advertising
-   * - Enable auto advertising if disconnected
-   * - Interval:  fast mode = 20 ms, slow mode = 152.5 ms
-   * - Timeout for fast mode is 30 seconds 
-   * - Start(timeout) with timeout = 0 will advertise forever (until connected)
-   * 
-   * For recommended advertising interval
-   * https://developer.apple.com/library/content/qa/qa1931/_index.html   
-   */
+	 * - Enable auto advertising if disconnected
+	 * - Interval:  fast mode = 20 ms, slow mode = 152.5 ms
+	 * - Timeout for fast mode is 30 seconds
+	 * - Start(timeout) with timeout = 0 will advertise forever (until connected)
+	 *
+	 * For recommended advertising interval
+	 * https://developer.apple.com/library/content/qa/qa1931/_index.html
+	 */
 	Bluefruit.Advertising.restartOnDisconnect(true);
 	Bluefruit.Advertising.setInterval(32, 244); // in unit of 0.625 ms
 	Bluefruit.Advertising.setFastTimeout(15);	// number of seconds in fast mode
@@ -151,7 +151,7 @@ void init_ble(void)
 
 /**
  * @brief Restart advertising for a certain time
- * 
+ *
  * @param timeout timeout in seconds
  */
 void restart_advertising(uint16_t timeout)
@@ -198,7 +198,7 @@ void bleuart_rx_callback(uint16_t conn_handle)
 
 /**
  * @brief Initialize the settings characteristic
- * 
+ *
  */
 BLEService init_settings_characteristic(void)
 {
