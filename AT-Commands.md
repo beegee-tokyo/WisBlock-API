@@ -46,8 +46,8 @@ LoRa® is a registered trademark or service mark of Semtech Corporation or its a
 ### General commands
 * [AT Command syntax](#at-command-syntax)
 * [AT?](#at) Help
-* [ATR](#atr) Reset device
-* [ATZ](#atz) Reset to default configuration
+* [ATR](#atr) Reset to default configuration
+* [ATZ](#atz) Reset device
 ### LoRaWAN commands
 * [AT+APPEUI](#atappeui) Set/Get Application EUI
 * [AT+APPKEY](#atappkey) Set/Get Application Key

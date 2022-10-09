@@ -4,6 +4,10 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## 1.1.17 Add RAK11200 support and fix AT command manual
+  - Add experimental support for RAK11200    
+  - Correct AT command manual    
+  
 ## 1.1.16 Small improvements
   - Make AT commands accept lower and upper case
   - AT+BAT=? returns battery level in volt instead of 0 - 254

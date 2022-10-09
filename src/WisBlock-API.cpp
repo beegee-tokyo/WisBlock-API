@@ -13,7 +13,7 @@
 /** Flag if data flash was initialized */
 bool init_flash_done;
 
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES
 /** Semaphore used by events to wake up loop task */
 SemaphoreHandle_t g_task_sem = NULL;
 
@@ -38,7 +38,8 @@ void periodic_wakeup(TimerHandle_t unused)
 	api_wake_loop(STATUS);
 }
 #endif
-#ifdef ARDUINO_ARCH_RP2040
+
+#if defined ARDUINO_ARCH_RP2040
 /** Loop thread ID */
 osThreadId loop_thread = NULL;
 
@@ -61,6 +62,32 @@ void periodic_wakeup(void)
 }
 #endif
 
+#ifdef ESP32
+/** Semaphore used by events to wake up loop task */
+SemaphoreHandle_t g_task_sem = NULL;
+
+/** Timer to wakeup task frequently and send message */
+Ticker g_task_wakeup_timer;
+
+/** Flag for the event type */
+volatile uint16_t g_task_event_type = NO_EVENT;
+
+/** Flag if BLE should be enabled */
+bool g_enable_ble = false;
+
+/**
+ * @brief Timer event that wakes up the loop task frequently
+ *
+ * @param unused
+ */
+void periodic_wakeup(void)
+{
+	// Switch on LED to show we are awake
+	digitalWrite(LED_GREEN, HIGH);
+	api_wake_loop(STATUS);
+}
+#endif
+
 /**
  * @brief Arduino setup function. Called once after power-up or reset
  * 
@@ -68,7 +95,7 @@ void periodic_wakeup(void)
 void setup()
 {
 
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES || defined ESP32
 	// Create the task event semaphore
 	g_task_sem = xSemaphoreCreateBinary();
 	// Initialize semaphore
@@ -103,14 +130,17 @@ void setup()
 	}
 #endif
 
+#ifdef ESP32
+	Serial.onReceive(usb_rx_cb);
+#endif
 	digitalWrite(LED_GREEN, HIGH);
 
 	// Call app setup for special settings
 	setup_app();
 
-	API_LOG("MAIN", "====================");
-	API_LOG("MAIN", "WisBlock API LoRaWAN");
-	API_LOG("MAIN", "====================");
+	API_LOG("API", "====================");
+	API_LOG("API", "WisBlock API LoRaWAN");
+	API_LOG("API", "====================");
 
 #ifdef ARDUINO_ARCH_RP2040
 	// Initialize background task for Serial port handling
@@ -123,9 +153,10 @@ void setup()
 	// Get LoRa parameter
 	init_flash();
 
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES || defined ESP32
 	if (g_enable_ble)
 	{
+		API_LOG("API", "Init BLE");
 		// Init BLE
 		init_ble();
 	}
@@ -156,29 +187,29 @@ void setup()
 		int8_t lora_init_result = 0;
 		if (g_lorawan_settings.lorawan_enable)
 		{
-			API_LOG("MAIN", "Auto join is enabled, start LoRaWAN and join");
+			API_LOG("API", "Auto join is enabled, start LoRaWAN and join");
 			lora_init_result = init_lorawan();
 		}
 		else
 		{
-			API_LOG("MAIN", "Auto join is enabled, start LoRa P2P listen");
+			API_LOG("API", "Auto join is enabled, start LoRa P2P listen");
 			lora_init_result = init_lora();
 		}
 
 		if (lora_init_result != 0)
 		{
-			API_LOG("MAIN", "Init LoRa failed");
+			API_LOG("API", "Init LoRa failed");
 
 			// Without working LoRa we just stop here
 			while (1)
 			{
-				API_LOG("MAIN", "Get your LoRa stuff in order");
+				API_LOG("API", "Get your LoRa stuff in order");
 				pinMode(LED_GREEN, OUTPUT);
 				digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
 				delay(5000);
 			}
 		}
-		API_LOG("MAIN", "LoRa init success");
+		API_LOG("API", "LoRa init success");
 	}
 	else
 	{
@@ -186,7 +217,7 @@ void setup()
 		api_init_lora();
 		Radio.Sleep();
 
-		API_LOG("MAIN", "Auto join is disabled, waiting for connect command");
+		API_LOG("API", "Auto join is disabled, waiting for connect command");
 		delay(100);
 	}
 
@@ -194,7 +225,7 @@ void setup()
 	if (!init_app())
 	{
 		// Without working application we give a warning message
-		API_LOG("MAIN", "Get your application stuff in order");
+		API_LOG("API", "Get your application stuff in order");
 		// // Without working LoRa we just stop here
 		// while (1)
 		// {
@@ -245,7 +276,7 @@ void loop()
 			if ((g_task_event_type & BLE_CONFIG) == BLE_CONFIG)
 			{
 				g_task_event_type &= N_BLE_CONFIG;
-				API_LOG("MAIN", "Config received over BLE");
+				API_LOG("API", "Config received over BLE");
 				delay(100);
 
 				// Inform connected device about new settings
@@ -281,7 +312,7 @@ void loop()
 		// Skip this log message when USB data is received
 		if ((g_task_event_type & AT_CMD) == AT_CMD)
 		{
-			API_LOG("MAIN", "Loop goes to sleep");
+			API_LOG("API", "Loop goes to sleep");
 		}
 		Serial.flush();
 		g_task_event_type = 0;
@@ -289,7 +320,7 @@ void loop()
 		digitalWrite(LED_GREEN, LOW);
 		delay(10);
 		// Go back to sleep
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES || defined ESP32
 
 		xSemaphoreTake(g_task_sem, 10);
 #endif

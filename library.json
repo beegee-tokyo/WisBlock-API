@@ -1,11 +1,13 @@
 {
 	"name": "WisBlock-API",
-	"version": "1.1.16",
+	"version": "1.1.17",
 	"keywords": [
 		"lora",
 		"Semtech",
 		"SX126x",
 		"RAK4630",
+		"RAK11310",
+		"RAK11200",
 		"WisBlock"
 	],
 	"description": "A library that covers the complete LoRa/LoRaWAN, BLE and AT command handling. Just write your application specific functions and leave the rest to the API",
@@ -14,7 +16,8 @@
 	],
 	"platforms": [
 		"nordicnrf52",
-		"mbed_rp2040"
+		"mbed_rp2040",
+		"espressif32"
 	],
 	"license": "MIT",
 	"authors": [
@@ -38,11 +41,6 @@
 		{
 			"owner": "khoih-prog",
 			"name": "LittleFS_Mbed_RP2040",
-			"version": "*"
-		},
-		{
-			"owner": "beegee-tokyo",
-			"name": "RAKwireless Storage",
 			"version": "*"
 		}
 	],

@@ -10,7 +10,7 @@
  */
 #include "WisBlock-API.h"
 
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES || defined ESP32
 /** Millivolts per LSB 3.0V ADC range and 12-bit ADC resolution = 3000mV/4096 */
 #define VBAT_MV_PER_LSB (0.73242188F)
 /** Compensation factor for the VBAT divider */
@@ -35,7 +35,7 @@ uint32_t vbat_pin = WB_A0;
  */
 void init_batt(void)
 {
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES
 	// Set the analog reference to 3.0V (default = 3.6V)
 	analogReference(AR_INTERNAL_3_0);
 #endif
@@ -43,7 +43,7 @@ void init_batt(void)
 	// Set the resolution to 12-bit (0..4095)
 	analogReadResolution(12); // Can be 8, 10, 12 or 14
 
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES
 	// Set the sampling time to 10us
 	analogSampleTime(10);
 #endif

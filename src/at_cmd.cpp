@@ -14,6 +14,8 @@ static char atcmd[ATCMD_SIZE];
 static uint16_t atcmd_index = 0;
 char g_at_query_buf[ATQUERY_SIZE];
 
+bool has_custom_at = false;
+
 /** LoRaWAN application data buffer. */
 uint8_t m_lora_app_data_buffer[256];
 
@@ -111,6 +113,9 @@ void at_settings(void)
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	AT_PRINTF("   RAK11310\n");
+#endif
+#ifdef ESP32
+	AT_PRINTF("   RAK11200\n");
 #endif
 	AT_PRINTF("   Auto join %s\n", g_lorawan_settings.auto_join ? "enabled" : "disabled");
 	AT_PRINTF("   Mode %s\n", g_lorawan_settings.lorawan_enable ? "LPWAN" : "P2P");
@@ -1293,6 +1298,8 @@ static int at_exec_datarate(char *str)
 	g_lorawan_settings.data_rate = datarate;
 	save_settings();
 
+	lmh_datarate_set(datarate, g_lorawan_settings.adr_enabled);
+
 	return 0;
 }
 
@@ -1330,6 +1337,8 @@ static int at_exec_adr(char *str)
 	g_lorawan_settings.adr_enabled = (adr == 1 ? true : false);
 
 	save_settings();
+
+	lmh_datarate_set(g_lorawan_settings.data_rate, g_lorawan_settings.adr_enabled);
 
 	return 0;
 }
@@ -1370,6 +1379,8 @@ static int at_exec_txpower(char *str)
 
 	save_settings();
 
+	lmh_tx_power_set(tx_power);
+	
 	return 0;
 }
 
@@ -1565,8 +1576,8 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+ADR", "Get or set the adaptive data rate setting", at_query_adr, at_exec_adr, NULL},
 	{"+CLASS", "Get or set the device class", at_query_class, at_exec_class, NULL},
 	{"+DR", "Get or Set the Tx DataRate=[0..7]", at_query_datarate, at_exec_datarate, NULL},
-	{"+TXP", "Get or set the transmit power", at_query_txpower, at_exec_txpower, NULL},
-	{"+BAND", "Get and Set number corresponding to active regions", at_query_region, at_exec_region, NULL},
+	{"+TXP", "Get or set the transmit power=[0...10]", at_query_txpower, at_exec_txpower, NULL},
+	{"+BAND", "Get and Set LoRaWAN region 0 = AS923-1, 1 = AU915, 2 = CN470, 3 = CN779, 4 = EU433, 5 = EU868, 6 = KR720, 7 = IN865, 8 = US915, 9 = AS923-2, 10 = AS923-3, 11 = AS923-4, 12 = RU864", at_query_region, at_exec_region, NULL},
 	{"+MASK", "Get and Set channels mask", at_query_mask, at_exec_mask, NULL},
 	// Status queries
 	{"+BAT", "Get battery level", at_query_battery, NULL, NULL},
@@ -1757,7 +1768,16 @@ static void at_cmd_handle(void)
 		break;
 	}
 
+#ifndef ESP32
+	// ESP32 has a problem with weak declarations of functions
+	if (g_user_at_cmd_list != NULL)
+	{
+		has_custom_at = true;
+	}
+#endif
 	// Not a standard AT command?
+	if (has_custom_at)
+	{
 	if (i == sizeof(g_at_cmd_list) / sizeof(atcmd_t))
 	{
 		// Check user defined AT command from list
@@ -1887,6 +1907,7 @@ static void at_cmd_handle(void)
 			ret = AT_ERRNO_NOSUPP;
 		}
 	}
+	}
 
 	if (ret != 0 && ret != AT_CB_PRINT)
 	{
@@ -1956,6 +1977,20 @@ void tud_cdc_rx_cb(uint8_t itf)
 	if (g_task_sem != NULL)
 	{
 		xSemaphoreGiveFromISR(g_task_sem, pdFALSE);
+	}
+}
+#endif
+#ifdef ESP32
+static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+/**
+ * @brief Callback when data over USB arrived
+ */
+void usb_rx_cb(void)
+{
+	g_task_event_type |= AT_CMD;
+	if (g_task_sem != NULL)
+	{
+		xSemaphoreGiveFromISR(g_task_sem, &xHigherPriorityTaskWoken);
 	}
 }
 #endif

@@ -29,10 +29,6 @@ uint16_t g_sw_ver_3 = SW_VERSION_3; // patch version increase on bugfix, no affe
 uint16_t g_sw_ver_3 = 0; // patch version increase on bugfix, no affect on API
 #endif
 
-// External functions
-bool read_rak15001(uint16_t sector, uint8_t *buffer, uint16_t size);
-bool write_rak15001(uint16_t sector, uint8_t *buffer, uint16_t size);
-
 /**
  * @brief Set application version
  * 
@@ -77,6 +73,9 @@ void api_reset(void)
 #ifdef ARDUINO_ARCH_RP2040
 	NVIC_SystemReset();
 #endif
+#ifdef ESP32
+	esp_restart();
+#endif
 }
 
 /**
@@ -87,7 +86,7 @@ void api_reset(void)
  */
 void api_wait_wake(void)
 {
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES || defined ESP32
 	// Wait until semaphore is released (FreeRTOS)
 	xSemaphoreTake(g_task_sem, portMAX_DELAY);
 #endif
@@ -115,7 +114,7 @@ void api_wake_loop(uint16_t reason)
 	g_task_event_type |= reason;
 	API_LOG("API", "Waking up loop task");
 
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES || defined ESP32
 	if (g_task_sem != NULL)
 	{
 		// Wake up task to send initial packet
@@ -147,6 +146,9 @@ uint32_t api_init_lora(void)
 #ifdef ARDUINO_ARCH_RP2040
 	return lora_rak11300_init();
 #endif
+#ifdef ESP32
+	return lora_rak13300_init();
+#endif
 }
 
 /**
@@ -155,8 +157,7 @@ uint32_t api_init_lora(void)
  */
 void api_timer_init(void)
 {
-#ifdef NRF52_SERIES
-	// g_task_wakeup_timer.begin(g_lorawan_settings.send_repeat_time, periodic_wakeup);
+#if defined NRF52_SERIES
 	g_task_wakeup_timer = xTimerCreate(NULL, mypdMS_TO_TICKS(g_lorawan_settings.send_repeat_time), true, NULL, periodic_wakeup);
 #endif
 #ifdef ARDUINO_ARCH_RP2040
@@ -164,6 +165,9 @@ void api_timer_init(void)
 	g_task_wakeup_timer.ReloadValue = g_lorawan_settings.send_repeat_time;
 	TimerInit(&g_task_wakeup_timer, periodic_wakeup);
 	TimerSetValue(&g_task_wakeup_timer, g_lorawan_settings.send_repeat_time);
+#endif
+#if defined ESP32
+	// Nothing to do for ESP32
 #endif
 }
 
@@ -173,7 +177,7 @@ void api_timer_init(void)
  */
 void api_timer_start(void)
 {
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES
 	// g_task_wakeup_timer.start();
 	if (isInISR())
 	{
@@ -188,8 +192,11 @@ void api_timer_start(void)
 		xTimerStart(g_task_wakeup_timer, 0);
 	}
 #endif
-#ifdef ARDUINO_ARCH_RP2040
+#if defined ARDUINO_ARCH_RP2040
 	TimerStart(&g_task_wakeup_timer);
+#endif
+#if defined ESP32
+	g_task_wakeup_timer.attach_ms(g_lorawan_settings.send_repeat_time, periodic_wakeup);
 #endif
 }
 
@@ -199,7 +206,7 @@ void api_timer_start(void)
  */
 void api_timer_stop(void)
 {
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES
 	// g_task_wakeup_timer.stop();
 	if (isInISR())
 	{
@@ -213,8 +220,11 @@ void api_timer_stop(void)
 	}
 
 #endif
-#ifdef ARDUINO_ARCH_RP2040
+#if defined ARDUINO_ARCH_RP2040
 	TimerStop(&g_task_wakeup_timer);
+#endif
+#if defined ESP32
+	g_task_wakeup_timer.detach();
 #endif
 }
 
@@ -225,16 +235,20 @@ void api_timer_stop(void)
  */
 void api_timer_restart(uint32_t new_time)
 {
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES || defined ESP32
 	// g_task_wakeup_timer.stop();
 	api_timer_stop();
 #endif
 #ifdef ARDUINO_ARCH_RP2040
 	TimerStop(&g_task_wakeup_timer);
 #endif
+#if defined ESP32
+	g_task_wakeup_timer.detach();
+#endif
+
 	if ((g_lorawan_settings.send_repeat_time != 0) && (g_lorawan_settings.auto_join))
 	{
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES
 		// g_task_wakeup_timer.setPeriod(new_time);
 		// g_task_wakeup_timer.start();
 
@@ -249,9 +263,12 @@ void api_timer_restart(uint32_t new_time)
 			xTimerChangePeriod(g_task_wakeup_timer, mypdMS_TO_TICKS(new_time), 0);
 		}
 #endif
-#ifdef ARDUINO_ARCH_RP2040
+#if defined ARDUINO_ARCH_RP2040
 		TimerSetValue(&g_task_wakeup_timer, new_time);
 		TimerStart(&g_task_wakeup_timer);
+#endif
+#if defined ESP32
+		g_task_wakeup_timer.attach_ms(g_lorawan_settings.send_repeat_time, periodic_wakeup);
 #endif
 	}
 }

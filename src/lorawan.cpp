@@ -93,6 +93,12 @@ uint32_t otaaDevAddr = 0;
  */
 int8_t init_lorawan(void)
 {
+#ifdef ESP32
+	pinMode(WB_IO2, OUTPUT);
+	digitalWrite(WB_IO2, HIGH);
+	delay(500);
+#endif
+
 	// Initialize LoRa chip.
 	if (api_init_lora() != 0)
 	{

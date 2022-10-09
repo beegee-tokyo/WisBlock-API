@@ -14,7 +14,11 @@ In addition the API offers two options to setup LoRa P2P / LoRaWAN settings with
 - AT Commands => [AT-Commands Manual](./AT-Commands.md)
 - BLE interface to [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) ↗️
 
-# _**IMPORTANT: This first release supports only the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_ ↗️ _**and the [RAKwireless WisBlock RAK11310 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11310/Overview)**_ ↗️
+# _**IMPORTANT:_**    
+_**This first release supports only the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_ ↗️ , _**the [RAKwireless WisBlock RAK11310 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11310/Overview)**_ ↗️ _**and the [RAKwireless WisBlock RAK11200 Core Module with the RAK13300 LoRa IO Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11200/Overview)**_ ↗️
+
+# _**IMPORTANT:**_
+_**Support for the RAK11310 and RAK1200 is work in progress and not everything will work**_
 
 ----
 
@@ -937,6 +941,10 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-10-09    
+  - Add experimental support for RAK11200    
+- 2022-07-27
+  - Correct AT command manual
 - 2022-06-05
   - Make AT commands accept lower and upper case
   - AT+BAT=? returns battery level in volt instead of 0 - 254

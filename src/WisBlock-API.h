@@ -22,7 +22,7 @@
 #endif
 
 #if API_DEBUG > 0
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES
 #define API_LOG(tag, ...)         \
 	do                            \
 	{                             \
@@ -32,7 +32,7 @@
 		PRINTF("\n");             \
 	} while (0)
 #endif
-#ifdef ARDUINO_ARCH_RP2040
+#if defined ARDUINO_ARCH_RP2040 || defined ESP32
 #define API_LOG(tag, ...)                \
 	do                                   \
 	{                                    \
@@ -65,8 +65,17 @@ using namespace std::chrono;
 
 #endif
 
+#ifdef ESP32
+#include <Preferences.h>
+#include <nvs.h>
+#include <nvs_flash.h>
+#include <esp_system.h>
+#include <nvs.h>
+#include <nvs_flash.h>
+#endif
+
 // Main loop stuff
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES
 void periodic_wakeup(TimerHandle_t unused);
 extern SemaphoreHandle_t g_task_sem;
 // extern SoftwareTimer g_task_wakeup_timer;
@@ -76,6 +85,12 @@ extern TimerHandle_t g_task_wakeup_timer;
 void periodic_wakeup(void);
 extern osThreadId loop_thread;
 extern TimerEvent_t g_task_wakeup_timer;
+#endif
+#if defined ESP32
+void periodic_wakeup(void);
+extern SemaphoreHandle_t g_task_sem;
+// extern SoftwareTimer g_task_wakeup_timer;
+extern Ticker g_task_wakeup_timer;
 #endif
 extern volatile uint16_t g_task_event_type;
 
@@ -122,7 +137,7 @@ extern volatile uint16_t g_task_event_type;
 // #define SIGNAL_JOIN 0x0080
 #endif
 
-#ifdef NRF52_SERIES
+#if defined NRF52_SERIES
 // BLE
 #include <bluefruit.h>
 void init_ble(void);
@@ -131,8 +146,42 @@ void restart_advertising(uint16_t timeout);
 extern BLECharacteristic g_lora_data;
 extern BLEUart g_ble_uart;
 extern bool g_ble_uart_is_connected;
-extern char g_ble_dev_name[];
 extern bool g_enable_ble;
+#endif
+extern char g_ble_dev_name[];
+
+#if defined ESP32
+// BLE
+#include <NimBLEUtils.h>
+#include <NimBLEServer.h>
+#include <NimBLEDevice.h>
+#include <NimBLEAdvertising.h>
+#include <ArduinoJson.h>
+
+void init_ble(void);
+BLEService init_settings_characteristic(void);
+void restart_advertising(uint16_t timeout);
+extern BLECharacteristic *lora_characteristic;
+extern BLECharacteristic *uart_tx_characteristic;
+extern bool g_ble_uart_is_connected;
+extern bool g_enable_ble;
+
+// WiFi
+#include <WiFi.h>
+#include <WiFiMulti.h>
+#include <esp_wifi.h>
+void init_wifi(void);
+void get_wifi_prefs(void);
+extern bool g_has_credentials;
+extern bool g_conn_status_changed;
+extern volatile bool g_wifi_connected;
+extern WiFiMulti wifi_multi;
+extern char g_ap_name[];
+extern String g_ssid_prim;
+extern String g_ssid_sec;
+extern String g_pw_prim;
+extern String g_pw_sec;
+
 #endif
 
 // LoRa
@@ -309,9 +358,16 @@ bool user_at_handler(char *user_cmd, uint8_t cmd_size) __attribute__((weak));
 // extern atcmd_t g_user_at_cmd_list[] __attribute__((weak));
 extern atcmd_t *g_user_at_cmd_list __attribute__((weak));
 extern uint8_t g_user_at_cmd_num __attribute__((weak));
+extern bool has_custom_at;
+
 void at_settings(void);
 #ifdef ARDUINO_ARCH_RP2040
 bool init_serial_task(void);
+#endif
+#ifdef ESP32
+#include "USB.h"
+void usb_rx_cb(void);
+void stop_ble_adv(void);
 #endif
 
 // API stuff
@@ -343,6 +399,28 @@ void api_file_write(uint8_t *source, uint32_t size);
 void api_file_remove(const char *filename);
 void api_file_close(const char *filename);
 extern const char settings_name[];
+
+#ifdef NRF52_SERIES
+#define api_ble_printf(...)             \
+	if (g_ble_uart_is_connected)        \
+	{                                   \
+		g_ble_uart.printf(__VA_ARGS__); \
+	}
+#endif
+#ifdef ESP32
+#define api_ble_printf(...)                                             \
+	if (g_ble_uart_is_connected)                                        \
+	{                                                                   \
+		char buff[255];                                                 \
+		int len = sprintf(buff, __VA_ARGS__);                           \
+		uart_tx_characteristic->setValue((uint8_t *)buff, (size_t)len); \
+		uart_tx_characteristic->notify(true);                           \
+	}
+#endif
+#ifdef ARDUINO_ARCH_RP2040
+#define api_ble_printf(...) \
+	\\ RP2040 does not have BLE
+#endif
 
 // Read/Write for WisBlock-API, module independent
 enum
