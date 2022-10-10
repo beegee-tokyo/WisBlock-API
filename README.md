@@ -12,13 +12,24 @@ This approach makes it easy to create applications designed for low power usage.
 
 In addition the API offers two options to setup LoRa P2P / LoRaWAN settings without the need to hard-code them into the source codes.    
 - AT Commands => [AT-Commands Manual](./AT-Commands.md)
-- BLE interface to [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) ↗️
+- (RAK4631 & RAK11200 only) BLE interface to [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) ↗️
 
-# _**IMPORTANT:_**    
-_**This first release supports only the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_ ↗️ , _**the [RAKwireless WisBlock RAK11310 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11310/Overview)**_ ↗️ _**and the [RAKwireless WisBlock RAK11200 Core Module with the RAK13300 LoRa IO Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11200/Overview)**_ ↗️
+# _**IMPORTANT:**_    
+_**This release supports the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_ ↗️ , _**the [RAKwireless WisBlock RAK11310 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11310/Overview)**_ ↗️ _**and the [RAKwireless WisBlock RAK11200 Core Module with the RAK13300 LoRa IO Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11200/Overview)**_ ↗️
 
 # _**IMPORTANT:**_
 _**Support for the RAK11310 and RAK1200 is work in progress and not everything will work**_
+
+# _**IMPORTANT:**_
+_**RAK11310 usage with PlatformIO requires to to add an `lib_ignore` to the platformio.ini file to compile without errors.**_     
+Example:
+```ini
+[env:rak11300]
+platform = raspberrypi
+board = rak11300
+framework = arduino
+lib_ignore = WiFi
+```
 
 ----
 
@@ -257,6 +268,7 @@ _**The WisBlock-API has been used as well in the following PlatformIO projects:*
 - _**[RAK4631-Kit-4-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-4-RAK1906) :arrow_upper_right: Environment sensor application for the [WisBlock Kit 4](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-4-air-quality-monitor)**_ :arrow_upper_right:
 - _**[RAK4631-Kit-2-RAK1910-RAK1904-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-2-RAK1910-RAK1904-RAK1906) :arrow_upper_right: LPWAN GNSS tracker application for the [WisBlock Kit 2](https://store.rakwireless.com/collections/kits-bundles/products/wisblock-kit-2-lora-based-gps-tracker-with-solar-panel)**_ :arrow_upper_right:
 - _**[RAK4631-Kit-2-RAK12500-RAK1906](https://github.com/beegee-tokyo/RAK4631-Kit-2-RAK12500-RAK1906) :arrow_upper_right: LPWAN GNSS tracker application using the [RAK12500](https://store.rakwireless.com/products/wisblock-gnss-location-module-rak12500)**_ :arrow_upper_right:
+- _**[WisBlock-Sensor-For-LoRaWAN](https://github.com/beegee-tokyo/WisBlock-Sensor-For-LoRaWAN) :arrow_upper_right: My test application that supports many WisBlock I2C modules. It scans the I2C bus for connected modules and adapts its function and the payload to the found modules.
 
 ----
 
@@ -402,62 +414,24 @@ Keep in mind that parameters that are changed from with this method can be chang
 
 ----
 
-## External non-volatile memory access
+# **REMOVED**
 
-Read and write functions for external NV memory. In WisBlock API, the external NV memory is used to store the LoRa/LoRaWAN credentials. The credentials are stored starting from address 0 (or 1st sector if it is Flash memory).    
+~~## External non-volatile memory access~~
 
-The first module that is supported is the WisBlock RAK15001 Flash module. 
+~~Read and write functions for external NV memory. In WisBlock API, the external NV memory is used to store the LoRa/LoRaWAN credentials. The credentials are stored starting from address 0 (or 1st sector if it is Flash memory).~~    
 
-### Read from NV memory
-This function reads data from the external NV memory. It supports for now only the RAK15001. The Flash is divided into 512 sectors with 4096 bytes each. Sector 0 is reserved, but any other sector can be used for user data.
-
-```
-/**
- * @brief Read data from a sector of a WisBlock NVRAM Module
- * 		RAK15001 => 
- * 			Sector 0 is reserved for device settings
- * 			Sector size is 4096 bytes max
- *
- * @param sector 
- * 		RAK15001 => Sector to read data from. Valid 1 to 511
- * @param buffer Buffer to write data into
- * @param size Number of bytes
- * @return true if success
- * @return false if failed
- */
-bool api_read_ext_nvram(uint16_t sector, uint8_t *buffer, uint16_t size)
-```
-### Write to NV memory
-This function writes data to the external NV memory. It supports for now only the RAK15001. The Flash is divided into 512 sectors with 4096 bytes each. Sector 0 is reserved, but any other sector can be used for user data.    
-
-```
-/**
- * @brief Write data into a sector of a WisBlock NVRAM Module
- * 		RAK15001 => 
- * 			Sector 0 is reserved for device settings
- * 			Sector size is 4096 bytes max
- *
- * @param sector 
- * 		RAK15001 => Sector to write data into. Valid 1 to 511
- * @param buffer Buffer with the data to write
- * @param size Number of bytes
- * @return true if success
- * @return false if failed
- */
-bool api_write_ext_nvram(uint16_t sector, uint8_t *buffer, uint16_t size)
-```
 
 ----
 
-## Send data over BLE UART
-**`g_ble_uart.print()`** can be used to send data over the BLE UART. **`print`**, **`println`** and **`printf`** is supported.     
+## Send data over BLE UART (only RAK4631 and RAK11200)
+**`api_ble_printf()`** can be used to send data over the BLE UART. **`print`**, **`println`** and **`printf`** is supported.     
 
 **REMARK**    
 This command is not available on the RAK11310!    
 
 ----
 
-## Restart BLE advertising
+## Restart BLE advertising (only RAK4631 and RAK11200)
 By default the BLE advertising is only active for 30 seconds after power-up/reset to lower the power consumption. By calling **`void restart_advertising(uint16_t timeout);`** the advertising can be restarted for **`timeout`** seconds.
 
 **REMARK**    
