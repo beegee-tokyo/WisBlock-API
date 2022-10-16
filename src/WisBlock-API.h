@@ -144,15 +144,11 @@ extern bool g_ble_uart_is_connected;
 extern bool g_enable_ble;
 
 // WiFi
-#include <WiFi.h>
-#include <WiFiMulti.h>
-#include <esp_wifi.h>
 void init_wifi(void);
 void get_wifi_prefs(void);
 extern bool g_has_credentials;
 extern bool g_conn_status_changed;
 extern volatile bool g_wifi_connected;
-extern WiFiMulti wifi_multi;
 extern char g_ap_name[];
 extern String g_ssid_prim;
 extern String g_ssid_sec;
