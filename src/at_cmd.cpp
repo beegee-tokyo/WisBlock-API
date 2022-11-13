@@ -1570,7 +1570,8 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+JOIN", "Join network", at_query_join, at_exec_join, NULL},
 	{"+NJS", "Get the join status", at_query_join_status, NULL, NULL},
 	{"+NJM", "Get or set the network join mode", at_query_joinmode, at_exec_joinmode, NULL},
-	{"+SENDFREQ", "Get or Set the automatic send time", at_query_sendfreq, at_exec_sendfreq, NULL},
+	{"+SENDFREQ", "Deprecated! Use SENDINT instead", at_query_sendfreq, at_exec_sendfreq, NULL},
+	{"+SENDINT", "Get or Set the automatic send interval", at_query_sendfreq, at_exec_sendfreq, NULL},
 	{"+SEND", "Send data", NULL, at_exec_send, NULL},
 	// LoRa network management
 	{"+ADR", "Get or set the adaptive data rate setting", at_query_adr, at_exec_adr, NULL},

@@ -59,7 +59,8 @@ LoRa® is a registered trademark or service mark of Semtech Corporation or its a
 * [AT+JOIN](#atjoin) Join LoRaWAN® Network
 * [AT+NJS](#atnjs) Get Network Join Status
 * [AT+NJM](#atnjm) Get/Set Network Join Mode
-* [AT+SENDFREQ](#atsendfreq) Get/Set Automatic Send Interval 
+* [AT+SENDFREQ](#atsendint) Deprecated, use SENDINT 
+* [AT+SENDINT](#atsendint) Get/Set Automatic Send Interval 
 * [AT+SEND](#atsend) Send LoRaWAN® packet
 * [AT+ADR](#atadr) Set/Get ADR Mode
 * [AT+CLASS](#atclass) Set/Get Class
@@ -166,7 +167,7 @@ AT+CFM      Get or set the confirm mode
 AT+JOIN     Join network
 AT+NJS      Get the join status
 AT+NJM      Get or set the network join mode
-AT+SENDFREQ Get or Set the automatic send time
+AT+SENDINT  Get or Set the automatic send interval
 AT+SEND	Send data
 AT+ADR      Get or set the adaptive data rate setting
 AT+CLASS    Get or set the device class
@@ -608,32 +609,32 @@ AT+NJM=2
 
 ----
 
-## AT+SENDFREQ
+## AT+SENDINT
 
-Description: Set the automatic transmission period
+Description: Set the automatic transmission interval
 
-This command allows to set the period in seconds between automatic packet transmissions. If set to 0, automatic packet transmission is disabled.
+This command allows to set the interval in seconds between automatic packet transmissions. If set to 0, automatic packet transmission is disabled.
 
 | Command                    | Input Parameter | Return Value                                                  | Return Code              |
 | -------------------------- | --------------- | ------------------------------------------------------------- | ------------------------ |
-| AT+SENDFREQ?                    | -               | `AT+SENDFREQ: Get or Set the automatic send time` | `OK`                     |
-| AT+SENDFREQ=?                   | -               | `<period in seconds>`                                                    | `OK`                     |
-| AT+SENDFREQ=`<Input Parameter>` | `<period in seconds>`      | -                                                             | `OK` or `AT_PARAM_ERROR` |
+| AT+SENDINT?                    | -               | `AT+SENDINT: "Get or Set the automatic send interval` | `OK`                     |
+| AT+SENDINT=?                   | -               | `<interval in seconds>`                                                    | `OK`                     |
+| AT+SENDINT=`<Input Parameter>` | `<interval in seconds>`      | -                                                             | `OK` or `AT_PARAM_ERROR` |
 
 **Examples**:
 
 ```
-AT+SENDFREQ?
+AT+SENDINT?
 
-AT+SENDFREQ: Get or Set the automatic send time 
+AT+SENDINT: Get or Set the automatic send interval 
 OK
 
-AT+SENDFREQ=?
+AT+SENDINT=?
 
-AT+SENDFREQ:60
+AT+SENDINT:60
 OK
 
-AT+SENDFREQ=60
+AT+SENDINT=60
 
 OK
 ```

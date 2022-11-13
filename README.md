@@ -54,6 +54,9 @@ lib_ignore = WiFi
 	* [Trigger custom events](#trigger-custom-events)
 		* [Event trigger definition](#event-trigger-definition)
 		* [Example for a custom event using the signal of a PIR sensor to wake up the device](#example-for-a-custom-event-using-the-signal-of-a-pir-sensor-to-wake-up-the-device)
+* [Cayenne LPP packet decoding](#cayenne-lpp-packet-decoding)
+	* [Usage of the WisBlock Extended Cayenne LPP data types](#usage-of-the-wisblock-extended-cayenne-lpp-data-types)
+	* [Data types and channel numbers used with WisBlock API](#data-types-and-channel-numbers-used-with-wisblock-api)
 * [Simple code example of the user application](#simple-code-example-of-the-user-application)
 	* [Includes and definitions](#includes-and-definitions)
 	* [setup_app()](#setup-app)
@@ -451,6 +454,180 @@ This command is not available on the RAK11310!
 
 ## Check result of LoRaWAN transmission
 After the TX cycle (including RX1 and RX2 windows) are finished, the result is hold in the global flag **`g_rx_fin_result`**, the event **`LORA_TX_FIN`** is triggered and the **`lora_data_handler()`** callback is called. In this callback the result can be checked and if necessary measures can be taken.
+
+----
+
+# Cayenne LPP packet decoding
+CayenneLPP is a format designed by [myDevices](https://mydevices.com/) to integrate LoRaWan nodes into their [IoT Platform](https://mydevices.com/capabilities).     
+The [CayenneLPP library](https://github.com/ElectronicCats/CayenneLPP) extends the available data types with several IPSO data types not included in the original work by [Johan Stokking](https://github.com/TheThingsNetwork/arduino-device-lib) or most of the forks and side works by other people, these additional data types are not supported by myDevices Cayenne.     
+The WisBlock API uses a few more data types that extends both the original and ElectronicCats data types to better support the wide range of the WisBlock Sensor Modules.   
+
+----
+
+## Usage of the WisBlock Extended Cayenne LPP data types
+
+### 1) Include file required
+To use the extended data types WisBlock API already includes the required header file.
+
+### 2) Definition of the packet buffer
+To be able to use the Cayenne LPP functions, an instance of the class is required.
+```cpp
+/** LoRaWAN packet */
+WisCayenne g_solution_data(255);
+```
+
+### 3) Reset the packet buffer
+Before adding data, the packet buffer needs to be reset
+```cpp
+// Reset the packet
+g_solution_data.reset();
+```
+
+### 4) Add data to the buffer
+The CayenneLPP library has API calls for the different data types supported. See [CayenneLPP API](https://github.com/ElectronicCats/CayenneLPP/blob/master/API.md) for details. In addition to these API calls WisBlock API adds 5 more calls to them. These API calls are for different GNSS formats and for the VOC sensor data:    
+```cpp
+uint8_t addGNSS_4(uint8_t channel, int32_t latitude, int32_t longitude, int32_t altitude);
+uint8_t addGNSS_6(uint8_t channel, int32_t latitude, int32_t longitude, int32_t altitude);
+uint8_t addGNSS_H(int32_t latitude, int32_t longitude, int16_t altitude, int16_t accuracy, int16_t battery);
+uint8_t addGNSS_T(int32_t latitude, int32_t longitude, int16_t altitude, float accuracy, int8_t sats);
+uint8_t addVoc_index(uint8_t channel, uint32_t voc_index);
+```
+
+1) Standard Cayenne LPP location format
+```cpp
+/**
+ * @brief Add GNSS data in Cayenne LPP standard format
+ *
+ * @param channel LPP channel
+ * @param latitude Latitude as read from the GNSS receiver
+ * @param longitude Longitude as read from the GNSS receiver
+ * @param altitude Altitude as read from the GNSS receiver
+ * @return uint8_t bytes added to the data packet
+ */
+uint8_t WisCayenne::addGNSS_4(uint8_t channel, int32_t latitude, int32_t longitude, int32_t altitude)
+```
+
+2) Extended precision location format
+```cpp
+/**
+ * @brief Add GNSS data in custom Cayenne LPP format
+ *        Requires changed decoder in LNS and visualization
+ *        Does not work with Cayenne LPP MyDevices
+ *
+ * @param channel LPP channel
+ * @param latitude Latitude as read from the GNSS receiver
+ * @param longitude Longitude as read from the GNSS receiver
+ * @param altitude Altitude as read from the GNSS receiver
+ * @return uint8_t bytes added to the data packet
+ */
+uint8_t WisCayenne::addGNSS_6(uint8_t channel, int32_t latitude, int32_t longitude, int32_t altitude)
+```
+
+3) Helium Mapper data format. 
+This is not a CayenneLPP format. The API is just used to make it easier to create a data packet that makes it easier to generate a packet that is compatible with the [Helium Mapper integration](https://docs.helium.com/use-the-network/coverage-mapping/mappers-quickstart/).
+```cpp
+/**
+ * @brief Add GNSS data in Helium Mapper format
+ *
+ * @param channel LPP channel
+ * @param latitude Latitude as read from the GNSS receiver
+ * @param longitude Longitude as read from the GNSS receiver
+ * @param altitude Altitude as read from the GNSS receiver
+ * @param accuracy Accuracy of reading from the GNSS receiver
+ * @param battery Device battery voltage in V
+ * @return uint8_t bytes added to the data packet
+ */
+uint8_t WisCayenne::addGNSS_H(int32_t latitude, int32_t longitude, int16_t altitude, int16_t accuracy, int16_t battery)
+```
+
+4) disk91 LoRaWAN field tester data format. This is as well not a CayenneLPP format. The API is just used to make it easier to create a data packet that makes it easier to generate a packet that is compatible with the [Low Cost LoRaWan Field Tester](https://www.disk91.com/2021/technology/lora/low-cost-lorawan-field-tester/).
+```cpp
+/**
+ * @brief Add GNSS data in Field Tester format
+ *
+ * @param latitude Latitude as read from the GNSS receiver
+ * @param longitude Longitude as read from the GNSS receiver
+ * @param altitude Altitude as read from the GNSS receiver
+ * @param accuracy Accuracy of reading from the GNSS receiver
+ * @param sats Number of satellites of reading from the GNSS receiver
+ * @return uint8_t bytes added to the data packet
+ */
+uint8_t WisCayenne::addGNSS_T(int32_t latitude, int32_t longitude, int16_t altitude, float accuracy, int8_t sats)
+```
+
+5) VOC sensor data requires a digital format with 16 bits length that is not supported by CayenneLPP originally.
+```cpp
+/**
+ * @brief Add the VOC index
+ *
+ * @param channel VOC channel
+ * @param voc_index VOC index
+ * @return uint8_t bytes added to the data packet
+ */
+uint8_t WisCayenne::addVoc_index(uint8_t channel, uint32_t voc_index)
+```
+
+----
+
+## Data types and channel numbers used with WisBlock API
+The CayenneLPP data packets are always in the format `<Channel #><Channel ID><data bytes>`.     
+To make it easier in data encoders used in LoRaWAN servers and integration data collected by WisBlock sensors have always the same channel number (if these API is used). Here is the list of currently assigned channel numbers, channel ID's and which modules are using the combination.    
+
+| Data                     | Channel # | Channel ID | Length   | Comment                                           | Required Module   | Decoded Field Name |
+| --                       | --        | --         | --       | --                                                | --                | --                 |
+| Battery value            | 1         | _**116**_  | 2 bytes  | 0.01 V Unsigned MSB                               | RAK4631           | voltage_1          |
+| Humidity                 | 2         | 104        | 1 byte   | in %RH                                            | RAK1901           | humidity_2         |
+| Temperature              | 3         | 103        | 2 bytes  | in °C                                             | RAK1901           | temperature_3      | 
+| Barometric Pressure      | 4         | 115        | 2 bytes  | in hPa (mBar)                                     | RAK1902           | barometer_4        |
+| Illuminance              | 5         | 101        | 2 bytes  | 1 lux unsigned                                    | RAK1903           | illuminance_5      |
+| Humidity 2               | 6         | 104        | 1 byte   | in %RH                                            | RAK1906           | humidity_6         |
+| Temperature 2            | 7         | 103        | 2 bytes  | in °C                                             | RAK1906           | temperature_7      | 
+| Barometric Pressure 2    | 8         | 115        | 2 bytes  | in hPa (mBar)                                     | RAK1906           | barometer_8        |
+| Gas Resistance 2         | 9         | 2          | 2 bytes  | 0.01 signed (kOhm)                                | RAK1906           | analog_9           |
+| GNSS stand. resolution   | 10        | 136        | 9 bytes  | 3 byte lon/lat 0.0001 °, 3 bytes alt 0.01 meter   | RAK1910, RAK12500 | gps_10             |
+| GNSS enhanced resolution | 10        | _**137**_  | 11 bytes | 4 byte lon/lat 0.000001 °, 3 bytes alt 0.01 meter | RAK1910, RAK12500 | gps_10             |
+| Soil Temperature         | 11        | 103        | 2 bytes  | in °C                                             | RAK12023/RAK12035 | temperature_11     |
+| Soil Humidity            | 12        | 104        | 1 byte   | in %RH                                            | RAK12023/RAK12035 | humidity_12        |
+| Soil Humidity Raw        | 13        | 2          | 2 bytes  | 0.01 signed                                       | RAK12023/RAK12035 | analog_in_13       |
+| Soil Data Valid          | 14        | 102        | 1 byte   | bool                                              | RAK12023/RAK12035 | presence_14        |
+| Illuminance 2            | 15        | 101        | 2 bytes  | 1 lux unsigned                                    | RAK12010          | illuminance_15     |
+| VOC                      | 16        | _**138**_  | 2 bytes  | VOC index                                         | RAK12047          | voc_16             |
+| MQ2 Gas                  | 17        | 2          | 2 bytes  | 0.01 signed                                       | RAK12004          | analog_in_17       |
+| MQ2 Gas Percentage       | 18        | _**120**_  | 1 byte   | 1-100% unsigned                                   | RAK12004          | percentage_18      |
+| MG812 Gas                | 19        | 2          | 2 bytes  | 0.01 signed                                       | RAK12008          | analog_in_19       |
+| MG812 Gas Percentage     | 20        | _**120**_  | 1 byte   | 1-100% unsigned                                   | RAK12008          | percentage_20      |
+| MQ3 Alcohol Gas          | 21        | 2          | 2 bytes  | 0.01 signed                                       | RAK12009          | analog_in_21       |
+| MQ3 Alcohol Gas Perc.    | 22        | _**120**_  | 1 byte   | 1-100% unsigned                                   | RAK12009          | percentage_22      |
+| ToF distance             | 23        | 2          | 2 bytes  | 0.01 signed                                       | RAK12014          | analog_in_23       |
+| ToF Data Valid           | 24        | 102        | 1 byte   | bool                                              | RAK12014          | presence_24        |
+| Gyro triggered           | 25        | _**134**_  | 6 bytes  | 2 bytes per axis, 0.01 °/s                        | RAK12025          | gyrometer_25       |
+| Gesture detected         | 26        | 0          | 1 byte   | 1 byte with id of gesture                         | RAK14008          | digital_in_26      |
+| LTR390 UVI value         | 27        | 2          | 2 bytes  | 0.01 signed                                       | RAK12019          | analog_in_27       | 
+| LTR390 UVS value         | 28        | 101        | 2 bytes  | 1 lux unsigned                                    | RAK12019          | illuminance_28     | 
+| INA219 Current           | 29        | 2          | 2 bytes  | 0.01 signed                                       | RAK16000          | analog_29          | 
+| INA219 Voltage           | 30        | 2          | 2 bytes  | 0.01 signed                                       | RAK16000          | analog_30          | 
+| INA219 Power             | 31        | 2          | 2 bytes  | 0.01 signed                                       | RAK16000          | analog_31          | 
+| Touchpad left            | 32        | 102        | 1 byte   | bool                                              | RAK14002          | presence_32        | 
+| Touchpad middle          | 33        | 102        | 1 byte   | bool                                              | RAK14002          | presence_33        | 
+| Touchpad right           | 34        | 102        | 1 byte   | bool                                              | RAK14002          | presence_34        | 
+| SCD30 CO2 concentration  | 35        | 125        | 2 bytes  | 1 ppm unsigned                                    | RAK12037          | concentration_35   |
+| SCD30 temperature        | 36        | 103        | 2 bytes  | in °C                                             | RAK12037          | temperature_36     |
+| SCD30 humidity           | 37        | 104        | 1 byte   | in %RH                                            | RAK12037          | humidity_37        |
+| MLX90632 sensor temp     | 38        | 103        | 2 bytes  | in °C                                             | RAK12003          | temperature_38     |
+| MLX90632 object temp     | 39        | 103        | 2 bytes  | in °C                                             | RAK12003          | temperature_39     |
+| PM 1.0 value             | 40        | 103        | 2 bytes  | in ug/m3                                          | RAK12003          | voc_40             |
+| PM 2.5 value             | 41        | 103        | 2 bytes  | in ug/m3                                          | RAK12003          | voc_41             |
+| PM 10 value              | 42        | 103        | 2 bytes  | in ug/m3                                          | RAK12003          | voc_42             |
+| Earthquake event         | 43        | 102        | 1 byte   | bool                                              | RAK12027          | presence_43        |
+| Earthquake SI value      | 44        | 2          | 2 bytes  | analog 10 * m/s                                   | RAK12027          | analog_44          |
+| Earthquake PGA value     | 45        | 2          | 2 bytes  | analog 10 * m/s2                                  | RAK12027          | analog_45          |
+| Earthquake SHUTOFF alert | 46        | 102        | 1 byte   | bool                                              | RAK12027          | presence_46        |
+| LPP_CHANNEL_EQ_COLLAPSE  | 47        | 102        | 1 byte   | bool                                              | RAK12027          | presence_47        |
+
+### _REMARK_
+Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.
+
+Example decoders for TTN, Chirpstack, Helium and Datacake can be found in the folder [decoders](./decoders) ⤴️
 
 ----
 
@@ -915,6 +1092,9 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2022-11-13
+  - Add WisBlock Cayenne LPP setup to make it easier to use from examples
+  - Replace AT command SENDFREQ with SENDINT to make it's meaning easier to understand (use word interval instead of frequency)
 - 2022-10-09    
   - Add experimental support for RAK11200    
 - 2022-07-27
