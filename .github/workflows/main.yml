@@ -38,5 +38,8 @@ jobs:
         git clone --quiet https://github.com/RAKWireless/RAKwireless_Storage
         mv RAKwireless_Storage /home/runner/Arduino/libraries/RAKwireless_Storage
 
+        git clone --quiet https://github.com/h2zero/NimBLE-Arduino
+        mv NimBLE-Arduino /home/runner/Arduino/libraries/NimBLE-Arduino
+ 
     - name: test platforms
-      run: python3 ci/build_platform.py rak4631 rak11300
+      run: python3 ci/build_platform.py rak4631 rak11300 rak11200
