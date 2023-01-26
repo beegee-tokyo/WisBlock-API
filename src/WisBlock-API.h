@@ -324,6 +324,7 @@ typedef struct atcmd_s
 	int (*query_cmd)(void);		   // AT+CMD=?
 	int (*exec_cmd)(char *str);	   // AT+CMD=value
 	int (*exec_cmd_no_para)(void); // AT+CMD
+	const char *permission;        // "R" or "RW"
 } atcmd_t;
 void at_serial_input(uint8_t cmd);
 extern char *region_names[];
