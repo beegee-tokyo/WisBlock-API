@@ -623,6 +623,7 @@ To make it easier in data encoders used in LoRaWAN servers and integration data 
 | Earthquake PGA value     | 45        | 2          | 2 bytes  | analog 10 * m/s2                                  | RAK12027          | analog_45          |
 | Earthquake SHUTOFF alert | 46        | 102        | 1 byte   | bool                                              | RAK12027          | presence_46        |
 | LPP_CHANNEL_EQ_COLLAPSE  | 47        | 102        | 1 byte   | bool                                              | RAK12027          | presence_47        |
+| Switch Status            | 48        | 102        | 1 byte   | bool                                              | RAK13011          | presence_48        |
 
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.
