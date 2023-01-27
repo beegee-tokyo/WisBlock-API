@@ -652,13 +652,13 @@ static int at_exec_region(char *str)
  */
 static int at_query_mask(void)
 {
-	if ((g_lorawan_settings.lora_region == 1) || (g_lorawan_settings.lora_region == 2) || (g_lorawan_settings.lora_region == 8))
+	if ((g_lorawan_settings.lora_region == LORAMAC_REGION_US915) || (g_lorawan_settings.lora_region == LORAMAC_REGION_AU915) || (g_lorawan_settings.lora_region == LORAMAC_REGION_CN470))
 	{
-		snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.subband_channels);
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "%04X", 1 << (g_lorawan_settings.subband_channels - 1));
 
 		return 0;
 	}
-	return AT_ERRNO_PARA_VAL;
+	return AT_ERRNO_NOALLOW;
 }
 
 /**
@@ -694,6 +694,48 @@ static int at_exec_mask(char *str)
 			break;
 		default:
 			return AT_ERRNO_PARA_VAL;
+		}
+		switch (mask)
+		{
+		case 0x0001:
+			mask = 1;
+			break;
+		case 0x0002:
+			mask = 2;
+			break;
+		case 0x0004:
+			mask = 3;
+			break;
+		case 0x0008:
+			mask = 4;
+			break;
+		case 0x0010:
+			mask = 5;
+			break;
+		case 0x0020:
+			mask = 6;
+			break;
+		case 0x0040:
+			mask = 7;
+			break;
+		case 0x0080:
+			mask = 8;
+			break;
+		case 0x0100:
+			mask = 9;
+			break;
+		case 0x0200:
+			mask = 10;
+			break;
+		case 0x0400:
+			mask = 11;
+			break;
+		case 0x0800:
+			mask = 12;
+			break;
+		default:
+			mask = 99;
+			break;
 		}
 		if ((mask == 0) || (mask > maxBand))
 		{
@@ -1659,7 +1701,7 @@ static int at_query_recv(void)
 	for (int idx = 0; idx < g_rx_data_len; idx++)
 	{
 		snprintf(&g_at_query_buf[len], ATQUERY_SIZE, "%02X", g_rx_lora_data[idx]);
-		len=len+2;
+		len = len + 2;
 	}
 	return 0;
 }
@@ -1689,6 +1731,26 @@ static int at_exec_retry(char *str)
 
 	set_new_config();
 	return 0;
+}
+
+static int at_query_single(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", 0);
+	return 0;
+}
+
+static int at_query_eight(void)
+{
+	if ((g_lorawan_settings.lora_region == LORAMAC_REGION_US915) || (g_lorawan_settings.lora_region == LORAMAC_REGION_AU915) || (g_lorawan_settings.lora_region == LORAMAC_REGION_CN470))
+	{
+		uint8_t sub_channel = (g_lorawan_settings.subband_channels * 8) - 7;
+
+		// snprintf(g_at_query_buf, ATQUERY_SIZE, "%d:%d:%d:%d:%d:%d:%d:%d", sub_channels[0], sub_channels[1], sub_channels[2], sub_channels[3], sub_channels[4], sub_channels[5], sub_channels[6], sub_channels[7]);
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", sub_channel);
+
+		return 0;
+	}
+	return AT_ERRNO_NOALLOW;
 }
 
 static int at_exec_list_all(void);
@@ -1755,6 +1817,8 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+DCS", "Get the duty cycle status", at_query_duty, NULL, NULL, "R"},
 	{"+PNM", "Get the network mode", at_query_public, NULL, NULL, "R"},
 	{"+RECV", "Get the last received packet", at_query_recv, NULL, NULL, "R"},
+	{"+CHE", "Get single channel mode (na)", at_query_eight, NULL, NULL, "R"},
+	{"+CHS", "Get 8 channel mode", at_query_single, NULL, NULL, "R"},
 	{"+RETY", "Get the number of retries in confirmed mode", at_query_retry, at_exec_retry, NULL, "RW"},
 	// Custom AT commands
 	{"+STATUS", "Status, Show LoRaWAN status", at_query_status, NULL, NULL, "R"},
@@ -1773,8 +1837,6 @@ AT+BFREQ=?
 AT+BTIME=?
 AT+BGW=?
 AT+LTIME=?
-AT+CHS=?
-AT+CHE=?
 AT+ARSSI=?
 AT+LINKCHECK=?
 AT+TIMEREQ=?
