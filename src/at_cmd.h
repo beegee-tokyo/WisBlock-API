@@ -18,9 +18,11 @@ extern uint8_t g_last_fport;
 #ifdef NRF52_SERIES
 #define AT_PRINTF(...)                  \
 	Serial.printf(__VA_ARGS__);         \
+	Serial.printf("\r\n");         \
 	if (g_ble_uart_is_connected)        \
 	{                                   \
 		g_ble_uart.printf(__VA_ARGS__); \
+		g_ble_uart.flush();             \
 	}
 #endif
 #ifdef ESP32

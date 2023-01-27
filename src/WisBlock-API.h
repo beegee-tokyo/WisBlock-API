@@ -1,15 +1,17 @@
 /**
- * @file SX126x-API.h
+ * @file WisBlock-API.h
  * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
  * @brief Includes and global declarations
- * @version 0.1
- * @date 2021-01-10
+ * @version 0.2
+ * @date 2023-01-27
  *
- * @copyright Copyright (c) 2021
+ * @copyright Copyright (c) 2023
  *
  */
-#ifndef SX126x_API_H
-#define SX126x_API_H
+#ifndef WISBLOCK_API_H
+#define WISBLOCK_API_H
+
+#define WISBLOCK_API_VER 2
 
 #ifndef NO_BLE_LED
 // Set usage of BLE connection LED (blue). Comment the line to enable LED
@@ -324,7 +326,7 @@ typedef struct atcmd_s
 	int (*query_cmd)(void);		   // AT+CMD=?
 	int (*exec_cmd)(char *str);	   // AT+CMD=value
 	int (*exec_cmd_no_para)(void); // AT+CMD
-	const char *permission;        // "R" or "RW"
+	const char *permission;		   // "R" or "RW"
 } atcmd_t;
 void at_serial_input(uint8_t cmd);
 extern char *region_names[];
@@ -408,4 +410,4 @@ extern uint16_t g_sw_ver_1; // major version increase on API change / not backwa
 extern uint16_t g_sw_ver_2; // minor version increase on API change / backward compatible
 extern uint16_t g_sw_ver_3; // patch version increase on bugfix, no affect on API
 
-#endif // SX126x-API_H
+#endif // WISBLOCK_API_H

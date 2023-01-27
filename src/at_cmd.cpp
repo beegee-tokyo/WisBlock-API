@@ -109,30 +109,30 @@ static int hex2bin(const char *hex, uint8_t *bin, uint16_t bin_length)
  */
 void at_settings(void)
 {
-	AT_PRINTF("Device status:\n");
+	AT_PRINTF("Device status:");
 #ifdef NRF52_SERIES
-	AT_PRINTF("   RAK4631\n");
+	AT_PRINTF("   RAK4631");
 #endif
 #ifdef ARDUINO_ARCH_RP2040
-	AT_PRINTF("   RAK11310\n");
+	AT_PRINTF("   RAK11310");
 #endif
 #ifdef ESP32
-	AT_PRINTF("   RAK11200\n");
+	AT_PRINTF("   RAK11200");
 #endif
-	AT_PRINTF("   Auto join %s\n", g_lorawan_settings.auto_join ? "enabled" : "disabled");
-	AT_PRINTF("   Mode %s\n", g_lorawan_settings.lorawan_enable ? "LPWAN" : "P2P");
-	AT_PRINTF("   Network %s\n", g_lpwan_has_joined ? "joined" : "not joined");
-	AT_PRINTF("   Send Frequency %ld\n", g_lorawan_settings.send_repeat_time / 1000);
-	AT_PRINTF("LPWAN status:\n");
-	AT_PRINTF("   Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
+	AT_PRINTF("   Auto join %s", g_lorawan_settings.auto_join ? "enabled" : "disabled");
+	AT_PRINTF("   Mode %s", g_lorawan_settings.lorawan_enable ? "LPWAN" : "P2P");
+	AT_PRINTF("   Network %s", g_lpwan_has_joined ? "joined" : "not joined");
+	AT_PRINTF("   Send Frequency %ld", g_lorawan_settings.send_repeat_time / 1000);
+	AT_PRINTF("LPWAN status:");
+	AT_PRINTF("   Dev EUI %02X%02X%02X%02X%02X%02X%02X%02X", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
 			  g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
 			  g_lorawan_settings.node_device_eui[4], g_lorawan_settings.node_device_eui[5],
 			  g_lorawan_settings.node_device_eui[6], g_lorawan_settings.node_device_eui[7]);
-	AT_PRINTF("   App EUI %02X%02X%02X%02X%02X%02X%02X%02X\n", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
+	AT_PRINTF("   App EUI %02X%02X%02X%02X%02X%02X%02X%02X", g_lorawan_settings.node_app_eui[0], g_lorawan_settings.node_app_eui[1],
 			  g_lorawan_settings.node_app_eui[2], g_lorawan_settings.node_app_eui[3],
 			  g_lorawan_settings.node_app_eui[4], g_lorawan_settings.node_app_eui[5],
 			  g_lorawan_settings.node_app_eui[6], g_lorawan_settings.node_app_eui[7]);
-	AT_PRINTF("   App Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
+	AT_PRINTF("   App Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 			  g_lorawan_settings.node_app_key[0], g_lorawan_settings.node_app_key[1],
 			  g_lorawan_settings.node_app_key[2], g_lorawan_settings.node_app_key[3],
 			  g_lorawan_settings.node_app_key[4], g_lorawan_settings.node_app_key[5],
@@ -141,8 +141,8 @@ void at_settings(void)
 			  g_lorawan_settings.node_app_key[10], g_lorawan_settings.node_app_key[11],
 			  g_lorawan_settings.node_app_key[12], g_lorawan_settings.node_app_key[13],
 			  g_lorawan_settings.node_app_key[14], g_lorawan_settings.node_app_key[15]);
-	AT_PRINTF("   Dev Addr %08lX\n", g_lorawan_settings.node_dev_addr);
-	AT_PRINTF("   NWS Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
+	AT_PRINTF("   Dev Addr %08lX", g_lorawan_settings.node_dev_addr);
+	AT_PRINTF("   NWS Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 			  g_lorawan_settings.node_nws_key[0], g_lorawan_settings.node_nws_key[1],
 			  g_lorawan_settings.node_nws_key[2], g_lorawan_settings.node_nws_key[3],
 			  g_lorawan_settings.node_nws_key[4], g_lorawan_settings.node_nws_key[5],
@@ -151,7 +151,7 @@ void at_settings(void)
 			  g_lorawan_settings.node_nws_key[10], g_lorawan_settings.node_nws_key[11],
 			  g_lorawan_settings.node_nws_key[12], g_lorawan_settings.node_nws_key[13],
 			  g_lorawan_settings.node_nws_key[14], g_lorawan_settings.node_nws_key[15]);
-	AT_PRINTF("   Apps Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
+	AT_PRINTF("   Apps Key %02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
 			  g_lorawan_settings.node_apps_key[0], g_lorawan_settings.node_apps_key[1],
 			  g_lorawan_settings.node_apps_key[2], g_lorawan_settings.node_apps_key[3],
 			  g_lorawan_settings.node_apps_key[4], g_lorawan_settings.node_apps_key[5],
@@ -160,26 +160,26 @@ void at_settings(void)
 			  g_lorawan_settings.node_apps_key[10], g_lorawan_settings.node_apps_key[11],
 			  g_lorawan_settings.node_apps_key[12], g_lorawan_settings.node_apps_key[13],
 			  g_lorawan_settings.node_apps_key[14], g_lorawan_settings.node_apps_key[15]);
-	AT_PRINTF("   OTAA %s\n", g_lorawan_settings.otaa_enabled ? "enabled" : "disabled");
-	AT_PRINTF("   ADR %s\n", g_lorawan_settings.adr_enabled ? "enabled" : "disabled");
-	AT_PRINTF("   %s Network\n", g_lorawan_settings.public_network ? "Public" : "Private");
-	AT_PRINTF("   Dutycycle %s\n", g_lorawan_settings.duty_cycle_enabled ? "enabled" : "disabled");
-	AT_PRINTF("   Join trials %d\n", g_lorawan_settings.join_trials);
-	AT_PRINTF("   TX Power %d\n", g_lorawan_settings.tx_power);
-	AT_PRINTF("   DR %d\n", g_lorawan_settings.data_rate);
-	AT_PRINTF("   Class %d\n", g_lorawan_settings.lora_class);
-	AT_PRINTF("   Subband %d\n", g_lorawan_settings.subband_channels);
-	AT_PRINTF("   Fport %d\n", g_lorawan_settings.app_port);
-	AT_PRINTF("   %s Message\n", g_lorawan_settings.confirmed_msg_enabled ? "Confirmed" : "Unconfirmed");
-	AT_PRINTF("   Region %s\n", region_names[g_lorawan_settings.lora_region]);
-	AT_PRINTF("LoRa P2P status:\n");
-	AT_PRINTF("   P2P frequency %ld\n", g_lorawan_settings.p2p_frequency);
-	AT_PRINTF("   P2P TX Power %d\n", g_lorawan_settings.p2p_tx_power);
-	AT_PRINTF("   P2P BW %s\n", bandwidths[g_lorawan_settings.p2p_bandwidth]);
-	AT_PRINTF("   P2P SF %d\n", g_lorawan_settings.p2p_sf);
-	AT_PRINTF("   P2P CR %d\n", g_lorawan_settings.p2p_cr);
-	AT_PRINTF("   P2P Preamble length %d\n", g_lorawan_settings.p2p_preamble_len);
-	AT_PRINTF("   P2P Symbol Timeout %d\n", g_lorawan_settings.p2p_symbol_timeout);
+	AT_PRINTF("   OTAA %s", g_lorawan_settings.otaa_enabled ? "enabled" : "disabled");
+	AT_PRINTF("   ADR %s", g_lorawan_settings.adr_enabled ? "enabled" : "disabled");
+	AT_PRINTF("   %s Network", g_lorawan_settings.public_network ? "Public" : "Private");
+	AT_PRINTF("   Dutycycle %s", g_lorawan_settings.duty_cycle_enabled ? "enabled" : "disabled");
+	AT_PRINTF("   Join trials %d", g_lorawan_settings.join_trials);
+	AT_PRINTF("   TX Power %d", g_lorawan_settings.tx_power);
+	AT_PRINTF("   DR %d", g_lorawan_settings.data_rate);
+	AT_PRINTF("   Class %d", g_lorawan_settings.lora_class);
+	AT_PRINTF("   Subband %d", g_lorawan_settings.subband_channels);
+	AT_PRINTF("   Fport %d", g_lorawan_settings.app_port);
+	AT_PRINTF("   %s Message", g_lorawan_settings.confirmed_msg_enabled ? "Confirmed" : "Unconfirmed");
+	AT_PRINTF("   Region %s", region_names[g_lorawan_settings.lora_region]);
+	AT_PRINTF("LoRa P2P status:");
+	AT_PRINTF("   P2P frequency %ld", g_lorawan_settings.p2p_frequency);
+	AT_PRINTF("   P2P TX Power %d", g_lorawan_settings.p2p_tx_power);
+	AT_PRINTF("   P2P BW %s", bandwidths[g_lorawan_settings.p2p_bandwidth]);
+	AT_PRINTF("   P2P SF %d", g_lorawan_settings.p2p_sf);
+	AT_PRINTF("   P2P CR %d", g_lorawan_settings.p2p_cr);
+	AT_PRINTF("   P2P Preamble length %d", g_lorawan_settings.p2p_preamble_len);
+	AT_PRINTF("   P2P Symbol Timeout %d", g_lorawan_settings.p2p_symbol_timeout);
 }
 
 static int at_query_mode(void)
@@ -897,11 +897,11 @@ static int at_query_devaddr(void)
 {
 	if (otaaDevAddr != 0)
 	{
-		snprintf(g_at_query_buf, ATQUERY_SIZE, "%08lX\n", otaaDevAddr);
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "%08lX", otaaDevAddr);
 	}
 	else
 	{
-		snprintf(g_at_query_buf, ATQUERY_SIZE, "%08lX\n", g_lorawan_settings.node_dev_addr);
+		snprintf(g_at_query_buf, ATQUERY_SIZE, "%08lX", g_lorawan_settings.node_dev_addr);
 	}
 	return 0;
 }
@@ -1794,21 +1794,21 @@ static int at_exec_list_all(void)
 	// AT_PRINTF("\r\n+++++++++++++++\r\n");
 	// AT_PRINTF("AT command list\r\n");
 	// AT_PRINTF("+++++++++++++++\r\n");
-	AT_PRINTF("\r\nAT+<CMD>?: help on <CMD>\r\n");
-	AT_PRINTF("AT+<CMD>: run <CMD>\r\n");
-	AT_PRINTF("AT+<CMD>=<value>: set the value\r\n");
-	AT_PRINTF("AT+<CMD>=?: get the value\r\n\r\n");
+	AT_PRINTF("\r\nAT+<CMD>?: help on <CMD>");
+	AT_PRINTF("AT+<CMD>: run <CMD>");
+	AT_PRINTF("AT+<CMD>=<value>: set the value");
+	AT_PRINTF("AT+<CMD>=?: get the value\r\n");
 
 	for (unsigned int idx = 1; idx < sizeof(g_at_cmd_list) / sizeof(atcmd_t); idx++)
 	{
 		if ((strcmp(g_at_cmd_list[idx].cmd_name, (char *)"+STATUS") == 0) || (strcmp(g_at_cmd_list[idx].cmd_name, (char *)"+SENDINT") == 0))
 		{
 			// AT_PRINTF("ATC%s,%s: %s, %s\r\n", g_at_cmd_list[idx].cmd_name, g_at_cmd_list[idx].permission, &g_at_cmd_list[idx].cmd_name[1], g_at_cmd_list[idx].cmd_desc);
-			AT_PRINTF("ATC%s,%s: %s\r\n", g_at_cmd_list[idx].cmd_name, g_at_cmd_list[idx].permission, g_at_cmd_list[idx].cmd_desc);
+			AT_PRINTF("ATC%s,%s: %s", g_at_cmd_list[idx].cmd_name, g_at_cmd_list[idx].permission, g_at_cmd_list[idx].cmd_desc);
 		}
 		else
 		{
-			AT_PRINTF("AT%s,%s: %s\r\n", g_at_cmd_list[idx].cmd_name, g_at_cmd_list[idx].permission, g_at_cmd_list[idx].cmd_desc);
+			AT_PRINTF("AT%s,%s: %s", g_at_cmd_list[idx].cmd_name, g_at_cmd_list[idx].permission, g_at_cmd_list[idx].cmd_desc);
 		}
 	}
 
@@ -1821,7 +1821,7 @@ static int at_exec_list_all(void)
 		for (unsigned int idx = 0; idx < g_user_at_cmd_num; idx++)
 		{
 			// AT_PRINTF("ATC%s,%s: %s, %s\r\n", g_user_at_cmd_list[idx].cmd_name, g_user_at_cmd_list[idx].permission, &g_user_at_cmd_list[idx].cmd_name[1], g_user_at_cmd_list[idx].cmd_desc);
-			AT_PRINTF("ATC%s,%s: %s\r\n", g_user_at_cmd_list[idx].cmd_name, g_user_at_cmd_list[idx].permission, g_user_at_cmd_list[idx].cmd_desc);
+			AT_PRINTF("ATC%s,%s: %s", g_user_at_cmd_list[idx].cmd_name, g_user_at_cmd_list[idx].permission, g_user_at_cmd_list[idx].cmd_desc);
 		}
 	}
 
@@ -1854,7 +1854,7 @@ static void at_cmd_handle(void)
 	{
 		atcmd_index = 0;
 		memset(atcmd, 0xff, ATCMD_SIZE);
-		AT_PRINTF("\r\nOK\r\n");
+		AT_PRINTF("\r\nOK");
 		return;
 	}
 
@@ -1894,17 +1894,17 @@ static void at_cmd_handle(void)
 			{
 				if (strncmp(g_at_cmd_list[i].cmd_desc, "OK", 2) == 0)
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+					snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
 				}
 				else
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s:\"%s\"\r\nOK\r\n",
+					snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s:\"%s\"\r\nOK",
 							 cmd_name, g_at_cmd_list[i].cmd_desc);
 				}
 			}
 			else
 			{
-				snprintf(atcmd, ATCMD_SIZE, "\r\n%s\r\nOK\r\n", cmd_name);
+				snprintf(atcmd, ATCMD_SIZE, "\r\n%s\r\nOK", cmd_name);
 			}
 		}
 		else if (rxcmd_index == (strlen(cmd_name) + 2) &&
@@ -1917,7 +1917,7 @@ static void at_cmd_handle(void)
 
 				if (ret == 0)
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s=%s\r\nOK\r\n",
+					snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s=%s\r\nOK",
 							 cmd_name, g_at_query_buf);
 				}
 			}
@@ -1935,7 +1935,7 @@ static void at_cmd_handle(void)
 				ret = g_at_cmd_list[i].exec_cmd(rxcmd + strlen(cmd_name) + 1);
 				if (ret == 0)
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+					snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
 				}
 				else if (ret == -1)
 				{
@@ -1955,7 +1955,7 @@ static void at_cmd_handle(void)
 				ret = g_at_cmd_list[i].exec_cmd_no_para();
 				if (ret == 0)
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+					snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
 				}
 				else if (ret == -1)
 				{
@@ -2021,17 +2021,17 @@ static void at_cmd_handle(void)
 						{
 							if (strncmp(g_user_at_cmd_list[j].cmd_desc, "OK", 2) == 0)
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+								snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
 							}
 							else
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s:\"%s\"\r\nOK\r\n",
+								snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s:\"%s\"\r\nOK",
 										 cmd_name, g_user_at_cmd_list[j].cmd_desc);
 							}
 						}
 						else
 						{
-							snprintf(atcmd, ATCMD_SIZE, "\r\n%s\r\nOK\r\n", cmd_name);
+							snprintf(atcmd, ATCMD_SIZE, "\r\n%s\r\nOK", cmd_name);
 						}
 					}
 					else if (rxcmd_index == (strlen(cmd_name) + 2) &&
@@ -2044,7 +2044,7 @@ static void at_cmd_handle(void)
 
 							if (ret == 0)
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s=%s\r\nOK\r\n",
+								snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s=%s\r\nOK",
 										 cmd_name, g_at_query_buf);
 							}
 						}
@@ -2062,7 +2062,7 @@ static void at_cmd_handle(void)
 							ret = g_user_at_cmd_list[j].exec_cmd(rxcmd + strlen(cmd_name) + 1);
 							if (ret == 0)
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+								snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
 							}
 							else if (ret == -1)
 							{
@@ -2082,7 +2082,7 @@ static void at_cmd_handle(void)
 							ret = g_user_at_cmd_list[j].exec_cmd_no_para();
 							if (ret == 0)
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+								snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
 							}
 							else if (ret == -1)
 							{
@@ -2112,7 +2112,7 @@ static void at_cmd_handle(void)
 				if (user_at_handler(rxcmd, rxcmd_index))
 				{
 					ret = 0;
-					snprintf(atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+					snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
 				}
 				else
 				{
@@ -2129,7 +2129,7 @@ static void at_cmd_handle(void)
 
 	if (ret != 0 && ret != AT_CB_PRINT)
 	{
-		snprintf(atcmd, ATCMD_SIZE, "\r\n%s%x\r\n", AT_ERROR, ret);
+		snprintf(atcmd, ATCMD_SIZE, "\r\n%s%x", AT_ERROR, ret);
 	}
 
 	if (ret != AT_CB_PRINT)
