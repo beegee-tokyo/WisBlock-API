@@ -1,7 +1,7 @@
 # WisBlock-API [![Build Status](https://github.com/beegee-tokyo/WisBlock-API/workflows/RAK%20Library%20Build%20CI/badge.svg)](https://github.com/beegee-tokyo/WisBlock-API/actions)
 
-| <center><img src="./assets/rakstar.jpg" alt="RAKstar" width=50%></center>  | <center><img src="./assets/RAK-Whirls.png" alt="RAKWireless" width=50%></center> | <center><img src="./assets/WisBlock.png" alt="WisBlock" width=50%></center> | <center><img src="./assets/Yin_yang-48x48.png" alt="BeeGee" width=50%></center>  |
-| -- | -- | -- | -- |
+| <center><img src="./assets/rakstar.jpg" alt="RAKstar" width=50%></center>  | <center><img src="./assets/RAK-Whirls.png" alt="RAKWireless" width=50%></center> | <center><img src="./assets/WisBlock.png" alt="WisBlock" width=50%></center> | <center><img src="./assets/Yin_yang-48x48.png" alt="BeeGee" width=50%></center>  | <center><img src="./assets/RUI3.png" alt="BeeGee"></center>  |
+| -- | -- | -- | -- | -- |
 
 ----
 
@@ -11,25 +11,15 @@ It requires some rethinking about Arduino applications, because you have no `set
 This approach makes it easy to create applications designed for low power usage. During sleep the WisBlock Base + WisBlock Core RAK4631 consume only 40uA.
 
 In addition the API offers two options to setup LoRa P2P / LoRaWAN settings without the need to hard-code them into the source codes.    
-- AT Commands => [AT-Commands Manual](./AT-Commands.md)
-- (RAK4631 & RAK11200 only) BLE interface to [WisBlock Toolbox](https://play.google.com/store/apps/details?id=tk.giesecke.wisblock_toolbox) ↗️
-
-# _**IMPORTANT:**_    
-_**This release supports the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_ ↗️ , _**the [RAKwireless WisBlock RAK11310 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11310/Overview)**_ ↗️ _**and the [RAKwireless WisBlock RAK11200 Core Module with the RAK13300 LoRa IO Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK11200/Overview)**_ ↗️
+- AT Commands => [AT-Command Manual](https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/) ↗️
+- WisToolBox ==> [WisToolbox](https://docs.rakwireless.com/Product-Categories/Software-Tools/WisToolBox) ↗️
 
 # _**IMPORTANT:**_
-_**Support for the RAK11310 and RAK1200 is work in progress and not everything will work**_
+_**V2 of the library changed the AT command format to be compatible with RUI3 AT commands. Please check the AT command manual for RUI3 for differences.**_
 
-# _**IMPORTANT:**_
-_**RAK11310 usage with PlatformIO requires to to add an `lib_ignore` to the platformio.ini file to compile without errors.**_     
-Example:
-```ini
-[env:rak11300]
-platform = raspberrypi
-board = rak11300
-framework = arduino
-lib_ignore = WiFi
-```
+_**V2 release supports only the [RAKwireless WisBlock RAK4631 Core Module](https://docs.rakwireless.com/Product-Categories/WisBlock/RAK4631/Overview)**_ ↗️ 
+
+_**Support for the RAK11310 and RAK1200 might be added in the future**_
 
 ----
 
@@ -140,29 +130,34 @@ A[Boot] -->|Startup| B(setup)
 ----
 
 ## AT Command format
-All available AT commands can be found in the [AT-Commands Manual](./AT-Commands.md)
+All AT commands can be found in the [AT-Command Manual](https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/) _**Not all RUI3 AT commands are supported. A list of available AT commands can be retrieved with AT? from the device**_ ↗️
 
 ----
 
 ## Extend AT command interface
 Starting with WisBlock API V1.1.2 the AT Commands can be extended by user defined AT Commands. This new implementation uses the parser function of the WisBlock API AT command function. In addition, custom AT commands will be listed if the **`AT?`** is used.    
+_**REMARK!**_ 
+In RUI3 custom AT commands are called with _**ATC**_ instead of _**AT**_!     
+
 To extend the AT commands, three steps are required:    
 
 ### 1) Definition of the custom AT commands
 The custom AT commands are listed in an array with the struct atcmd_t format. Each entry consist of the AT command, the explanation text that is shown when the command is called with a ? and pointers to the functions for query, execute with parameters and execute without parameters. Here is an example for two custom AT commands:    
 ```cpp
 atcmd_t g_user_at_cmd_list_example[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |  Permissions  |*/
 	// GNSS commands
-	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL},
-	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL},
+	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL, "RW"},
+	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL, "R"},
 };
 
 atcmd_t *g_user_at_cmd_list = g_user_at_cmd_list_example;
 ```
 **REMARK 1**    
-For functions that are not supported by the AT command a **`NULL`** must be put into the array.    
+The structure for custom AT commands is extended for RUI3 compatibility. Older code written for WisBlock-API V1.x needs to be adjusted to this new structure.        
 **REMARK 2**    
+For functions that are not supported by the AT command a **`NULL`** must be put into the array.    
+**REMARK 3**    
 The name **`g_user_at_cmd_list`** is fixed and cannot be changed or the custom commands are not detected.    
 
 ### 2) Definition of the number of custom AT commands
@@ -180,7 +175,7 @@ the function names used in the array of custom AT commands. The execute command 
 
 Query functions (**`=?`**) do not receive and parameters and must always return with 0. Query functions save the result of the query in the global char array **`g_at_query_buffer`**, the array has a max size of **`ATQUERY_SIZE`** which is 128 characters.
 
-Execute functions with parameters (**`=<value>`**) receive values or settings as a pointer to an char array. This array includes only the value or parameter without the AT command itself. For example the execute function handling **`AT+SETDEV=12000`** would receive only the **`120000`**. The received value or parameter must be checked for validity and if the value of format is not matching, an **`AT_ERRNO_PARA_VAL`** must be returned. If the value or parameter is correct, the function should return **`0`**.
+Execute functions with parameters (**`=<value>`**) receive values or settings as a pointer to an char array. This array includes only the value or parameter without the AT command itself. For example the execute function handling **`ATC+SETDEV=12000`** would receive only the **`120000`**. The received value or parameter must be checked for validity and if the value of format is not matching, an **`AT_ERRNO_PARA_VAL`** must be returned. If the value or parameter is correct, the function should return **`0`**.
 
 Execute functions without parameters are used to perform an action and return the success of the action as either **`0`** if successfull or  **`AT_ERRNO_EXEC_FAIL`** if the execution failed.
 
@@ -241,10 +236,10 @@ static int at_query_packet()
  * 
  */
 atcmd_t g_user_at_cmd_list_example[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |  Permission  |*/
 	// GNSS commands
-	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL},
-	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL},
+	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL, "RW"},
+	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL, "R"},
 };
 
 atcmd_t *g_user_at_cmd_list = g_user_at_cmd_list_example;
@@ -256,6 +251,10 @@ uint8_t g_user_at_cmd_num = sizeof(g_user_at_cmd_list_example) / sizeof(atcmd_t)
 ----
 
 ## Available examples
+
+**REMARK 1** 
+Example code has to be changed to work with WisBlock-API V2 if the example includes custom AT commands!
+
 - [API Test](./examples/api-test) is a very basic example that sends a dummy message over LoRaWAN
 - [Environment Sensor](./examples/environment) shows how to use the frequent wake up call to read sensor data from a RAK1906
 - [Accelerometer Sensor](./examples/accel) shows how to use an external interrupt to create a wake-up event.
@@ -414,15 +413,6 @@ Hard coded settings must be set in **`void setup_app(void)`**!
 
 _**REMARK 2**_    
 Keep in mind that parameters that are changed from with this method can be changed over AT command or BLE _**BUT WILL BE RESET AFTER A REBOOT**_!
-
-----
-
-# **REMOVED**
-
-~~## External non-volatile memory access~~
-
-~~Read and write functions for external NV memory. In WisBlock API, the external NV memory is used to store the LoRa/LoRaWAN credentials. The credentials are stored starting from address 0 (or 1st sector if it is Flash memory).~~    
-
 
 ----
 
@@ -1093,6 +1083,9 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2023-01-27
+  - Start switching to RUI3 compatible AT command format
+  - Add check to fix device hanging when wrong subband is selected (e.g. AU915 subband 2 switch to AS923 without changing the subband to 1)
 - 2022-11-13
   - Add WisBlock Cayenne LPP setup to make it easier to use from examples
   - Replace AT command SENDFREQ with SENDINT to make it's meaning easier to understand (use word interval instead of frequency)
