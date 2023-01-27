@@ -64,10 +64,10 @@ static int at_query_packet()
  * 
  */
 atcmd_t g_user_at_cmd_list_example[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |  Permissions  |*/
 	// GNSS commands
-	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL},
-	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL},
+	{"+SETVAL", "Get/Set custom variable", at_query_value, at_exec_value, NULL, "RW"},
+	{"+LIST", "Show last packet content", at_query_packet, NULL, NULL, "R"},
 };
 
 /** Number of user defined AT commands */
