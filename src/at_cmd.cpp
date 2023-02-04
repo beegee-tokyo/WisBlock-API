@@ -2233,7 +2233,7 @@ static void at_cmd_handle(void)
 	char *rxcmd = atcmd + 2;
 	int16_t tmp = atcmd_index - 2;
 	uint16_t rxcmd_index;
-	cmd_result[0] = 0;
+
 	if (atcmd_index < 2 || rxcmd[tmp] != '\0')
 	{
 		atcmd_index = 0;
@@ -2287,19 +2287,21 @@ static void at_cmd_handle(void)
 				if (strncmp(g_at_cmd_list[i].cmd_desc, "OK", 2) == 0)
 				{
 					snprintf(atcmd, ATCMD_SIZE, "\nOK");
-					// snprintf(cmd_result, ATCMD_SIZE,"");
+					snprintf(cmd_result, ATCMD_SIZE," ");
 				}
 				else
 				{
 					snprintf(atcmd, ATCMD_SIZE, "\nAT%s:\"%s\"\n",
 							 cmd_name, g_at_cmd_list[i].cmd_desc);
 					snprintf(cmd_result, ATCMD_SIZE, "OK");
+					Serial.printf(">>atcmd = %s<<\n", atcmd);
+					Serial.printf(">>cmd_result = %s<<\n", cmd_result);
 				}
 			}
 			else
 			{
 				snprintf(atcmd, ATCMD_SIZE, "\n%s\nOK", cmd_name);
-				// snprintf(cmd_result, ATCMD_SIZE, "");
+				snprintf(cmd_result, ATCMD_SIZE, " ");
 			}
 		}
 		else if (rxcmd_index == (strlen(cmd_name) + 2) &&
@@ -2332,7 +2334,7 @@ static void at_cmd_handle(void)
 				if (ret == 0)
 				{
 					snprintf(atcmd, ATCMD_SIZE, "\nOK");
-					// snprintf(cmd_result, ATCMD_SIZE, "");
+					snprintf(cmd_result, ATCMD_SIZE, " ");
 				}
 				else if (ret == -1)
 				{
@@ -2353,7 +2355,7 @@ static void at_cmd_handle(void)
 				if (ret == 0)
 				{
 					snprintf(atcmd, ATCMD_SIZE, "\nOK");
-					// snprintf(cmd_result, ATCMD_SIZE, "");
+					snprintf(cmd_result, ATCMD_SIZE, " ");
 				}
 				else if (ret == -1)
 				{
@@ -2382,7 +2384,6 @@ static void at_cmd_handle(void)
 	// Not a standard AT command?
 	if (has_custom_at)
 	{
-		cmd_result[0] = 0;
 		if (i == sizeof(g_at_cmd_list) / sizeof(atcmd_t))
 		{
 			// Check user defined AT command from list
@@ -2421,19 +2422,19 @@ static void at_cmd_handle(void)
 							if (strncmp(g_user_at_cmd_list[j].cmd_desc, "OK", 2) == 0)
 							{
 								snprintf(atcmd, ATCMD_SIZE, "\nOK");
-								// snprintf(cmd_result, ATCMD_SIZE, "");
+								snprintf(cmd_result, ATCMD_SIZE, " ");
 							}
 							else
 							{
 								snprintf(atcmd, ATCMD_SIZE, "\nAT%s:\"%s\"\n",
 										 cmd_name, g_user_at_cmd_list[j].cmd_desc);
-								// snprintf(cmd_result, ATCMD_SIZE, "");
+								snprintf(cmd_result, ATCMD_SIZE, " ");
 							}
 						}
 						else
 						{
 							snprintf(atcmd, ATCMD_SIZE, "\n%s\nOK", cmd_name);
-							snprintf(cmd_result, ATCMD_SIZE, "");
+							snprintf(cmd_result, ATCMD_SIZE, " ");
 						}
 					}
 					else if (rxcmd_index == (strlen(cmd_name) + 2) &&
@@ -2466,7 +2467,7 @@ static void at_cmd_handle(void)
 							if (ret == 0)
 							{
 								snprintf(atcmd, ATCMD_SIZE, "\nOK");
-								// snprintf(cmd_result, ATCMD_SIZE, "");
+								snprintf(cmd_result, ATCMD_SIZE, " ");
 							}
 							else if (ret == -1)
 							{
@@ -2487,7 +2488,7 @@ static void at_cmd_handle(void)
 							if (ret == 0)
 							{
 								snprintf(atcmd, ATCMD_SIZE, "\nOK");
-								// snprintf(cmd_result, ATCMD_SIZE, "");
+								snprintf(cmd_result, ATCMD_SIZE, " ");
 							}
 							else if (ret == -1)
 							{
@@ -2518,7 +2519,7 @@ static void at_cmd_handle(void)
 				{
 					ret = 0;
 					snprintf(atcmd, ATCMD_SIZE, "\nOK");
-					// snprintf(cmd_result, ATCMD_SIZE, "");
+					snprintf(cmd_result, ATCMD_SIZE, " ");
 				}
 				else
 				{
