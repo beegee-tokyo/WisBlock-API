@@ -11,6 +11,7 @@
 #include "at_cmd.h"
 
 static char atcmd[ATCMD_SIZE];
+static char cmd_result[ATCMD_SIZE];
 static uint16_t atcmd_index = 0;
 char g_at_query_buf[ATQUERY_SIZE];
 
@@ -19,14 +20,24 @@ bool has_custom_at = false;
 /** LoRaWAN application data buffer. */
 uint8_t m_lora_app_data_buffer[256];
 
+/** Bandwidths as char arrays */
 char *bandwidths[] = {(char *)"125", (char *)"250", (char *)"500", (char *)"062", (char *)"041", (char *)"031", (char *)"020", (char *)"015", (char *)"010", (char *)"007"};
 
+/** Regions as char arrays */
 char *region_names[] = {(char *)"AS923", (char *)"AU915", (char *)"CN470", (char *)"CN779",
 						(char *)"EU433", (char *)"EU868", (char *)"KR920", (char *)"IN865",
 						(char *)"US915", (char *)"AS923-2", (char *)"AS923-3", (char *)"AS923-4", (char *)"RU864"};
+
+/** Region map between WisToolBox and API*/
 uint8_t wtb_regions[] = {8, 6, 1, 12, 0, 4, 7, 3, 5, 9, 10, 11, 2};
+
+/** Region map between API and WisToolBox*/
 uint8_t api_regions[] = {4, 2, 12, 7, 5, 8, 1, 6, 0, 9, 10, 11, 3};
 
+/**
+ * @brief Set the device to new settings
+ * 
+ */
 void set_new_config(void)
 {
 	Radio.Sleep();
@@ -182,12 +193,25 @@ void at_settings(void)
 	AT_PRINTF("   P2P Symbol Timeout %d", g_lorawan_settings.p2p_symbol_timeout);
 }
 
+/**
+ * @brief Query LoRa mode 
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_mode(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.lorawan_enable ? 1 : 0);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Switch LoRa mode
+ *
+ * @param str char array with mode
+ *			'0' = LoRa P2P
+ *			'1' = LoRaWAN
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_PARA_VAL
+ */
 static int at_exec_mode(char *str)
 {
 	bool need_restart = false;
@@ -219,15 +243,26 @@ static int at_exec_mode(char *str)
 		delay(100);
 		api_reset();
 	}
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get current LoRa P2P frequency
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_p2p_freq(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", g_lorawan_settings.p2p_frequency);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Set LoRa P2P frequency
+ *
+ * @param str frequency as char array, valid values are '525000000' to '960000000'
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
+ */
 static int at_exec_p2p_freq(char *str)
 {
 	if (g_lorawan_settings.lorawan_enable)
@@ -245,15 +280,26 @@ static int at_exec_p2p_freq(char *str)
 	save_settings();
 
 	set_new_config();
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get LoRa P2P spreading factor
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_p2p_sf(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.p2p_sf);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Set LoRa P2P spreading factor
+ *
+ * @param str spreading factor as char array, valid values '7' to '12'
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
+ */
 static int at_exec_p2p_sf(char *str)
 {
 	if (g_lorawan_settings.lorawan_enable)
@@ -271,15 +317,26 @@ static int at_exec_p2p_sf(char *str)
 	save_settings();
 
 	set_new_config();
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get current LoRa P2P bandwidth
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_p2p_bw(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%s", bandwidths[g_lorawan_settings.p2p_bandwidth]);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Set LoRa P2P bandwidth
+ *
+ * @param str bandwidth as char array, valid values are '0' = 125, '1' = 250, '2' = 500, '3' = 7.8, '4' = 10.4, '5' = 15.63, '6' = 20.83, '7' = 31.25, '8' = 41.67, '9' = 62.5
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
+ */
 static int at_exec_p2p_bw(char *str)
 {
 	if (g_lorawan_settings.lorawan_enable)
@@ -294,18 +351,29 @@ static int at_exec_p2p_bw(char *str)
 			save_settings();
 
 			set_new_config();
-			return 0;
+			return AT_SUCCESS;
 		}
 	}
 	return AT_ERRNO_PARA_VAL;
 }
 
+/**
+ * @brief Get current LoRa P2P coding rate
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_p2p_cr(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.p2p_cr);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Set LoRa P2P coding rate
+ *
+ * @param str coding rate as char array valid values are '1' = 4/5, '2' = '4/6, '3' = 4/7, '4' = 4/8
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
+ */
 static int at_exec_p2p_cr(char *str)
 {
 	if (g_lorawan_settings.lorawan_enable)
@@ -323,15 +391,26 @@ static int at_exec_p2p_cr(char *str)
 	save_settings();
 
 	set_new_config();
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get current LoRa P2P preamble length
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_p2p_pl(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.p2p_preamble_len);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Set LoRa P2P preamble length
+ *
+ * @param str preamble length as char array, valid values are '0' to '255'
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
+ */
 static int at_exec_p2p_pl(char *str)
 {
 	if (g_lorawan_settings.lorawan_enable)
@@ -349,15 +428,26 @@ static int at_exec_p2p_pl(char *str)
 	save_settings();
 
 	set_new_config();
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get current LoRa P2P TX power
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_p2p_txp(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.p2p_tx_power);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Set LoRa P2P TX power
+ *
+ * @param str TX power as char array, valid values = '1' to '22'
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
+ */
 static int at_exec_p2p_txp(char *str)
 {
 	if (g_lorawan_settings.lorawan_enable)
@@ -375,9 +465,14 @@ static int at_exec_p2p_txp(char *str)
 	save_settings();
 
 	set_new_config();
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get current LoRa P2P settings
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_p2p_config(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld:%d:%s:%d:%d:%d",
@@ -387,9 +482,16 @@ static int at_query_p2p_config(void)
 			 g_lorawan_settings.p2p_cr,
 			 g_lorawan_settings.p2p_preamble_len,
 			 g_lorawan_settings.p2p_tx_power);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Set LoRa P2P configuration
+ *
+ * @param str configuration as char array
+ * 			format <frequency>:<spreading factor>:<bandwidth>:<coding rate>:<preamble length>:<TX power>
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL, AT_ERRNO_PARA_NUM
+ */
 static int at_exec_p2p_config(char *str)
 {
 	if (g_lorawan_settings.lorawan_enable)
@@ -485,7 +587,7 @@ static int at_exec_p2p_config(char *str)
 							save_settings();
 
 							set_new_config();
-							return 0;
+							return AT_SUCCESS;
 						}
 					}
 				}
@@ -495,6 +597,12 @@ static int at_exec_p2p_config(char *str)
 	return AT_ERRNO_PARA_NUM;
 }
 
+/**
+ * @brief Send data packet over LoRa P2P
+ *
+ * @param str data packet as char array with data in ASCII Hex
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
+ */
 static int at_exec_p2p_send(char *str)
 {
 	if (g_lorawan_settings.lorawan_enable)
@@ -519,7 +627,7 @@ static int at_exec_p2p_send(char *str)
 		buff_idx++;
 	}
 	send_p2p_packet(m_lora_app_data_buffer, data_size / 2);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
@@ -528,7 +636,7 @@ static int at_exec_p2p_send(char *str)
  * 1 ... 65533 => Enable RX for xxxx milliseconds
  * 65534 => Enable continous RX (restarts after TX)
  * 65535 => Enable RX until a packet was received, no timeout
- * @return int 0 if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL, AT_ERRNO_PARA_NUM
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL, AT_ERRNO_PARA_NUM
  */
 static int at_exec_p2p_receive(char *str)
 {
@@ -585,21 +693,26 @@ static int at_exec_p2p_receive(char *str)
 		{
 			return AT_ERRNO_PARA_VAL;
 		}
-		return 0;
+		return AT_SUCCESS;
 	}
 	return AT_ERRNO_PARA_NUM;
 }
 
+/**
+ * @brief Get current LoRa P2P receive mode
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_p2p_receive(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", g_lora_p2p_rx_time);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+BAND=? Get regional frequency band
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_region(void)
 {
@@ -607,13 +720,13 @@ static int at_query_region(void)
 	// snprintf(g_at_query_buf, ATQUERY_SIZE, "%d %s", g_lorawan_settings.lora_region, region_names[g_lorawan_settings.lora_region]);
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", wtb_regions[g_lorawan_settings.lora_region]);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+BAND=xx Set regional frequency band
- *  Values: 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR920 7: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4 12: RU864
- * @return int 0 if valid parameter
+ *  Values: 0 = EU433, 1 = CN470, 2 = RU864, 3 = IN865, 4 = EU868, 5 = US915, 6 = AU915, 7 = KR920, 8 = AS923-1, 9 = AS923-2, 10 = AS923-3, 11 = AS923-4, 12 = CN779
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_region(char *str)
 {
@@ -628,12 +741,11 @@ static int at_exec_region(char *str)
 	if (param != NULL)
 	{
 		region = strtol(param, NULL, 0);
-		// RAK4630 0: AS923 1: AU915 2: CN470 3: CN779 4: EU433 5: EU868 6: KR920 7: IN865 8: US915 9: AS923-2 10: AS923-3 11: AS923-4 12: RU864
+		// 0 = EU433, 1 = CN470, 2 = RU864, 3 = IN865, 4 = EU868, 5 = US915, 6 = AU915, 7 = KR920, 8 = AS923-1, 9 = AS923-2, 10 = AS923-3, 11 = AS923-4, 12 = CN779
 		if (region > 12)
 		{
 			return AT_ERRNO_PARA_VAL;
 		}
-		// g_lorawan_settings.lora_region = region;
 		g_lorawan_settings.lora_region = api_regions[region];
 		save_settings();
 	}
@@ -642,13 +754,13 @@ static int at_exec_region(char *str)
 		return AT_ERRNO_PARA_VAL;
 	}
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+MASK=? Get channel mask
- *  Only available for regions 1: AU915 2: CN470 8: US915
- * @return int always 0
+ *  Only available for regions 5 = US915, 6 = AU915, 1 = CN470
+ * @return int AT_SUCCESS;
  */
 static int at_query_mask(void)
 {
@@ -656,15 +768,15 @@ static int at_query_mask(void)
 	{
 		snprintf(g_at_query_buf, ATQUERY_SIZE, "%04X", 1 << (g_lorawan_settings.subband_channels - 1));
 
-		return 0;
+		return AT_SUCCESS;
 	}
 	return AT_ERRNO_NOALLOW;
 }
 
 /**
  * @brief AT+MASK=xx Set channel mask
- *  Only available for regions 1: AU915 2: CN470 8: US915
- * @return int 0 if valid parameter
+ *  Only available for regions 5 = US915, 6 = AU915, 1 = CN470
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL, AT_ERRNO_PARA_NUM
  */
 static int at_exec_mask(char *str)
 {
@@ -749,13 +861,13 @@ static int at_exec_mask(char *str)
 		return AT_ERRNO_PARA_NUM;
 	}
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+NJM=? Return current join modus
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_joinmode(void)
 {
@@ -763,14 +875,14 @@ static int at_query_joinmode(void)
 	mode = g_lorawan_settings.otaa_enabled == true ? 1 : 0;
 
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", mode);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+NJM=x Set current join modus
  *
  * @param str 1 = OTAA 0 = ABP
- * @return int 0 if valid parameter
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_joinmode(char *str)
 {
@@ -788,13 +900,13 @@ static int at_exec_joinmode(char *str)
 	g_lorawan_settings.otaa_enabled = (mode == 1 ? true : false);
 	save_settings();
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+DEVEUI=? Get current Device EUI
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_deveui(void)
 {
@@ -808,12 +920,12 @@ static int at_query_deveui(void)
 			 g_lorawan_settings.node_device_eui[5],
 			 g_lorawan_settings.node_device_eui[6],
 			 g_lorawan_settings.node_device_eui[7]);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+DEVEUI=<XXXXXXXXXXXXXXXX> Set current Device EUI
- * @return int 0 if Dev EUI has correct length and was valid HEX
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_deveui(char *str)
 {
@@ -834,13 +946,13 @@ static int at_exec_deveui(char *str)
 	memcpy(g_lorawan_settings.node_device_eui, buf, 8);
 	save_settings();
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+APPEUI=? Get current Application (Join) EUI
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_appeui(void)
 {
@@ -854,13 +966,13 @@ static int at_query_appeui(void)
 			 g_lorawan_settings.node_app_eui[5],
 			 g_lorawan_settings.node_app_eui[6],
 			 g_lorawan_settings.node_app_eui[7]);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+APPEUI=<XXXXXXXXXXXXXXXX> Set current Application (Join) EUI
  *
- * @return int 0 if App EUI has correct length and was valid HEX
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_appeui(char *str)
 {
@@ -880,13 +992,13 @@ static int at_exec_appeui(char *str)
 	memcpy(g_lorawan_settings.node_app_eui, buf, 8);
 	save_settings();
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+APPKEY=? Get current Application Key
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_appkey(void)
 {
@@ -901,13 +1013,13 @@ static int at_query_appkey(void)
 			return -1;
 		}
 	}
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+APPKEY=<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX> Set current Application (Join) EUI
  *
- * @return int 0 if App Key has correct length and was valid HEX
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_appkey(char *str)
 {
@@ -927,13 +1039,13 @@ static int at_exec_appkey(char *str)
 	memcpy(g_lorawan_settings.node_app_key, buf, 16);
 	save_settings();
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+DEVADDR=? Get device address
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_devaddr(void)
 {
@@ -945,13 +1057,13 @@ static int at_query_devaddr(void)
 	{
 		snprintf(g_at_query_buf, ATQUERY_SIZE, "%08lX", g_lorawan_settings.node_dev_addr);
 	}
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+DEVADDR=<XXXXXXXX> Set device address
  *
- * @return int 0 if device address has correct length and was valid HEX
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_devaddr(char *str)
 {
@@ -978,13 +1090,13 @@ static int at_exec_devaddr(char *str)
 	memcpy(&g_lorawan_settings.node_dev_addr, swap_buf, 4);
 	save_settings();
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+APPSKEY=? Get application session key
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_appskey(void)
 {
@@ -1000,13 +1112,13 @@ static int at_query_appskey(void)
 		}
 	}
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+APPSKEY=<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX> Set application session key
  *
- * @return int 0 if App session Key has correct length and was valid HEX
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_appskey(char *str)
 {
@@ -1026,13 +1138,13 @@ static int at_exec_appskey(char *str)
 	memcpy(g_lorawan_settings.node_apps_key, buf, 16);
 	save_settings();
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+NWSKEY=? Get network session key
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_nwkskey(void)
 {
@@ -1048,13 +1160,13 @@ static int at_query_nwkskey(void)
 		}
 	}
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+NWSKEY=<XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX> Set network session key
  *
- * @return int 0 if Network session key has correct length and was valid HEX
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_nwkskey(char *str)
 {
@@ -1074,26 +1186,26 @@ static int at_exec_nwkskey(char *str)
 	memcpy(g_lorawan_settings.node_nws_key, buf, 16);
 	save_settings();
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+CLASS=? Get device class
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_class(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%c", g_lorawan_settings.lora_class + 65);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+CLASS=X Set device class
  *
  * @param str Class A or C, B not supported
- * @return int if class was valid
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_class(char *str)
 {
@@ -1116,13 +1228,13 @@ static int at_exec_class(char *str)
 	g_lorawan_settings.lora_class = cls - 65;
 	save_settings();
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+NJM=? Get join mode
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_join(void)
 {
@@ -1136,7 +1248,7 @@ static int at_query_join(void)
 	// Param4 = No. of join attempts: 0 - 255
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d:%d:%d:%d", g_lpwan_has_joined ? 1 : 0, g_lorawan_settings.auto_join ? 1 : 0, 8, g_lorawan_settings.join_trials);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
@@ -1147,7 +1259,7 @@ static int at_query_join(void)
  * Param4 = No. of join attempts: 0 - 255
  *
  * @param str parameters as string
- * @return int 0 if all parameters were valid
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL, AT_ERRNO_PARA_NUM
  */
 static int at_exec_join(char *str)
 {
@@ -1203,7 +1315,7 @@ static int at_exec_join(char *str)
 			}
 
 			save_settings();
-			return 0;
+			return AT_SUCCESS;
 		}
 
 		param = strtok(NULL, ":");
@@ -1231,15 +1343,15 @@ static int at_exec_join(char *str)
 			// Manual join only works if LoRaWAN was not initialized yet.
 			// If LoRaWAN was already initialized, a restart is required
 			init_lorawan();
+			return AT_SUCCESS;
 		}
-		return 0;
 
 		if ((bJoin == 1) && g_lorawan_initialized && (lmh_join_status_get() != LMH_SET))
 		{
 			// If if not yet joined, start join
 			delay(100);
 			lmh_join();
-			return 0;
+			return AT_SUCCESS;
 		}
 
 		if ((bJoin == 1) && g_lorawan_settings.auto_join)
@@ -1247,7 +1359,7 @@ static int at_exec_join(char *str)
 			// If auto join is set, restart the device to start join process
 			delay(100);
 			api_reset();
-			return 0;
+			return AT_SUCCESS;
 		}
 	}
 
@@ -1257,7 +1369,7 @@ static int at_exec_join(char *str)
 /**
  * @brief AT+NJS Get current join status
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_join_status()
 {
@@ -1270,25 +1382,25 @@ static int at_query_join_status()
 	join_status = (uint8_t)lmh_join_status_get();
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", join_status);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+CFM=? Get current confirm/unconfirmed packet status
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_confirm(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.confirmed_msg_enabled);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+CFM=X Set confirmed / unconfirmed packet sending
  *
  * @param str 0 = unconfirmed 1 = confirmed packet
- * @return int 0 if correct parameter
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_confirm(char *str)
 {
@@ -1307,25 +1419,25 @@ static int at_exec_confirm(char *str)
 	g_lorawan_settings.confirmed_msg_enabled = (lmh_confirm)cfm;
 	save_settings();
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+DR=? Get current datarate
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_datarate(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.data_rate);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+DR=X Set datarate
  *
  * @param str 0 to 15, depending on region
- * @return int 0 if correct parameter
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_datarate(char *str)
 {
@@ -1347,25 +1459,25 @@ static int at_exec_datarate(char *str)
 
 	lmh_datarate_set(datarate, g_lorawan_settings.adr_enabled);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+ADR=? Get current adaptive datarate status
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_adr(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.adr_enabled ? 1 : 0);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+ADR=X Enable/disable adaptive datarate
  *
  * @param str 0 = disable, 1 = enable ADR
- * @return int 0 if correct parameter
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
 static int at_exec_adr(char *str)
 {
@@ -1387,25 +1499,25 @@ static int at_exec_adr(char *str)
 
 	lmh_datarate_set(g_lorawan_settings.data_rate, g_lorawan_settings.adr_enabled);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+TXP=? Get current TX power setting
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_txpower(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.tx_power);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+TXP Set TX power
  *
  * @param str TX power 0 to 10
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_exec_txpower(char *str)
 {
@@ -1428,29 +1540,29 @@ static int at_exec_txpower(char *str)
 
 	lmh_tx_power_set(tx_power);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
- * @brief AT+SENDFREQ=? Get current send frequency
+ * @brief AT+SENDINT=? Get current send frequency
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
-static int at_query_sendfreq(void)
+static int at_query_sendint(void)
 {
 	// Return time in seconds, but it is saved in milli seconds
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", (g_lorawan_settings.send_repeat_time == 0) ? 0 : (int)(g_lorawan_settings.send_repeat_time / 1000));
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
- * @brief AT+SENDFREQ=<value> Set current send frequency
+ * @brief AT+SENDINT=<value> Set current send frequency
  *
  * @param str send frequency in seconds between 0 (disabled)
- * @return int
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
  */
-static int at_exec_sendfreq(char *str)
+static int at_exec_sendint(char *str)
 {
 	long time = strtoul(str, NULL, 0);
 
@@ -1464,9 +1576,16 @@ static int at_exec_sendfreq(char *str)
 
 	api_timer_restart(g_lorawan_settings.send_repeat_time);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Send data packet over LoRaWAN
+ *
+ * @param str data packet as char array. Format <fPort>:<data>
+ * 			data is in ASCII Hex format
+ * @return int AT_SUCCESS if no error, otherwise AT_ERRNO_NOALLOW, AT_ERRNO_PARA_VAL
+ */
 static int at_exec_send(char *str)
 {
 	if (!g_lpwan_has_joined || !g_lorawan_settings.lorawan_enable)
@@ -1503,13 +1622,13 @@ static int at_exec_send(char *str)
 		buff_idx++;
 	}
 	send_lora_packet(m_lora_app_data_buffer, data_size / 2, fPort);
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+BATT=? Get current battery value (0 to 255)
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_battery(void)
 {
@@ -1523,81 +1642,81 @@ static int at_query_battery(void)
 	// Battery level is in Volt
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%.2f", (float)(read_val / 5000.0));
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+RSSI=? Get RSSI of last received package
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_rssi(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_last_rssi);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+SNR=? Get SNR of last received package
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_snr(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_last_snr);
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief AT+VER=? Get firmware version and build date
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_query_version(void)
 {
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "Arduino %d.%d.%d %s %s", g_sw_ver_1, g_sw_ver_2, g_sw_ver_3, __DATE__, __TIME__);
-	return 0;
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "WisBlock API %d.%d.%d", WISBLOCK_API_VER, WISBLOCK_API_VER2, WISBLOCK_API_VER3);
+	return AT_SUCCESS;
 }
 
 /**
  * @brief ATZ Initiate a system reset
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_exec_reboot(void)
 {
 	delay(100);
 	api_reset();
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief List all device settings
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_status(void)
 {
 	at_settings();
 	snprintf(g_at_query_buf, ATQUERY_SIZE, " ");
 
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
  * @brief ATR Restore flash defaults
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_exec_restore(void)
 {
 	flash_reset();
-	return 0;
+	return AT_SUCCESS;
 }
 
-static int at_query_wtb_version(void)
-{
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "RUI_3.5.4_RAK4631_Arduino");
-	return 0;
-}
-
+/** Application build time */
 const unsigned char compiler_build_time[] =
 	{
 		BUILD_YEAR_CH0,
@@ -1613,88 +1732,171 @@ const unsigned char compiler_build_time[] =
 		BUILD_MIN_CH0, BUILD_MIN_CH1,
 		BUILD_SEC_CH0, BUILD_SEC_CH1};
 
+/**
+ * @brief Get application build data and time
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_build_time(void)
 {
 	// snprintf(g_at_query_buf, ATQUERY_SIZE, "%d.%d.%d %s %s", g_sw_ver_1, g_sw_ver_2, g_sw_ver_3, __DATE__, __TIME__);
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%s", compiler_build_time);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get CLI version
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_cli(void)
 {
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "1.5.8");
-	return 0;
+	// snprintf(g_at_query_buf, ATQUERY_SIZE, "1.5.8");
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d.%d.%d", WISBLOCK_API_VER, WISBLOCK_API_VER2, WISBLOCK_API_VER3);
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get API version
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_api(void)
 {
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "3.2.3");
-	return 0;
+	// snprintf(g_at_query_buf, ATQUERY_SIZE, "3.2.3");
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d.%d.%d", WISBLOCK_API_VER, WISBLOCK_API_VER2, WISBLOCK_API_VER3);
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get HW model
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_hw_model(void)
 {
+#ifdef ESP32
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "rak11200");
+#elif defined ARDUINO_ARCH_RP2040
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "rak11310");
+#else // NRF52_SERIES
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "rak4630");
-	return 0;
+#endif
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get HW ID
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_hw_id(void)
 {
+#ifdef ESP32
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "esp32");
+#elif defined ARDUINO_ARCH_RP2040
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "rp2040");
+#else // NRF52_SERIES
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "nrf52840");
-	return 0;
+#endif
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get low power mode (always off)
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_lpm(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "0");
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get device alias (static)
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_alias(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "WisBlock API %02X%02X%02X%02X%02X%02X%02X%02X", g_lorawan_settings.node_device_eui[0], g_lorawan_settings.node_device_eui[1],
 			 g_lorawan_settings.node_device_eui[2], g_lorawan_settings.node_device_eui[3],
 			 g_lorawan_settings.node_device_eui[4], g_lorawan_settings.node_device_eui[5],
 			 g_lorawan_settings.node_device_eui[6], g_lorawan_settings.node_device_eui[7]);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get device serial number
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_sn(void)
 {
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "");
-	return 0;
+	uint8_t dev_sn[8] = {0};
+	BoardGetUniqueId(dev_sn);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%02X%02X%02X%02X%02X%02X%02X%02X",
+			 dev_sn[7], dev_sn[6], dev_sn[5], dev_sn[4],
+			 dev_sn[3], dev_sn[2], dev_sn[1], dev_sn[0]);
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get LoRaWAN network ID
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_netid(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "000000");
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get confirmed result of last sent packet
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_cfs(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_rx_fin_result ? 1 : 0);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get status of duty cycle
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_duty(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.duty_cycle_enabled ? 1 : 0);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get status of public/private network
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_public(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.public_network ? 1 : 0);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get last received packet
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_recv(void)
 {
 	if (g_rx_data_len == 0)
 	{
 		snprintf(g_at_query_buf, ATQUERY_SIZE, " ");
-		return 0;
+		return AT_SUCCESS;
 	}
 
 	int len = snprintf(g_at_query_buf, ATQUERY_SIZE, "%d:", g_last_fport);
@@ -1703,15 +1905,26 @@ static int at_query_recv(void)
 		snprintf(&g_at_query_buf[len], ATQUERY_SIZE, "%02X", g_rx_lora_data[idx]);
 		len = len + 2;
 	}
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get confirmed packet retry rate
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_retry(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", lmh_getConfRetries());
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Set confirmed packet retry rate
+ * 
+ * @param str retry rate as char array, valid values: '0' ... '8'
+ * @return int 
+ */
 static int at_exec_retry(char *str)
 {
 	if (g_lorawan_settings.lorawan_enable)
@@ -1730,15 +1943,25 @@ static int at_exec_retry(char *str)
 	save_settings();
 
 	set_new_config();
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get single channel usage
+ * 
+ * @return int AT_SUCCESS
+ */
 static int at_query_single(void)
 {
 	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", 0);
-	return 0;
+	return AT_SUCCESS;
 }
 
+/**
+ * @brief Get eight channel usage
+ *
+ * @return int AT_SUCCESS
+ */
 static int at_query_eight(void)
 {
 	if ((g_lorawan_settings.lora_region == LORAMAC_REGION_US915) || (g_lorawan_settings.lora_region == LORAMAC_REGION_AU915) || (g_lorawan_settings.lora_region == LORAMAC_REGION_CN470))
@@ -1748,9 +1971,126 @@ static int at_query_eight(void)
 		// snprintf(g_at_query_buf, ATQUERY_SIZE, "%d:%d:%d:%d:%d:%d:%d:%d", sub_channels[0], sub_channels[1], sub_channels[2], sub_channels[3], sub_channels[4], sub_channels[5], sub_channels[6], sub_channels[7]);
 		snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", sub_channel);
 
-		return 0;
+		return AT_SUCCESS;
 	}
 	return AT_ERRNO_NOALLOW;
+}
+
+/**
+ * @brief Get Join delay 1
+ *
+ * @return int AT_SUCCESS
+ */
+static int at_query_jdl1(void)
+{
+	GetPhyParams_t phy_param;
+	phy_param.Attribute = PHY_JOIN_ACCEPT_DELAY1;
+	PhyParam_t curr_param = RegionGetPhyParam(LoRaMacRegion, &phy_param);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", curr_param.Value);
+	return AT_SUCCESS;
+}
+
+/**
+ * @brief Get Join delay 2
+ *
+ * @return int AT_SUCCESS
+ */
+static int at_query_jdl2(void)
+{
+	GetPhyParams_t phy_param;
+	phy_param.Attribute = PHY_JOIN_ACCEPT_DELAY2;
+	PhyParam_t curr_param = RegionGetPhyParam(LoRaMacRegion, &phy_param);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", curr_param.Value);
+	return AT_SUCCESS;
+}
+
+/**
+ * @brief Get RX 1 delay
+ *
+ * @return int AT_SUCCESS
+ */
+static int at_query_rxdl1(void)
+{
+	GetPhyParams_t phy_param;
+	phy_param.Attribute = PHY_RECEIVE_DELAY1;
+	PhyParam_t curr_param = RegionGetPhyParam(LoRaMacRegion, &phy_param);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", curr_param.Value);
+	return AT_SUCCESS;
+}
+
+/**
+ * @brief Get RX 2 delay
+ *
+ * @return int AT_SUCCESS
+ */
+static int at_query_rxdl2(void)
+{
+	GetPhyParams_t phy_param;
+	phy_param.Attribute = PHY_RECEIVE_DELAY2;
+	PhyParam_t curr_param = RegionGetPhyParam(LoRaMacRegion, &phy_param);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", curr_param.Value);
+	return AT_SUCCESS;
+}
+
+/**
+ * @brief Get RX2 datarate
+ *
+ * @return int AT_SUCCESS
+ */
+static int at_query_rxdr2(void)
+{
+	GetPhyParams_t phy_param;
+	phy_param.Attribute = PHY_DEF_RX2_DR;
+	PhyParam_t curr_param = RegionGetPhyParam(LoRaMacRegion, &phy_param);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", curr_param.Value);
+	return AT_SUCCESS;
+}
+
+/**
+ * @brief Get RX2 frequency
+ *
+ * @return int AT_SUCCESS
+ */
+static int at_query_rxfrq2(void)
+{
+	GetPhyParams_t phy_param;
+	phy_param.Attribute = PHY_DEF_RX2_FREQUENCY;
+	PhyParam_t curr_param = RegionGetPhyParam(LoRaMacRegion, &phy_param);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%ld", curr_param.Value);
+	return AT_SUCCESS;
+}
+
+/**
+ * @brief Get all channel RSSI (faked)
+ *
+ * @return int AT_SUCCESS
+ */
+static int at_query_arssi(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "0:%d", g_last_rssi);
+	return AT_SUCCESS;
+}
+
+/**
+ * @brief Get network link status (faked)
+ *
+ * @return int AT_SUCCESS
+ */
+static int at_query_link(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "0");
+	return AT_SUCCESS;
+}
+
+/**
+ * @brief Get multichannel settings (faked)
+ *
+ * @return int AT_SUCCESS
+ */
+static int at_query_lstmulc(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "0:00000000:00000000000000000000000000000000:00000000000000000000000000000000:000000000:00:0,0:00000000:00000000000000000000000000000000:00000000000000000000000000000000:000000000:00:0,0:00000000:00000000000000000000000000000000:00000000000000000000000000000000:000000000:00:0,0:00000000:00000000000000000000000000000000:00000000000000000000000000000000:000000000:00:0");
+	return AT_SUCCESS;
 }
 
 static int at_exec_list_all(void);
@@ -1760,7 +2100,7 @@ static int at_exec_list_all(void);
  *
  */
 static atcmd_t g_at_cmd_list[] = {
-	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  |*/
+	/*|    CMD    |     AT+CMD?      |    AT+CMD=?    |  AT+CMD=value |  AT+CMD  | AT Permissions |*/
 	// General commands
 	{"?", "AT commands", NULL, NULL, at_exec_list_all, "R"},
 	{"R", "Restore default", NULL, NULL, at_exec_restore, "R"},
@@ -1802,9 +2142,7 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+PSEND", "P2P send data", NULL, at_exec_p2p_send, NULL, "W"},
 	{"+PRECV", "P2P receive mode", at_query_p2p_receive, at_exec_p2p_receive, NULL, "RW"},
 	// WisToolBox compatibility
-	// {"+VER", "Get SW version", at_query_wtb_version, NULL, NULL},
 	{"+BUILDTIME", "Get Build time", at_query_build_time, NULL, NULL, "R"},
-	{"+FIRMWAREVER", "Get SW version", at_query_wtb_version, NULL, NULL, "R"},
 	{"+CLIVER", "Get the version of the AT command", at_query_cli, NULL, NULL, "R"},
 	{"+APIVER", "Get the version of the API", at_query_api, NULL, NULL, "R"},
 	{"+HWMODEL", "Get the string of the hardware model", at_query_hw_model, NULL, NULL, "R"},
@@ -1820,28 +2158,28 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+CHE", "Get single channel mode (na)", at_query_eight, NULL, NULL, "R"},
 	{"+CHS", "Get 8 channel mode", at_query_single, NULL, NULL, "R"},
 	{"+RETY", "Get the number of retries in confirmed mode", at_query_retry, at_exec_retry, NULL, "RW"},
+	{"+JN1DL", "Get the join delay 1", at_query_jdl1, NULL, NULL, "R"},
+	{"+JN2DL", "Get the join delay 2", at_query_jdl2, NULL, NULL, "R"},
+	{"+RX1DL", "Get the RX delay 1", at_query_rxdl1, NULL, NULL, "R"},
+	{"+RX2DL", "Get the RX delay 2", at_query_rxdl2, NULL, NULL, "R"},
+	{"+RX2DR", "Get the RX delay 2", at_query_rxdr2, NULL, NULL, "R"},
+	{"+RX2FQ", "Get the RX delay 2", at_query_rxfrq2, NULL, NULL, "R"},
+	{"+ARSSI", "Get all channel RSSI", at_query_arssi, NULL, NULL, "R"},
+	{"+LINKCHECK", "Get network link status", at_query_link, NULL, NULL, "R"},
+	{"+LSTMULC", "Get multicast status", at_query_lstmulc, NULL, NULL, "R"},
 	// Custom AT commands
 	{"+STATUS", "Status, Show LoRaWAN status", at_query_status, NULL, NULL, "R"},
-	{"+SENDINT", "Send interval, Get or Set the automatic send interval", at_query_sendfreq, at_exec_sendfreq, NULL, "RW"},
+	{"+SENDINT", "Send interval, Get or Set the automatic send interval", at_query_sendint, at_exec_sendint, NULL, "RW"},
 };
 /**
 
 // Class B or not supported by library
-AT+JN1DL=?
-AT+JN2DL=?
-AT+RX1DL=?
-AT+RX2DL=?
-AT+RX2DR=?
 AT+PGSLOT=?
 AT+BFREQ=?
 AT+BTIME=?
 AT+BGW=?
 AT+LTIME=?
-AT+ARSSI=?
-AT+LINKCHECK=?
 AT+TIMEREQ=?
-AT+LSTMULC=?
-AT+RX2FQ=?
 AT+ENCRY=?
 AT+ENCKEY=?
 */
@@ -1849,13 +2187,10 @@ AT+ENCKEY=?
 /**
  * @brief List all available commands with short help
  *
- * @return int always 0
+ * @return int AT_SUCCESS;
  */
 static int at_exec_list_all(void)
 {
-	// AT_PRINTF("\r\n+++++++++++++++\r\n");
-	// AT_PRINTF("AT command list\r\n");
-	// AT_PRINTF("+++++++++++++++\r\n");
 	AT_PRINTF("\r\nAT+<CMD>?: help on <CMD>");
 	AT_PRINTF("AT+<CMD>: run <CMD>");
 	AT_PRINTF("AT+<CMD>=<value>: set the value");
@@ -1865,7 +2200,6 @@ static int at_exec_list_all(void)
 	{
 		if ((strcmp(g_at_cmd_list[idx].cmd_name, (char *)"+STATUS") == 0) || (strcmp(g_at_cmd_list[idx].cmd_name, (char *)"+SENDINT") == 0))
 		{
-			// AT_PRINTF("ATC%s,%s: %s, %s\r\n", g_at_cmd_list[idx].cmd_name, g_at_cmd_list[idx].permission, &g_at_cmd_list[idx].cmd_name[1], g_at_cmd_list[idx].cmd_desc);
 			AT_PRINTF("ATC%s,%s: %s", g_at_cmd_list[idx].cmd_name, g_at_cmd_list[idx].permission, g_at_cmd_list[idx].cmd_desc);
 		}
 		else
@@ -1876,19 +2210,15 @@ static int at_exec_list_all(void)
 
 	if (&g_user_at_cmd_list != 0)
 	{
-		// AT_PRINTF("\r\n+++++++++++++++\r\n");
-		// AT_PRINTF("User AT command list\r\n");
-		// AT_PRINTF("+++++++++++++++\r\n");
+
 
 		for (unsigned int idx = 0; idx < g_user_at_cmd_num; idx++)
 		{
-			// AT_PRINTF("ATC%s,%s: %s, %s\r\n", g_user_at_cmd_list[idx].cmd_name, g_user_at_cmd_list[idx].permission, &g_user_at_cmd_list[idx].cmd_name[1], g_user_at_cmd_list[idx].cmd_desc);
 			AT_PRINTF("ATC%s,%s: %s", g_user_at_cmd_list[idx].cmd_name, g_user_at_cmd_list[idx].permission, g_user_at_cmd_list[idx].cmd_desc);
 		}
 	}
 
-	// AT_PRINTF("+++++++++++++++\r\n");
-	return 0;
+	return AT_SUCCESS;
 }
 
 /**
@@ -1903,7 +2233,7 @@ static void at_cmd_handle(void)
 	char *rxcmd = atcmd + 2;
 	int16_t tmp = atcmd_index - 2;
 	uint16_t rxcmd_index;
-
+	cmd_result[0] = 0;
 	if (atcmd_index < 2 || rxcmd[tmp] != '\0')
 	{
 		atcmd_index = 0;
@@ -1916,7 +2246,7 @@ static void at_cmd_handle(void)
 	{
 		atcmd_index = 0;
 		memset(atcmd, 0xff, ATCMD_SIZE);
-		AT_PRINTF("\r\nOK");
+		AT_PRINTF("\nOK");
 		return;
 	}
 
@@ -1956,17 +2286,20 @@ static void at_cmd_handle(void)
 			{
 				if (strncmp(g_at_cmd_list[i].cmd_desc, "OK", 2) == 0)
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
+					snprintf(atcmd, ATCMD_SIZE, "\nOK");
+					// snprintf(cmd_result, ATCMD_SIZE,"");
 				}
 				else
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s:\"%s\"\r\nOK",
+					snprintf(atcmd, ATCMD_SIZE, "\nAT%s:\"%s\"\n",
 							 cmd_name, g_at_cmd_list[i].cmd_desc);
+					snprintf(cmd_result, ATCMD_SIZE, "OK");
 				}
 			}
 			else
 			{
-				snprintf(atcmd, ATCMD_SIZE, "\r\n%s\r\nOK", cmd_name);
+				snprintf(atcmd, ATCMD_SIZE, "\n%s\nOK", cmd_name);
+				// snprintf(cmd_result, ATCMD_SIZE, "");
 			}
 		}
 		else if (rxcmd_index == (strlen(cmd_name) + 2) &&
@@ -1979,8 +2312,9 @@ static void at_cmd_handle(void)
 
 				if (ret == 0)
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s=%s\r\nOK",
+					snprintf(atcmd, ATCMD_SIZE, "\nAT%s=%s\n",
 							 cmd_name, g_at_query_buf);
+					snprintf(cmd_result, ATCMD_SIZE, "OK");
 				}
 			}
 			else
@@ -1997,7 +2331,8 @@ static void at_cmd_handle(void)
 				ret = g_at_cmd_list[i].exec_cmd(rxcmd + strlen(cmd_name) + 1);
 				if (ret == 0)
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
+					snprintf(atcmd, ATCMD_SIZE, "\nOK");
+					// snprintf(cmd_result, ATCMD_SIZE, "");
 				}
 				else if (ret == -1)
 				{
@@ -2017,7 +2352,8 @@ static void at_cmd_handle(void)
 				ret = g_at_cmd_list[i].exec_cmd_no_para();
 				if (ret == 0)
 				{
-					snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
+					snprintf(atcmd, ATCMD_SIZE, "\nOK");
+					// snprintf(cmd_result, ATCMD_SIZE, "");
 				}
 				else if (ret == -1)
 				{
@@ -2046,6 +2382,7 @@ static void at_cmd_handle(void)
 	// Not a standard AT command?
 	if (has_custom_at)
 	{
+		cmd_result[0] = 0;
 		if (i == sizeof(g_at_cmd_list) / sizeof(atcmd_t))
 		{
 			// Check user defined AT command from list
@@ -2083,17 +2420,20 @@ static void at_cmd_handle(void)
 						{
 							if (strncmp(g_user_at_cmd_list[j].cmd_desc, "OK", 2) == 0)
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
+								snprintf(atcmd, ATCMD_SIZE, "\nOK");
+								// snprintf(cmd_result, ATCMD_SIZE, "");
 							}
 							else
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s:\"%s\"\r\nOK",
+								snprintf(atcmd, ATCMD_SIZE, "\nAT%s:\"%s\"\n",
 										 cmd_name, g_user_at_cmd_list[j].cmd_desc);
+								// snprintf(cmd_result, ATCMD_SIZE, "");
 							}
 						}
 						else
 						{
-							snprintf(atcmd, ATCMD_SIZE, "\r\n%s\r\nOK", cmd_name);
+							snprintf(atcmd, ATCMD_SIZE, "\n%s\nOK", cmd_name);
+							snprintf(cmd_result, ATCMD_SIZE, "");
 						}
 					}
 					else if (rxcmd_index == (strlen(cmd_name) + 2) &&
@@ -2106,8 +2446,9 @@ static void at_cmd_handle(void)
 
 							if (ret == 0)
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nAT%s=%s\r\nOK",
+								snprintf(atcmd, ATCMD_SIZE, "\nAT%s=%s\n",
 										 cmd_name, g_at_query_buf);
+								snprintf(cmd_result, ATCMD_SIZE, "OK");
 							}
 						}
 						else
@@ -2124,7 +2465,8 @@ static void at_cmd_handle(void)
 							ret = g_user_at_cmd_list[j].exec_cmd(rxcmd + strlen(cmd_name) + 1);
 							if (ret == 0)
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
+								snprintf(atcmd, ATCMD_SIZE, "\nOK");
+								// snprintf(cmd_result, ATCMD_SIZE, "");
 							}
 							else if (ret == -1)
 							{
@@ -2144,7 +2486,8 @@ static void at_cmd_handle(void)
 							ret = g_user_at_cmd_list[j].exec_cmd_no_para();
 							if (ret == 0)
 							{
-								snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
+								snprintf(atcmd, ATCMD_SIZE, "\nOK");
+								// snprintf(cmd_result, ATCMD_SIZE, "");
 							}
 							else if (ret == -1)
 							{
@@ -2174,7 +2517,8 @@ static void at_cmd_handle(void)
 				if (user_at_handler(rxcmd, rxcmd_index))
 				{
 					ret = 0;
-					snprintf(atcmd, ATCMD_SIZE, "\r\nOK");
+					snprintf(atcmd, ATCMD_SIZE, "\nOK");
+					// snprintf(cmd_result, ATCMD_SIZE, "");
 				}
 				else
 				{
@@ -2191,12 +2535,15 @@ static void at_cmd_handle(void)
 
 	if (ret != 0 && ret != AT_CB_PRINT)
 	{
-		snprintf(atcmd, ATCMD_SIZE, "\r\n%s%x", AT_ERROR, ret);
+		snprintf(atcmd, ATCMD_SIZE, "\n%s%x", AT_ERROR, ret);
+		snprintf(cmd_result, ATCMD_SIZE, "OK");
 	}
 
 	if (ret != AT_CB_PRINT)
 	{
 		AT_PRINTF(atcmd);
+
+		AT_PRINTF(cmd_result);
 	}
 
 	atcmd_index = 0;

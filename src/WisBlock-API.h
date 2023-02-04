@@ -12,6 +12,9 @@
 #define WISBLOCK_API_H
 
 #define WISBLOCK_API_VER 2
+#define WISBLOCK_API_VER2 0
+#define WISBLOCK_API_VER3 0
+#define WISBLOCK_API_BUILD_TIME "04.02.2023"
 
 #ifndef NO_BLE_LED
 // Set usage of BLE connection LED (blue). Comment the line to enable LED
