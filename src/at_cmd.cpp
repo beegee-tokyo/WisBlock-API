@@ -1751,8 +1751,8 @@ static int at_query_build_time(void)
  */
 static int at_query_cli(void)
 {
-	// snprintf(g_at_query_buf, ATQUERY_SIZE, "1.5.8");
-	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d.%d.%d", WISBLOCK_API_VER, WISBLOCK_API_VER2, WISBLOCK_API_VER3);
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "1.5.8");
+	// snprintf(g_at_query_buf, ATQUERY_SIZE, "%d.%d.%d", WISBLOCK_API_VER, WISBLOCK_API_VER2, WISBLOCK_API_VER3);
 	return AT_SUCCESS;
 }
 
