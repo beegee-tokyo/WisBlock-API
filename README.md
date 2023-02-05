@@ -1,4 +1,4 @@
-# WisBlock-API [![Build Status](https://github.com/beegee-tokyo/WisBlock-API/workflows/RAK%20Library%20Build%20CI/badge.svg)](https://github.com/beegee-tokyo/WisBlock-API/actions)
+# WisBlock-API V2[![Build Status](https://github.com/beegee-tokyo/WisBlock-API/workflows/RAK%20Library%20Build%20CI/badge.svg)](https://github.com/beegee-tokyo/WisBlock-API/actions)
 
 | <center><img src="./assets/rakstar.jpg" alt="RAKstar" width=50%></center>  | <center><img src="./assets/RAK-Whirls.png" alt="RAKWireless" width=50%></center> | <center><img src="./assets/WisBlock.png" alt="WisBlock" width=50%></center> | <center><img src="./assets/Yin_yang-48x48.png" alt="BeeGee" width=50%></center>  | <center><img src="./assets/RUI3.png" alt="BeeGee"></center>  |
 | -- | -- | -- | -- | -- |
@@ -132,6 +132,97 @@ A[Boot] -->|Startup| B(setup)
 ## AT Command format
 All AT commands can be found in the [AT-Command Manual](https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/https://docs.rakwireless.com/RUI3/Serial-Operating-Modes/AT-Command-Manual/) _**Not all RUI3 AT commands are supported. A list of available AT commands can be retrieved with AT? from the device**_ ↗️
 
+Two custom AT commands have been added to the default RUI3 AT command set:    
+
+## ATC+SENDINT
+
+Description: Set the automatic transmission interval
+
+This command allows to set the interval in seconds between automatic packet transmissions. If set to 0, automatic packet transmission is disabled.
+
+| Command                    | Input Parameter | Return Value                                                  | Return Code              |
+| -------------------------- | --------------- | ------------------------------------------------------------- | ------------------------ |
+| ATC+SENDINT?                    | -               | `ATC+SENDINT: "Get or Set the automatic send interval` | `OK`                     |
+| ATC+SENDINT=?                   | -               | `<interval in seconds>`                                                    | `OK`                     |
+| ATC+SENDINT=`<Input Parameter>` | `<interval in seconds>`      | -                                                             | `OK` or `AT_PARAM_ERROR` |
+
+**Examples**:
+
+```
+ATC+SENDINT?
+
+ATC+SENDINT: Get or Set the automatic send interval 
+OK
+
+ATC+SENDINT=?
+
+ATC+SENDINT:60
+OK
+
+ATC+SENDINT=60
+
+OK
+```
+
+## ATC+STATUS
+
+Description: Show device status
+
+This command allows the user to get the current device status.
+
+| Command                    | Input Parameter | Return Value                              | Return Code |
+| -------------------------- | --------------- | ----------------------------------------- | ----------- |
+| ATC+STATUS?                    | -               | `ATC+STATUS: Show LoRaWAN status` | `OK`        |
+| ATC+STATUS=? | -               | *< status   >*                        | `OK`        |
+
+**Examples**:
+
+```
+ATC+STATUS?
+
+ATC+STATUS: Show LoRaWAN status
+OK
+
+ATC+STATUS=?
+Device status:
+    RAK4631
+    Auto join enabled
+    Mode LPWAN
+    Network joined
+    Send Frequency 300
+ LPWAN status:
+    Dev EUI AC1F09FFFE08E887
+    App EUI 70B3D57ED00201E1
+    App Key 2B84E0B09B68E5CB42176FE753DCEE79
+    Dev Addr 26021FB4
+    NWS Key 323D155A000DF335307A16DA0C9DF53F
+    Apps Key 3F6A66459D5EDCA63CBC4619CD61A11E
+    OTAA enabled
+    ADR disabled
+    Public Network
+    Dutycycle disabled
+    Join trials 5
+    TX Power 0
+    DR 3
+    Class 0
+    Subband 1
+    Fport 2
+    Unconfirmed Message
+    Region AS923-3
+ LoRa P2P status:
+    P2P frequency 916000000
+    P2P TX Power 22
+    P2P BW 125
+    P2P SF 7
+    P2P CR 1
+    P2P Preamble length 8
+    P2P Symbol Timeout 0
+
+AT+STATUS= 
+
+OK
+```
+
 ----
 
 ## Extend AT command interface
@@ -159,6 +250,8 @@ The structure for custom AT commands is extended for RUI3 compatibility. Older c
 For functions that are not supported by the AT command a **`NULL`** must be put into the array.    
 **REMARK 3**    
 The name **`g_user_at_cmd_list`** is fixed and cannot be changed or the custom commands are not detected.    
+**REMARK 4**     
+The permissions are given as a string. Valid entries are "R" (read only), "W" (write only), "RW" (read and write)    
 
 ### 2) Definition of the number of custom AT commands
 A variable with the number of custom AT commands must be provided:
@@ -618,7 +711,9 @@ To make it easier in data encoders used in LoRaWAN servers and integration data 
 ### _REMARK_
 Channel ID's in cursive are extended format and not supported by standard Cayenne LPP data decoders.
 
-Example decoders for TTN, Chirpstack, Helium and Datacake can be found in the folder [decoders](./decoders) ⤴️
+### _REMARK_ 
+An full and updated list of used data formats can be found in our [RAKwireless_Standardized_Payload](https://github.com/RAKWireless/RAKwireless_Standardized_Payload) ⤴️.     
+The RAKwireless_Standardized_Payload repo includes as well a matching decoder.
 
 ----
 
@@ -1083,6 +1178,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2023-02-05
+  - Ready to merge RUI3 compatible AT command into master
 - 2023-01-27
   - Start switching to RUI3 compatible AT command format
   - Add check to fix device hanging when wrong subband is selected (e.g. AU915 subband 2 switch to AS923 without changing the subband to 1)

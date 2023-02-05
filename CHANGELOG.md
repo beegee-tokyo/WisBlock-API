@@ -4,6 +4,12 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## 2.0.0 Make WisBlock API compatible to the RAKwireless RUI3 AT command interface
+  - Rework the AT command to be compatible with [RAKwireless RUI3](https://docs.rakwireless.com/RUI3)
+  - Keep backwards compatibility to V1.1.18
+  - Tested with desktop version of [RAKwireless WisToolBox](https://docs.rakwireless.com/Product-Categories/Software-Tools/WisToolBox/Overview/)
+  - Not yet working with mobile version of WisToolBox (Device sync fails, but BLE UART terminal can be used already)
+
 ## 1.1.18 Add Cayenne LPP and cleanup AT commands
   - Add WisBlock extended Cayenne LPP to make it easier to use from examples
   - Replace AT command SENDFREQ with SENDINT to make it's meaning easier to understand (use word interval instead of frequency)

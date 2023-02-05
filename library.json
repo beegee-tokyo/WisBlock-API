@@ -1,23 +1,19 @@
 {
 	"name": "WisBlock-API",
-	"version": "1.1.18",
+	"version": "2.0.0",
 	"keywords": [
 		"lora",
 		"Semtech",
 		"SX126x",
 		"RAK4630",
-		"RAK11310",
-		"RAK11200",
 		"WisBlock"
 	],
-	"description": "A library that covers the complete LoRa/LoRaWAN, BLE and AT command handling. Just write your application specific functions and leave the rest to the API",
+	"description": "A RUI3 AT command compatible library that covers the complete LoRa/LoRaWAN, BLE and AT command handling. Just write your application specific functions and leave the rest to the API",
 	"frameworks": [
 		"arduino"
 	],
 	"platforms": [
-		"nordicnrf52",
-		"mbed_rp2040",
-		"espressif32"
+		"nordicnrf52"
 	],
 	"license": "MIT",
 	"authors": [
@@ -30,7 +26,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/beegee-tokyo/WisBlock-API"
+		"url": "https://github.com/beegee-tokyo/WisBlock-API-V2"
 	},
 	"dependencies": [
 		{
@@ -39,15 +35,10 @@
 			"version": "*"
 		},
 		{
-			"owner": "khoih-prog",
-			"name": "LittleFS_Mbed_RP2040",
-			"version": "*"
-		},
-		{
 			"owner": "sabas1080",
 			"name": "CayenneLPP",
 			"version": "*"
 		}
 	],
-	"homepage": "https://github.com/beegee-tokyo/WisBlock-API"
+	"homepage": "https://github.com/beegee-tokyo/WisBlock-API-V2"
 }
