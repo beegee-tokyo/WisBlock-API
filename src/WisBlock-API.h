@@ -370,14 +370,6 @@ void api_timer_stop(void);
 void api_timer_restart(uint32_t new_time);
 void api_log_settings(void);
 
-bool api_fs_init(void);
-void api_fs_format(const char *filename);
-bool api_file_open_read(const char *filename);
-bool api_file_open_write(const char *filename);
-void api_file_read(uint8_t *destination, uint16_t size);
-void api_file_write(uint8_t *source, uint32_t size);
-void api_file_remove(const char *filename);
-void api_file_close(const char *filename);
 extern const char settings_name[];
 
 #ifdef NRF52_SERIES

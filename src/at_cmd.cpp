@@ -2214,7 +2214,7 @@ static int at_exec_list_all(void)
 
 		for (unsigned int idx = 0; idx < g_user_at_cmd_num; idx++)
 		{
-			AT_PRINTF("ATC%s,%s: %s", g_user_at_cmd_list[idx].cmd_name, g_user_at_cmd_list[idx].permission, g_user_at_cmd_list[idx].cmd_desc);
+			AT_PRINTF("ATC%s,%s: %s", g_user_at_cmd_list[idx].cmd_name, g_user_at_cmd_list[idx].permission != NULL ? g_user_at_cmd_list[idx].permission : "RW", g_user_at_cmd_list[idx].cmd_desc);
 		}
 	}
 
