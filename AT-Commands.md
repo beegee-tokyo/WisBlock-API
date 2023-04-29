@@ -65,6 +65,7 @@ LoRa® is a registered trademark or service mark of Semtech Corporation or its a
 * [AT+ADR](#atadr) Set/Get ADR Mode
 * [AT+CLASS](#atclass) Set/Get Class
 * [AT+DR](#atdr) Set/Get Data Rate
+* [AT+PORT](#atport) Set/Get LoRaWAN® port
 * [AT+TXP](#attxp) Set/Get TX Power
 * [AT+BAND](#atband) Set/Get LoRaWAN® Region
 * [AT+MASK](#atmask) Set/Get Channel Mask
@@ -172,6 +173,7 @@ AT+SEND	Send data
 AT+ADR      Get or set the adaptive data rate setting
 AT+CLASS    Get or set the device class
 AT+DR       Get or Set the Tx DataRate=[0..7]
+AT+PORT     Get or Set the port
 AT+TXP      Get or set the transmit power
 AT+BAND     Get and Set number corresponding to active regions
 AT+MASK     Get and Set channels mask
@@ -801,6 +803,40 @@ AT+DR:3
 OK
 
 AT+DR=3
+
+OK
+```
+
+[Back](#content)    
+
+----
+
+## AT+PORT
+
+Description: Port settings
+
+This command allows the user to access and configure port settings.
+
+| Command                     | Input Parameter    | Return Value                              | Return Code            |
+| --------------------------- | ------------------ | ----------------------------------------- | ---------------------- |
+| AT+PORT?                    | -                  | `AT+PORT=<Port><CR>. Get or Set the Port` | `OK`                   |
+| AT+PORT=?                   | -                  | 1-223                                     | OK                     |
+| AT+PORT=`<Input Parameter>` | 1-223              | -                                         | OK *or* AT_PARAM_ERROR |
+
+**Examples**:
+
+```
+AT+PORT?
+
+AT+PORT: Get or Set the Port=[1..223]
+OK
+
+AT+PORT=?
+
+AT+PORT:2
+OK
+
+AT+PORT=2
 
 OK
 ```

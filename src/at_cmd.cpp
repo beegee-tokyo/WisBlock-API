@@ -1304,6 +1304,44 @@ static int at_exec_datarate(char *str)
 }
 
 /**
+ * @brief AT+PORT=? Get current port
+ *
+ * @return int
+ */
+static int at_query_port(void)
+{
+	snprintf(g_at_query_buf, ATQUERY_SIZE, "%d", g_lorawan_settings.app_port);
+	return 0;
+}
+
+/**
+ * @brief AT+PORT=X Set port
+ *
+ * @param str 1 to 224
+ * @return int 0 if correct parameter
+ */
+static int at_exec_port(char *str)
+{
+	if (!g_lorawan_settings.lorawan_enable)
+	{
+		return AT_ERRNO_NOALLOW;
+	}
+	uint8_t port;
+
+	port = strtol(str, NULL, 0);
+
+	if ((port < 1) || (port > 223))
+	{
+		return AT_ERRNO_PARA_VAL;
+	}
+
+	g_lorawan_settings.app_port = port;
+	save_settings();
+
+	return 0;
+}
+
+/**
  * @brief AT+ADR=? Get current adaptive datarate status
  *
  * @return int always 0
@@ -1577,6 +1615,7 @@ static atcmd_t g_at_cmd_list[] = {
 	{"+ADR", "Get or set the adaptive data rate setting", at_query_adr, at_exec_adr, NULL},
 	{"+CLASS", "Get or set the device class", at_query_class, at_exec_class, NULL},
 	{"+DR", "Get or Set the Tx DataRate=[0..7]", at_query_datarate, at_exec_datarate, NULL},
+	{"+PORT", "Get or Set the Port=[1..223]", at_query_port, at_exec_port, NULL},
 	{"+TXP", "Get or set the transmit power=[0...10]", at_query_txpower, at_exec_txpower, NULL},
 	{"+BAND", "Get and Set LoRaWAN region 0 = AS923-1, 1 = AU915, 2 = CN470, 3 = CN779, 4 = EU433, 5 = EU868, 6 = KR720, 7 = IN865, 8 = US915, 9 = AS923-2, 10 = AS923-3, 11 = AS923-4, 12 = RU864", at_query_region, at_exec_region, NULL},
 	{"+MASK", "Get and Set channels mask", at_query_mask, at_exec_mask, NULL},
