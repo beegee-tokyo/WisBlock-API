@@ -4,6 +4,9 @@ Arduino library for RAKWireless WisBlock Core modules that takes all the LoRaWAN
 
 # Release Notes
 
+## 1.1.19 Add AT command
+  - Add AT command to change fPort when using LoRaWAN. Thanks to @xoseperez
+
 ## 1.1.18 Add Cayenne LPP and cleanup AT commands
   - Add WisBlock extended Cayenne LPP to make it easier to use from examples
   - Replace AT command SENDFREQ with SENDINT to make it's meaning easier to understand (use word interval instead of frequency)

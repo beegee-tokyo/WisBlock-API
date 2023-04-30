@@ -1093,6 +1093,8 @@ AT Command functions: Taylor Lee (taylor.lee@rakwireless.com)
 ----
 # Changelog
 [Code releases](CHANGELOG.md)
+- 2023-04-30
+  - Added option to set the LoRaWAN port using the AT command set. Thanks to @xoseperez
 - 2022-11-13
   - Add WisBlock Cayenne LPP setup to make it easier to use from examples
   - Replace AT command SENDFREQ with SENDINT to make it's meaning easier to understand (use word interval instead of frequency)
